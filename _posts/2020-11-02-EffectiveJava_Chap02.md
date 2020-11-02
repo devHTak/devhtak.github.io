@@ -75,7 +75,7 @@ public 생성자를 사용하는 대신 정적 팩터리 메서드를 제공하�
   => 빌더는 점층적 생성자보다 클라이언트 코드를 읽고 쓰기가 훨씬 간결하고, 자바 빈드보다 훨씬 안정적이다. 다만, Builder 객체를 만드는 비용 발생
   
   예제)
-  ```
+  ```java
   public class Account {
 	
     private Long id;
@@ -121,11 +121,66 @@ public 생성자를 사용하는 대신 정적 팩터리 메서드를 제공하�
       this.password = builder.password;
     }
   }
+	```
+
+### Item 03. private 생성자나 열거 타입으로 싱글턴임을 보장하라
+
+- Signleton이란? 인스턴스를 오직 하나만 생성할 수 있는 클래스
+- 클래스를 signleton 으로 만들면, 이를 사용하는 클라이언트를 테스트하기가 어려워 진다.
+
+- public static final 또는 private static final + getter 을 활용한 signleton 구현
 ```
+	public class Elvis {
+		public static final Elvis INSTNACE = new Elvis();
+		private Elvis(){}
+	}
+```
+  - 해당 클래스가 싱글턴임을 API에서 명백히 드러난다.
+  - 코드가 간결하다.
+```
+	public class Presley {
+		private static final Presley INSTANCE = new Presley();
+		private Presley(){}
+		
+		public static Presley getInstance() {
+			return INSTANCE;
+		}
+	}
+```
+  - API를 변경하지 않고도 singleton을 변경할 수 있다.
+  - 정적 팩터리를 제네릭 싱글턴 팩터리로 만들 수 있다는 점
+  - 정적 팩터리의 메서드 참조를 공급자로 사용할 수 있다는 점
 
-### Item03. private 생성자나 열거 타입으로 싱글턴임을 보장하라
+- enum을 활용한 singleton 구현
+```
+	public enum Elvis {
+		INSTNACE;
+	}
+```
+  - public 방식과 비슷하지만, 더 간결하며, 추가 노력없이 직렬화할 수 있다.
+  - 대부분 상황에서는 원소가 하나뿐인 열거 타입이 singleton을 구현하는 데 가장 좋은 방법이 된다.
+  	다만, 만들려는 singleton이 Enum외의 클래스를 상속해야 한다면 이 방법은 사용할 수 없다. -> 열거 타입이 다른 인터페이스를 구현하도록 선언할 수 있다.
+	
+### Item 04. 인스턴스화를 막으려거든 private 생성자를 사용하라
 
-  
+- 정적 메서드와 정적 필드만을 담은 클래스
+- java.lang.Math, java.util.Arrays 처럼 기본 타입 값이나, 배열 관련 메서드들을 모아놓거나 java.util.Collections처럼 특정 인터페이스를 구현하는 객체를 생성해주는 정적 메서드를 모아놓는 경우 
+- final class와 관련한 메서드를 모아놓는 경우
+-> 기본 생성자를 명시하지 않으면 컴파일러가 자동으로 기본 생성자를 만들어 주기 때문에 private 생성자가 필요하다.
+-> 추상 클래스로 만드는 것 또한 상속하여 인스턴스화 하면 가능하기 때문에 private 생성자가 필요하다.
+```
+	public class UtilityClass {
+		// 기본 생성자가 만들어지는 것을 막는다. (인스턴스화 방지용)
+		private UtilityClass() {
+			throw new AssertionError();
+		}
+	}
+```
+-> 해당 방식은 private 생성자밖에 없기 때문에 상속을 불가능하게 막아주는 효과도 있다.
+
+### Item 05. 자원을 직접 명시하지 말고 의존 객체 주입을 사용하라.
+
+- 
 
   
     
