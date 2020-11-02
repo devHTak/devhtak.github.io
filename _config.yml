@@ -29,9 +29,6 @@ exclude:
 
 # Jekyll SEO Tag (Optional)
 # =========================
-twitter:
-  username: devHTak
-  card: summary
 logo: logo.png
 social:
   name: HyunTak Park
