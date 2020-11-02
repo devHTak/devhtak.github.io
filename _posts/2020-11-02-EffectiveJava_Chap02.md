@@ -129,33 +129,33 @@ public 생성자를 사용하는 대신 정적 팩터리 메서드를 제공하�
 - 클래스를 signleton 으로 만들면, 이를 사용하는 클라이언트를 테스트하기가 어려워 진다.
 
 - public static final 또는 private static final + getter 을 활용한 signleton 구현
-```
-	public class Elvis {
-		public static final Elvis INSTNACE = new Elvis();
-		private Elvis(){}
-	}
+```java
+public class Elvis {
+	public static final Elvis INSTNACE = new Elvis();
+	private Elvis(){}
+}
 ```
   - 해당 클래스가 싱글턴임을 API에서 명백히 드러난다.
   - 코드가 간결하다.
-```
-	public class Presley {
-		private static final Presley INSTANCE = new Presley();
-		private Presley(){}
-		
-		public static Presley getInstance() {
-			return INSTANCE;
-		}
+```java
+public class Presley {
+	private static final Presley INSTANCE = new Presley();
+	private Presley(){}
+
+	public static Presley getInstance() {
+		return INSTANCE;
 	}
+}
 ```
   - API를 변경하지 않고도 singleton을 변경할 수 있다.
   - 정적 팩터리를 제네릭 싱글턴 팩터리로 만들 수 있다는 점
   - 정적 팩터리의 메서드 참조를 공급자로 사용할 수 있다는 점
 
 - enum을 활용한 singleton 구현
-```
-	public enum Elvis {
-		INSTNACE;
-	}
+```java
+public enum Elvis {
+	INSTNACE;
+}
 ```
   - public 방식과 비슷하지만, 더 간결하며, 추가 노력없이 직렬화할 수 있다.
   - 대부분 상황에서는 원소가 하나뿐인 열거 타입이 singleton을 구현하는 데 가장 좋은 방법이 된다.
@@ -168,19 +168,142 @@ public 생성자를 사용하는 대신 정적 팩터리 메서드를 제공하�
 - final class와 관련한 메서드를 모아놓는 경우
 -> 기본 생성자를 명시하지 않으면 컴파일러가 자동으로 기본 생성자를 만들어 주기 때문에 private 생성자가 필요하다.
 -> 추상 클래스로 만드는 것 또한 상속하여 인스턴스화 하면 가능하기 때문에 private 생성자가 필요하다.
-```
-	public class UtilityClass {
-		// 기본 생성자가 만들어지는 것을 막는다. (인스턴스화 방지용)
-		private UtilityClass() {
-			throw new AssertionError();
-		}
+```java
+public class UtilityClass {
+	// 기본 생성자가 만들어지는 것을 막는다. (인스턴스화 방지용)
+	private UtilityClass() {
+		throw new AssertionError();
 	}
+}
 ```
 -> 해당 방식은 private 생성자밖에 없기 때문에 상속을 불가능하게 막아주는 효과도 있다.
 
 ### Item 05. 자원을 직접 명시하지 말고 의존 객체 주입을 사용하라.
 
-- 
+- 사용하는 자원에 따라 동작이 달라지는 클래스는 정적 유틸리티 클래스나 싱글턴 방식이 적합하지 않다.
+- 대신, 클래스가 여러 자원 인스턴스를 지원해야 하며, 클라이언트가 원하는 자원을 사용해야 한다. 인스턴스를 생성할 때 생성자에 필요한 자원을 넘겨주는 방식
+```java
+public class SpellChecker {
+	private final Lexicon dictionary;
+	
+	public SpellChecker(Lexicon dictionary) {
+		this.dictionary = Objects.requireNonNull(dictionary);
+	}
+}
+```
+-> 자원 팩터리를 넘겨주는 방식이 있다. : Factory method pattern
+-> Supplier<T> 인터페이스가 팩터리를 표현한 완벽한 예 (참고: https://m.blog.naver.com/PostView.nhn?blogId=writer0713&logNo=221590159146&proxyReferer=https:%2F%2Fwww.google.com%2F ) 
+
+### Item 06. 불필요한 객체 생성을 피하라
+
+- 똑같은 기능의 객체를 매번 생성하기 보다는 객체 하나를 재사용하는 편이 나을 때가 많다.
+- 특히, 불별 객체는 언제든 재 사용할 수 있다. -> 정적 팩터리 메서드를 제공하는 불변 객체에 경우 해당 방법을 사용하여 불필요한 객체 생성을 막을 수 있다.
+- auto boxing : 기본 타입과 박싱된 기본 타입의 구분을 흐려주지만 완전히 사라지는 것은 아니다.
+** 객체를 생성하는 것에 부담감을 느끼는 것이 아닌 불필요한 생성을 지양하자는 것
+
+```java
+public class RomanNumeral {
+	/*
+	public static boolean isRomanNumeral(String s) {
+		return s.matches("^(?=.)M*(C[MD]|D?C{0,3}(X[CL]|L?X{0,3})(I[XV]|V?I{0,3}$"); 
+	}
+	*/
+	
+	private static final Pattern ROMAN = Pattern.compile("^(?=.)M*(C[MD]|D?C{0,3}(X[CL]|L?X{0,3})(I[XV]|V?I{0,3}$");
+	
+	public static boolean isRomanNumeral(String s) {
+		return ROMAN.matcher(s).matches();
+	}
+}
+```
+-> 주석처리된 부분을 반복 사용하면 같은 Pattern 인스턴스를 계속 생성한다.
+-> 아래와 같이 정적변수로 하나 만들어주면 계속 재사용이 가능하다. 
+
+### Item 07. 다 쓴 객체를 해제하라.
+
+- 다 쓴 참조를 여전히 가지고 있는 경우
+-> null 처리(참조 해제)
+-> null처리는 예외적인 경우여야 한다. 다 쓴 참조를 해제하는 방법 중 가장 좋은 방법은 그 참조를 담은 변수를 유효 범위 밖으로 밀어내는 것
+
+- 캐시 
+-> 객체 참조를 캐시에 넣은 후 그 객체를 다 쓴 뒤에도 한참을 그냥 두는 일
+-> 해법은 키를 참조하는 동안만 엔트리가 살아있는 캐시가 필요한 경우 WeakHashMap을 사용해 캐시 생성
+
+- 리스너 혹은 콜백
+-> 콜백을 등록만 하고 명확히 해지하지 않는다면 콜백이 계속 쌓여갈 것이다.
+-> 해법은 약한 참조(Weak reference)로 저장하면 가비지 컬렉터가 즉시 수거한다.
+
+### Item 08. finalizer와 cleaner 사용을 피하라
+
+- 객체 소멸자: finalizer 
+-> 예측할 수 없고, 상황에 따라 위험할 수 있어 일반적으로 불필요하다.
+
+- 객체 소멸자: cleaner
+-> finalizer보다 덜 위험하지만, 여전히 예측할 수 없고, 느리고, 일반적으로 불필요하다.
+
+### Item 09. try-finally 보다는 try-with-resources 를 사용하라
+
+- 라이브러리 중 close를 호출해 직접 닫아주어야 하는 자원이 많다.
+-> 자원을 닫지 않으면 성능 문제로 이어진다.
+
+- try-finally를 활용한 자원 회수 방법
+```java
+// 자원 회수 방법 중 try-catch-finally는 최선의 방책이 아니다.
+public static String firstLineOfFile(String path) throws IOException {
+	BufferedReader br = new BufferedReader(new FileReader(path));
+
+	try {
+		return br.readLine();
+	} finally {
+		br.close();
+	}
+}
+
+// 자원이 둘 이상이면 너무 드러워 진다.
+public static void copy(String src, String dist) throws IOException {
+	InputStream in = new FileInputStream(src);
+
+	try {
+		OutputStream out = new FileOutputStream(dist);
+		try {
+			byte[] buf = new byte[BUFFER_SIZE];
+			int n;
+			while( (n = in.read(buf)) >= 0) {
+				out.write(buf, 0, n);
+			}
+		} finally {
+			out.close();
+		}
+	} finally {
+		in.close();
+	}
+}
+```
+  - try-finally 를 사용하면 닫아야 하는 자원이 많을 수록 소스가 더러워진다.
+  - 예외는 try 블록 뿐만이 아닌 finally 블록에서도 발생할 수 있는데, finally 블록에서 발생하면 try에서 발생한 예외를 찾기 어려워 진다.
+
+```java
+public static String firstLineOfFile(String path) throws IOException {
+	try(BufferedReader br = new BufferedReader(new FileReader(path))) {
+		return br.readLine();
+	}
+}
+
+public static void copy(String src, String dist) throws IOException {
+	try(InputStream in = new FileInputStream(src); OutputStream out = new FileOutputStream(dist)) {
+		byte[] buf = new byte[BUFFER_SIZE];
+		int n;
+		while( (n = in.read(buf)) >= 0) {
+			out.write(buf, 0, n);
+		}
+	}
+}
+```
+
+  - 간결하기 때문에 가독성이 높다.
+  - 만약 firstLineOfFile 에서 close 도 중 오류가 발생하면 readLine오류에서 발생한 예외가 기록된다.
+  - 물론 catch 절도 사용할 수 있다.
+  - try-finally를 사용해야 할 예외는 없다.
 
   
     
