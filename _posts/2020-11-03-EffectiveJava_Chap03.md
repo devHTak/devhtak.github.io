@@ -123,14 +123,14 @@ category: java
     ColorPoint에 equals를 구현하지 않은 상태인 경우 equals 규약에 위배되지 않는다. 다만 ColorPoint의 color 를 놓치게 된다.
     
     ```java
-    	@Override public boolean equals(Object o) {
+    @Override public boolean equals(Object o) {
         // TODO Auto-generated method stub
         if( !(o instanceof ColorPoint) )
           return false;
         return super.equals(o) && this.color == ((ColorPoint) o).color;
       }
     ```
-    위와 같이 ColorPoint에서 equals를 재정의 하는 경우 Point와 ColorPoint는 동치성 위배가 된다. ColorPoint에 equals에서 instanceof ColorPoint 가 계속 false이기 때문
+    위와 같이 ColorPoint에서 equals를 재정의 하는 경우 Point와 ColorPoint는 동치성 위배가 된다. ColorPoint에 equals에서 instanceof ColorPoint 가 계속 false이기 때문이다.
     
     ```java
     @Override public boolean equals(Object o) {
