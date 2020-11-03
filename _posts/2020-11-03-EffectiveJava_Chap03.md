@@ -83,6 +83,7 @@ category: java
     }
     ```
     cis.equals(s) 는 true, s.equals(cis) 는 false를 반환하여 대칭성을 명백히 위반한다.
+    
     ```java
     @Override public boolean equals(Object o) {
       // TODO Auto-generated method stub
@@ -92,6 +93,7 @@ category: java
     CaseInsentiveString의 equals를 String과 비교할 생각을 버리면 위와 같이 간단하게 구현할 수 있다.
     
     - 추이성은 첫 번째 객체와 두 번째 객체가 같고, 두 번째 객체와 세 번째 객체가 같다면, 첫 번째 객체와 세 번째 객체도 같아야 한다는 의미
+    
     ```java
     public class Point {
       private final int x;
