@@ -266,8 +266,8 @@ category: java
   - 특정 클래스나 인터페이스와 강하게 연관된 상수라면 해당 클래스나 인터페이스에 구현하거나 열거 타입으로 공개, 인스턴스화 할 수 없는 유틸리티 클래스로 공개하자.
   ```java
   public class PhysicalConstants {
-  	// 상수 유틸리티 클래스
-  	private PhysicalConstants(){} // 인스턴스화 방지
+	// 상수 유틸리티 클래스
+	private PhysicalConstants(){} // 인스턴스화 방지
 	public static final double AVOGADROS_NUMBER = ...;
 	public static final double BOLTZMAN_CONSTANT = ...;
 	public static final double ELECTRON_MASS = ...;
