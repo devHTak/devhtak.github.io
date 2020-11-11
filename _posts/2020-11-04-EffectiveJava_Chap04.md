@@ -38,7 +38,7 @@ category: java
     // 해결방법 2. 배열을 private으로 만들고, 그 복사본을 반환하는 public 메서드를 추가
     private static final Thing[] PRIVATE_VALUES={...};
     public static final Thing[] values() {
-      return PRIVATE_VALUES.clone();
+    	return PRIVATE_VALUES.clone();
     }
     ```
 
@@ -61,49 +61,49 @@ category: java
     - 자신 외에는 내부의 가변 컴포넌트에 접근할 수 없도록 한다.
   ```java
   public final class Complex {	
-    private final double re;
-    private final double im;
+	private final double re;
+	private final double im;
 
-    public Complex(double re, double im) {
-      this.re = re; this.im = im;
-    }
+	public Complex(double re, double im) {
+		this.re = re; this.im = im;
+	}
 
-    public double realPart() { return re; }
-    public double imaginaryPart() { return im; }
+	public double realPart() { return re; }
+	public double imaginaryPart() { return im; }
 
-    public Complex plus(Complex c) {
-      return new Complex(c.re + this.re, c.im + this.im);
-    }
+	public Complex plus(Complex c) {
+		return new Complex(c.re + this.re, c.im + this.im);
+	}
 
-    public Complex minus(Complex c) {
-      return new Complex(this.re - c.re, this.im - c.im);
-    }
+	public Complex minus(Complex c) {
+		return new Complex(this.re - c.re, this.im - c.im);
+	}
 
-    public Complex times(Complex c) {
-      return new Complex(this.re * c.re - this.im * c.im, this.re * c.im + this.im * c.re);
-    }
+	public Complex times(Complex c) {
+		return new Complex(this.re * c.re - this.im * c.im, this.re * c.im + this.im * c.re);
+	}
 
-    public Complex dividexBy(Complex c) {
-      double tmp = c.re * c.re + c.im * c.im;
-      return new Complex((this.re * c.re + this.im * c.im) / tmp, (this.im * c.re - this.re * c.im) / tmp);
-    }
-    	@Override public boolean equals(Object o) {
-        // TODO Auto-generated method stub
-        if( o == this ) return true;
-        if( !(o instanceof Complex) ) return false;
-        Complex c = (Complex)o;
-        return Double.compare(c.re, this.re) == 0 && Double.compare(c.im, this.im) == 0;
-      }
+	public Complex dividexBy(Complex c) {
+		double tmp = c.re * c.re + c.im * c.im;
+		return new Complex((this.re * c.re + this.im * c.im) / tmp, (this.im * c.re - this.re * c.im) / tmp);
+	}
+	@Override public boolean equals(Object o) {
+		// TODO Auto-generated method stub
+		if( o == this ) return true;
+		if( !(o instanceof Complex) ) return false;
+		Complex c = (Complex)o;
+		return Double.compare(c.re, this.re) == 0 && Double.compare(c.im, this.im) == 0;
+	}
 
-      @Override public int hashCode() {
-        // TODO Auto-generated method stub
-        return 31 * Double.hashCode(re) + Double.hashCode(im);
-      }
+	@Override public int hashCode() {
+		// TODO Auto-generated method stub
+		return 31 * Double.hashCode(re) + Double.hashCode(im);
+	}
 
-      @Override public String toString() {
-        // TODO Auto-generated method stub
-        return "(" + re + " + " + im + "i)";
-      }
+	@Override public String toString() {
+		// TODO Auto-generated method stub
+		return "(" + re + " + " + im + "i)";
+	}
   }
   ```
   - 사칙연산 메서드들이 인스턴스 자신을 수정하는 것이 아닌, 새로운 Complex 인스턴스를 만들어 반환하였다.
@@ -119,16 +119,16 @@ category: java
   - 불변 객체 만드는 법
   ```java
   public class Complex {
-	  private final double re;
-    private final double im;
+	private final double re;
+	private final double im;
 
-    private Complex(double re, double im) {
-      this.re = re; this.im = im;
-    }
+	private Complex(double re, double im) {
+		this.re = re; this.im = im;
+	}
 
-    public static Complex valueOf(double re, double im) {
-      return new Complex(re, im);
-    }
+	public static Complex valueOf(double re, double im) {
+		return new Complex(re, im);
+	}
     // 이하 생략
   ```
   - 객체 설계 시 주의점
@@ -156,31 +156,31 @@ category: java
   ```java
   // Wrapper Class - 상속대신 컴포지션을 사용
   public class InstrumentedSet<E> extends ForwardingSet<E> {	
-    private int addCount = 0;
-    public InstrumentedSet(Set<E> s) {
-      super(s);
-    }
-    @Override public boolean add(E e) {
-      this.addCount += 1; 
-      return super.add(e);
-    }
-    @Override public boolean addAll(Collection<? extends E> c) {
-      this.addCount += c.size();
-      return super.addAll(c);
-    }
-    public int getAddCount() {
-      return this.addCount;
-    }
+	private int addCount = 0;
+	public InstrumentedSet(Set<E> s) {
+		super(s);
+	}
+	@Override public boolean add(E e) {
+		this.addCount += 1; 
+		return super.add(e);
+	}
+	@Override public boolean addAll(Collection<? extends E> c) {
+		this.addCount += c.size();
+		return super.addAll(c);
+	}
+	public int getAddCount() {
+		return this.addCount;
+	}
   }  
   ```
   ```java
   public class ForwardingSet<E> implements Set<E> {
-    private final Set<E> s;
-    public ForwardingSet(Set<E> s) { this.s = s; }
-    
-    // 기존 메서드 구현
-    public void clear() {...}
-    ...
+	private final Set<E> s;
+	public ForwardingSet(Set<E> s) { this.s = s; }
+
+	// 기존 메서드 구현
+	public void clear() {...}
+	...
    }
   ```
           
@@ -197,24 +197,30 @@ category: java
   - 상속용 클래스의 생성자는 직/간접적으로 재정의 가능 메서드를 호출해서는 안된다.
   ```java
   public class SuperClass {
-    public SuperClass() { this.overrideMe(); }
-    public void overrideMe() {///}
+	public SuperClass() { this.overrideMe(); }
+	public void overrideMe() {///}
   }
   public final class SubClass extends SuperClass {
-    private final Instant instant;
-    public SuperClass() { instant = Instant.now(); }
-    @Override public void overrideMe() { System.out.println(instant); }
-    
-    public static void main(String[] args) {
-      SubClass sub = new SubClass();
-      sub.overrideMe();
-    }
+	private final Instant instant;
+	public SuperClass() { instant = Instant.now(); }
+	@Override public void overrideMe() { System.out.println(instant); }
+
+	public static void main(String[] args) {
+		SubClass sub = new SubClass();
+		sub.overrideMe();
+	}
+  }	
   ```
     - instant가 2번 실행되지 않고, 첫번째는 null을 출력한다. 인스턴스 필드가 초기화되기 전에 SuperClass 생성자에 있는 overrideMe()가 호출되기 때문이다.
   
   - Clonable 클래스를 구현한 클래스는 확장하기 어렵다.
     - clone과 readObject는 모두 직접적으로든 간접적으로든 재정의 가능 메서드를 호출해서는 안된다.
   - Serializable을 구현한 상속용 클래스가 readResolve나 writeReplace 메서드를 갖는다면 이 메서드들은 private아닌 protected를 선언해야 한다.
+  
+### Item 20. 추상 클래스보다는 인터페이스를 우선하라
+
+		
+  - 
 
     
     
