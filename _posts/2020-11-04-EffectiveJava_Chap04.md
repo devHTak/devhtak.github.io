@@ -59,6 +59,7 @@ category: java
     - 모든 필드를 final로 선언한다.
     - 모든 필드를 private으로 선언함으로써 가변 객체에 대한 접근을 제어한다.
     - 자신 외에는 내부의 가변 컴포넌트에 접근할 수 없도록 한다.
+  
   ```java
   public final class Complex {	
 	private final double re;
