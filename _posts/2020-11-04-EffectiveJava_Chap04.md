@@ -337,6 +337,11 @@ class Rectangle extends Figure {
   - 메소드 내부에 클래스를 정의하는 경우로 메소드 내의 지역변수처럼 사용 가능하다
   - 메소드 내부에서 new 생성자로 사용해야 한다. 메소드 밖에서는 사용할 수 없다.
     
-  
-  
- 
+### Item 25. 톱레벨 클래스는 한 파일에 하나만 담으라
+
+- 단점
+  - Utensil.java 파일 안에 Utensil class와 Dessert class를 선언하더라도 사용하는 데 아무런 문제가 없다. 하지만 이후 Dessert.java 파일을 생성하면 문제가 발생한다.
+  - javac Main.java 또는 javac Main.java Utensil.java를 실행하면 Utensil.java 안에 Desert class가 실행되지만, javac Main.java Dessert.java를 사용하면 Dessert.java 안에 있는 클래스가실행된다.
+- 해결책
+  - 소스들을 파일로 분리하면 된다.
+  - 한 파일에 담고자 한다면 정적 멤버 클래스를 사용하자.
