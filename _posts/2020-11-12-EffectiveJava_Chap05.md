@@ -67,6 +67,7 @@ category: java
 	  return a;
   }  
   ```
+
 ### Item 28. 배열보다는 리스트를 사용하라
   
 - 배열과 제네릭 타입에 중요 차이
@@ -168,7 +169,6 @@ category: java
   }
   ```
   // elements = new E[DEFAULT_INITIAL_CAPACITY]에서 오류가 발생한다. (E와 같은 실체화 불가 타입으로 배열을 만들 수 없다.)
-  
   // 해결 방법 첫번째. Object 배열을 생성한 뒤 제네릭 배열로 형변환
   // Object 배열을 만든 후 형변환하는 방법은 컴파일러가 형변환 경고를 발생한다. @SuppressWarnings("unchecked")를 하자
   // 해당 방법은 가독성에는 좋]배열의 런타임 타입이 컴파일 타임 타입과 다르기 때문에 힙 오염을 일으킨다.
