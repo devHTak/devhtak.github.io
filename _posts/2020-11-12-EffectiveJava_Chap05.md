@@ -23,12 +23,12 @@ category: java
   - List<Object>같은 매개변수화 타입을 사용할 때와 달리 List 같은 로 타입을 사용하면 타입 안전성을 잃게 된다.
   ```java
   public static void main(String[] args) {
-    List<String> strings = new ArrayList<>();
-    unsafeAdd(strings, Integer.valueOf(42));
-    String s = strings.get(0); // 컴파일러가 자동으로 형변환 코드를 넣어준다. 하지만 Integer가 들어있기 때문에 경고 발생
+  	List<String> strings = new ArrayList<>();
+  	unsafeAdd(strings, Integer.valueOf(42));
+  	String s = strings.get(0); // 컴파일러가 자동으로 형변환 코드를 넣어준다. 하지만 Integer가 들어있기 때문에 경고 발생
   }
   public static void unsafeAdd(List list, Object o) {
-    list.add(o);
+  	list.add(o);
   }
   ```
   - strings.get(0) 에서 ClassCastException 발생
@@ -38,7 +38,7 @@ category: java
   - instanceof 연산자
   ```java
   if( o instanceof Set){ // Row Type 사용 가능
-    Set<?> s = (Set<?>)o; 
+  	Set<?> s = (Set<?>)o; 
   }
   ```
 
@@ -56,18 +56,17 @@ category: java
   - 경고를 무시해도 되는 이유를 항상 주석으로 남기자
   ```java
   public <T> T[] toArray(T[] a) {
-		if( a.length < size ) {
-			// 생성한 배열과 매개변수로 받은 배열의 타입이 모두 T[]로 같으므로 올바른 형변환이다.
-			@SuppressWarnings("unchecked")T[] result = (T[])Arrays.copyOf(elements, size, a.getClass());
-			return result;
-		}
-		System.arraycopy(elements, 0, a, 0, size);
-		if(a.length > size) 
-			a[size] = null;
-		return a;
-	}  
+	  if( a.length < size ) {
+		// 생성한 배열과 매개변수로 받은 배열의 타입이 모두 T[]로 같으므로 올바른 형변환이다.
+		@SuppressWarnings("unchecked")T[] result = (T[])Arrays.copyOf(elements, size, a.getClass());
+		return result;
+	  }
+	  System.arraycopy(elements, 0, a, 0, size);
+	  if(a.length > size) 
+		a[size] = null;
+	  return a;
+  }  
   ```
-  
 ### Item 28. 배열보다는 리스트를 사용하라
   
 - 배열과 제네릭 타입에 중요 차이
@@ -98,39 +97,37 @@ category: java
   ```java
   public class Stack {
 
-    private Object[] elements;
-    private int size = 0;
-    private static final int DEFAULT_INITIAL_CAPACITY = 16;
+  	private Object[] elements;
+    	private int size = 0;
+    	private static final int DEFAULT_INITIAL_CAPACITY = 16;
 
-    public Stack() {
-      elements = new Object[DEFAULT_INITIAL_CAPACITY];
-    }
+    	public Stack() {
+      		elements = new Object[DEFAULT_INITIAL_CAPACITY];
+    	}
 
-    public void push(Object e) {
-      ensureCapacity();
-      this.elements[size++] = e;
-    }
+    	public void push(Object e) {
+      		ensureCapacity();
+      		this.elements[size++] = e;
+    	}
 
-    public Object pop() {
-      if(this.size == 0)
-        throw new EmptyStackException();
-      Object result = elements[--size];
-      elements[size] = null; // 다쓴 참조 해제
-      return result;
-    }
+    	public Object pop() {
+      		if(this.size == 0)
+        		throw new EmptyStackException();
+      		Object result = elements[--size];
+      		elements[size] = null; // 다쓴 참조 해제
+      		return result;
+    	}
 
-    public boolean isEmpty() {
-      return this.size == 0;
-    }
+    	public boolean isEmpty() {
+      		return this.size == 0;
+    	}
 
-    public void ensureCapacity() {
-      if(this.size == elements.length) {
-        elements = Arrays.copyOf(elements, this.size * 2 + 1);
-      }
-    }
-
+    	public void ensureCapacity() {
+      		if(this.size == elements.length) {
+        		elements = Arrays.copyOf(elements, this.size * 2 + 1);
+		}
+      	}
   }
-
   ```
   ** 해당 클래스는 제네릭 타입으로 작성해야 한다.
   
@@ -138,36 +135,36 @@ category: java
   ```java
   public class Stack<E> {
 	
-    private E[] elements;
-    private int size = 0;
-    private static final int DEFAULT_INITIAL_CAPACITY = 16;
+  	private E[] elements;
+    	private int size = 0;
+    	private static final int DEFAULT_INITIAL_CAPACITY = 16;
 
-    public Stack() {
-      elements = new E[DEFAULT_INITIAL_CAPACITY];
-    }
+    	public Stack() {
+      		elements = new E[DEFAULT_INITIAL_CAPACITY];
+    	}
 
-    public void push(E e) {
-      ensureCapacity();
-      this.elements[size++] = e;
-    }
+    	public void push(E e) {
+      		ensureCapacity();
+      		this.elements[size++] = e;
+    	}
 
-    public E pop() {
-      if(this.size == 0)
-        throw new EmptyStackException();
-      E result = elements[--size];
-      elements[size] = null; // 다쓴 참조 해제
-      return result;
-    }
+    	public E pop() {
+      		if(this.size == 0)
+        		throw new EmptyStackException();
+      		E result = elements[--size];
+      		elements[size] = null; // 다쓴 참조 해제
+      		return result;
+    	}	
 
-    public boolean isEmpty() {
-      return this.size == 0;
-    }
+    	public boolean isEmpty() {
+      		return this.size == 0;
+    	}
 
-    public void ensureCapacity() {
-      if(this.size == elements.length) {
-        elements = Arrays.copyOf(elements, this.size * 2 + 1);
-      }
-    }
+    	public void ensureCapacity() {
+      		if(this.size == elements.length) {
+        		elements = Arrays.copyOf(elements, this.size * 2 + 1);
+      		}
+    	}
   }
   ```
   // elements = new E[DEFAULT_INITIAL_CAPACITY]에서 오류가 발생한다. (E와 같은 실체화 불가 타입으로 배열을 만들 수 없다.)
@@ -177,11 +174,11 @@ category: java
   // 해당 방법은 가독성에는 좋]배열의 런타임 타입이 컴파일 타임 타입과 다르기 때문에 힙 오염을 일으킨다.
   ```java
   // 배열 elements는 push(E)로 넘어온 E 인스턴스만 담기 때문에 타입 완전성을 보장한다.
-	// 하지만 이 배열의 런타임 타입은 E[]가 아닌 Object[]이다.
-	@SuppressWarnings("unchecked")
-	public Stack() {
-		elements = (E[])new Object[DEFAULT_INITIAL_CAPACITY];
-	}
+  // 하지만 이 배열의 런타임 타입은 E[]가 아닌 Object[]이다.
+  @SuppressWarnings("unchecked")
+  public Stack() {
+  	elements = (E[])new Object[DEFAULT_INITIAL_CAPACITY];
+  }
   ```
   
   // 해결 방법 두번째. elements의 타입을 E[]가 아닌 Object[]로 변환
@@ -189,15 +186,154 @@ category: java
   // 형변환 경고가 발생하면 판단 후 @SuppressWarnings("unchecked")를 하자
   ```java
   public E pop() {
-		if(this.size == 0)
-			throw new EmptyStackException();
-		// push에서 E 타입만 허용하므로 이 형변환은 안전하다.
-		@SuppressWarnings("unchecked") E result = (E)elements[--size];
-		elements[size] = null; // 다쓴 참조 해제
-		return result;
-	}
+	if(this.size == 0)
+		throw new EmptyStackException();
+	// push에서 E 타입만 허용하므로 이 형변환은 안전하다.
+	@SuppressWarnings("unchecked") E result = (E)elements[--size];
+	elements[size] = null; // 다쓴 참조 해제
+	return result;
+}
   ```
   - 해당 제네릭 타입을 사용하면 문제는 기본 타입을 사용하지 못한다. 박싱된 타입을 사용하여 우회하는 방법이 있다.
+
+### Item30. 이왕이면 제네릭 메서드로 만들어라
+
+** 클래스와 마찬가지로, 메서드도 제네릭으로 만들 수 있다.
+
+- 제네릭 메서드 만드는 방법
+```java
+public static <E> Set<E> union(Set<E> s1, Set<E> s2) {
+	Set<E> result = new HashSet<E>(s1);
+	result.addAll(s2);
+	return result;
+}
+public static void main(String[] args) {
+	Set<String> guys = Set.of("톰", "딕", "해리");
+	Set<String> stooges = Set.of("래리", "모에", "컬리");
+	Set<String> aflCio = union(guys, stooges);
+	System.out.println(aflCio);
+}
+```
+  - 타입 매개변수들을 선언하는 타입 매개변수 목록은 메서드의 제한자와 반환 타입 사이에 온다.
+  - 해당 코드에서 타입 매개변수 목록은 <E>이고 반환 타입은 Set<E>이다.
+  - 현재 union 메서드에 입력2개, 반환1개에 타입이 모두 같아야 한다. 이는 와일드카드 타입을 사용하면 더 유연하게 개선할 수 있다.
+
+- 제네릭 싱글턴 팩터리
+  - 때때로 불변 객체를 여러 타입으로 활용할 수 있게 만들어야 할 때가 있다. 이 때 요청한 타입 매개변수에 맞게 매번 그 객체의 타입을 바꿔주는 정적 팩터리를 만들어야 한다. 이를 제네릭 싱글턴 팩터리라고 한다.
+  - 만약 제네릭을 사용하지 않으면 타입마다 형변환하는 정적 팩터리를 만들어야 한다.
+  - 예로는 Collections.reverseOrder, Collections.emptySet
+
+- 재귀적 타입 한정
+  - 자기 자신이 들어간 표현식을 사용하여 타입 매개변수의 허용 범위를 한정할 수 있다.
+  - 주로 타입의 자역적 순서를정하는 Copmarable 인터페이스와 함께 사용된다.
+  ```java
+  public static <E extends Comparable<E>> E max(Collection<E> c) {
+  	if( c.isEmpty() ) throw new IllegalArgumentException("컬렉션이 비어있습니다.");
+	E result = null;
+	for(E e : c) {
+		if(result == null || e.compareTo(result) > 0) {
+			result = Objects.requireNonNull(e);
+		}
+	}
+	return e;
+  }
+  ```
+  - 재귀적 타입 한정을 이용해 상호 비교할 수 있음을 표현했다.
+
+### Item 31. 한정적 와일드카드를 사용해 API 유연성을 높여라
+
+** 매개변수화 타입은 불공변(invarient)이다. 즉, 서로 다른 타입 Type1, Typ2가 있을 때 List<Type1>은 List<Type2>의 하위 타입도 상위 타입도 아니다.
+** 하지만 때로는 유연한 방식이 필요할 때도 필요하다.
+	
+- 한정적 와일드카드 타입
+  - 유연성을 극대화하기 위해 원소의 생산자나 소비자용 입력 매개변수에 와일드카드 타입을 사용하라.
+  ```java
+  public void pushAll(Iterable<? extends E> src) {
+  	for(E e : src) { push(e); } 
+  }
+  ```
+  - pushAll의 입력 매개변수 타입은 'E의 Iterable'이 아니라 'E의 하위 타입의 Iterable'이어야 한다.
+  ```java
+  public void popAll(Collection<? super E> dst) {
+  	while(!isEmpty()) { dst.add(pop()); }
+  }
+  ```
+  - PECS: producer-extends, consumer-super
+  - 매개변수화 타입 T가 생산자라면 <? extends T>를 사용하고, 소비자라면, <? super T>를 사용하라.
+  ```java
+  public static <E extends Comparable<? super e>> max(Collection<? extends E> c);
+  ```
+
+- 타입 매개변수와 와일드카드
+  ```java
+  public static <E> void swap1(List<E> list, int i, int j); // 비한정적 타입 매개변수 사용
+  public static void swap2(List<?> list, int i, int j); // 비한정적 와일드카드 사용
+  ```
+  - public API라면 간단한 두번째 swap2가 낫다. 메서드 선언에 타입 매개변수가 한번만 나오면 와일드 카드로 대체하라.
+  - 하지만 swap2의 문제점이 있다. List<?>에는 null외에는 어떤 값도 넣을 수 없다. 그래서 컴파일되지 않는 경우가 발생하며, 내부에서 다시 swap1을 호출해야 한다.
+  
+### Item 32. 제네릭과 가변인수를 함께 쓸때는 신중하라.
+
+** 가변인수는 메서드에 넘기는 인수에 개수를 클라이언트가 조절할 수 있게 해주지만 구현 방식에 허점이 있다.
+
+- 제네릭과 가변인수를 함께 사용하면 안전성이 깨진다.
+  ```java
+  static void dangerous(List<String>... stringLists) {
+  	List<Integer> intList = List.of(42);
+	Object[] objects = stringLists;
+	object[0] = intList; // 힙 오염 발생
+	String s = stringLists[0].get(0); //ClassCastException
+  }
+  ```
+  - 제네릭 varargs 배열 매개변수에 값을 저장하는 것은 안전하지 않다.
+  - 가변인자를 받는 메서드를 호출하면 호출하는 시점에서 varargs 제네릭 배열이 만들어진다.
+
+- @SafeVarargs
+  - 제네릭 가변인수 메서드 작성자가 클라이언트 측에서 발생하는 경고를 숨길 수 있게되었다.
+  - @SafeVarargs 메서드 작성자가 그 메서드가 타입 안전함을 보장하는 장치다.
+  - 타입 안전한 경우
+    - @SafeVarargs로 제대로 애노테이트된 또 다른 varargs 메서드에 넘기는 것은 안전하다.
+    - 그저 이 배열 내용의 일부 함수를 호출만 하는 일반 메서드에 넘기는 것도 안전하다.
+  - 사용해야 할 때를 정하는 규칙
+    - 제네릭이나 매개변수화 타입의 varargs 매개변수를 받는 모든 메서드에 @SafeVarargs를 달라.
+    
+### Item33. 타입 안전 이종 컨테이너를 고려하라.
+
+** 제네릭은 Set<E>, Map<E> 등의 컬렉션과 ThreadLocal<T>. AtomicReference<T> 등의 단일원소 컨테이너에 사용된다.
+** 매개변수화되는 대상은 원소가 아닌 컨테이너 자신이다. 따라서 하나의 컨테이너에서 매개변수화 할 수있는 타입은 제한된다.
+
+- 타입 안전 이종 컨테이너(hetereogeneous) 패턴
+  - 컨테이너 대신 키를 매개변수화한 다음, 컨테이너에 값을 넣거나 뺄 때 매개변수화한 키를 함께 제공하는 방법
+  ```java
+  public class Favorites {
+  	private Map<Calss<?, Object> favorites = new HashMap<>();
+  	public <T> void putFavorite(Class<T> type, T instance) {
+		favorites.put(Object.requireNorNull(type), instance);
+	}
+	public <T> void T getFavorite(Class<T> type) {
+		return type.cast(favorites.get(type));
+	}
+  }
+  public class MainTest {
+  	public static void main(String[] args) {
+		Favorites f = new Favorites();
+		f.putFavorite(String.class, "Java");
+		f.putFavorite(Integer.class, 0xcafebabe);
+		
+		System.out.println(f.getFavorite(String.class) + " " + f.getFavorite(Integer.class) );
+	}
+  }
+  ```
+  - Favorites 인스턴스는 타입 안전하다.
+  - Map<Class<?>, Object>: 와일드카드 타입이 중첩(nested)되었다는 점을 알아야 한다. 맵이 아니라 키가 와일드카드 타입이다.
+  - 안전성이 깨지는 경우
+    - row 타입을 넘기면 안전성이 쉽게 깨진다.
+    - 실체화 불가 타입에는 사용할 수 없다.
+      - List.class는 가능하나 List<String>.class, List<Integer>.class는 불가능하다. (즉 List.class 하나만 담긴다.)
+      - 이를 해결하기 위해 슈퍼타입토큰을 사용할 수 있다.
+
+  
+  
   
   
   
