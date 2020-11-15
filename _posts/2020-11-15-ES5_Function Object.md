@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Javascript ES5. Function Object
+title: 자바스크립트 중고급: 근본 핵심 이해 강좌_Function Object
 summary: 자바스크립트 중고급: 근본 핵심 이해 from 인프런 강좌
 author: devhtak
 date: '2020-11-15 13:41:00 +0900'
