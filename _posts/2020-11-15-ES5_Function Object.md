@@ -94,6 +94,7 @@ category: javascript
       - 오브젝트에 따라 선택적으로 설정되는 프로퍼티
       - 해당되는 오브젝트에만 설정
   - 공통 내부 프로퍼티
+  
   |프로퍼티 이름|값 형태|개요|
   |------|---|---|
   | [[Prototype]] | Object 또는 Null | 오브젝트의 prototype |
@@ -110,6 +111,7 @@ category: javascript
   | [[DefinedOwnProperty]] | Boolean | 프로퍼티 추가, 프로퍼티 값 변경 가능 여부 |
   
   - 선택적 내부 프로퍼티: 오브젝트에 따라 선택적 설정
+  
   |프로퍼티 이름|값 형태|개요|
   |------|---|---|
   | [[PrimitiveValue]] | 프리미티브 값 | Boolean, Date, Number, String 오브젝트에서 제공 |
@@ -197,8 +199,109 @@ category: javascript
         - 함수 선언문 해석: function getBook(){};
         - 변수초기화: var title = undefined; var readBook = undefined;
         - 코드 실행: var title = "JS Book"; var readBook = function() {}; getBook();
-    
-    
+      - 함수 선언문 해석
+        - 마지막 줄에서 book() 함수를 호출합니다.
+        - 엔진 제어가 book 함수의 첫 번째 줄로 이동, debugger를 실행하지 않는다.
+        - 함수 안에서 함수선언문을 찾습니다. 위에서 아래로 내려가면서 하나씩 검색
+        - function getBook() {} 이 함수 선언문이므로 function object를 생성한다.
+        - 더 이상 함수 선언문이 없으므로 다시 함수의 첫 번째 줄로 이동한다.
+      - 변수 초기화
+        - debugger를 실행하지 않습니다.
+        - var title = "JS Book"; title 변수에 undefined를 할당한다. "JS Book"을 할당하지 않습니다.
+        - function getBook() {} 은 이미 초기화 했으므로 초기화하지 않는다.
+        - var readBook = function() {}; readBook은 undefined를 할당합니다. 함수 표현식은 변수를 선언만 합니다.
+        - 여기까지가 초기화 단계로 다시 첫 번째 줄로 이동한다.
+      - 코드 실행
+        - debugger를 실행하며, 실행이 멈춘다.
+        - var title = "JS Book"; title 변수에 "JS Book"을 할당한다.
+        - function getBook() { return title; }; 실행이 아닌 선언이므로 다음 줄로 이동
+        - var readBook = function() {}; function오브젝트를 생성하여 readBook 변수에 할당. readBook이 function object가 되므로 이제 readBook을 호출 할 수 있다.
+        - getBook() 함수를 호출한다. 지금까지의 방법으로 getBook() 함수의 함수와 변수를 초기화하고 코드를 실행한다.
+
+- Hoisting(호이스팅)
+  - 함수 앞에서 함수를 호출하는 것을 Hoisting이라 한다.
+  - 함수 선언문은 초기화 단계에서 function 오브젝트를 생성하므로 어디에서도 함수를 호출할 수 있다.
+  ```javascript
+  // 함수 선언문 해석 - book이란 function object 생성
+  // 변수 초기화 - result 를 undefined로 선언
+  // 코드 실행 - book 실행하여 result에 결과 값(Hoisting)을 대입한 후 console.log를 찍는다.
+  var result = book();
+  console.log(result); // Hoisting
+  function book() {
+    return "Hoisting";
+  };
+  ```
+  - 초기화 단계에서 값이 있으면 초기화하지 않는다.
+  ```javascript
+  // 함수 선언문 해석 - function book() {} 을 통해 function object 생성
+  // 변수 초기화 - result 를 undefined로 선언, book = undefined 생성하는 데, 이미 book이 선언되었기 때문에 초기화하지 않는다.
+  // 코드 실행 - result에 book function object 실행하여 "Hoisting"이란 값을 대입한다. 이후 book 에 function object를 생성하고 result에 "함수 표현식"이란 값을 대입한다.
+  var result = book();
+  console.log(result); // Hoisting
+  function book() {
+    return "Hoisting";
+  }
+  book = function() {
+    return "함수 표현식";
+  }
+  result = book();
+  console.log(result); // 함수 표현식
+  ```
+- 예제
+  - 함수 선언문 -> 함수 호출() -> 함수 선언문
+    - 2번째 함수 선언문이 실행된다. 이유는 함수 선언문 당시 1번째 함수 선언문을 저장하고 다시 2번째 함수 선언문을 저장하기 때문에 2번째 함수선언문이 실행된다.
+  - 함수 표현식 -> 함수 호출() -> 함수 표현식
+    - 1번째 함수 표현식이 실행된다. 이유는 변수 선언 당시 1 번째, 2번째 함수 표현식은 undefined로 초기화 되고, 코드 실행 때 function object가 생성되기 때문에 함수 호출되는 부분에서는 1번째 함수 표현식만 생성된 상태이다.
+  - 함수 선언문 -> 함수 호출() -> 함수 표현식
+    - 1번째 함수 선언문이 실행된다. 이유는 함수 선언문 초기화 될 때 이미 1번째 함수 선언문에 function object가 생성되고 변수 선언 당시에는 이미 초기화 되었기 때문에 함수 선언문이 그대로 유지된다. 코드 실행 단계에서는 함수 호출 당시 선언된 1번째 선언문이 실행되고 이후에 2번째 함수 표현식으로 function object가 생성된다.
+  - 함수 표현식 -> 함수 호출() -> 함수 선언문
+    - 1번째 함수 표현식이 실행된다.  이유는 함수선언문 초기화 할때 2번째 함수 선언문에 function object가 생성되고, 변수 선언 당시에는 그대로 유지된다. 하지만 코드 실행 단계에서 1번째 함수 표현식으로 function object가 생성된 후 함수 호출이 되기 때문에 1번째 함수 표현식이 실행된다.
+  ```javascript
+  function first() {
+    console.log("first - first");
+  };
+  first(); // first - second 출력
+  function first() {
+    console.log("first - second");
+  };
+
+  var second = function(){
+    console.log("second - first");
+  };
+  second(); // second - first 출력
+  function second() {
+    console.log("second - second");
+  };
+  
+  function third() {
+    console.log("third - first");
+  };
+  third(); // third - first 출력
+  var third = function() {
+    console.log("third - second");
+  };
+
+  var fourth = function() {
+    console.log("fourth - first");
+  };
+  fourth(); // fourth - first 출력
+  function fourth() {
+    console.log("fourth - second");
+  };
+  ```
+- Overloading(오버로딩)
+  - 오버로딩 형태
+  ```javascript
+  function book(one) {};
+  function book(one, two) {};
+  function book(one, two, three) {};
+  ```
+  - 함수 이름이 같더라도 파라미터 수 또는 값 타입이 다르면 각각 존재
+  - 함수를 호출하면 파라미터 수와 값 타입이 같은 함수가 호출된다.
+  - JS는 오버로딩을 지원하지 않는다.
+    - JS는 파라미터 수와 값 타입을 구분하지 않고 {name: value} 형태로 저장하기 때문이다.
+
+ 
     
     
     
