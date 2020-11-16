@@ -1,10 +1,10 @@
 ---
 layout: post
-title: 자바스크립트 중고급. 근본 핵심 이해 강좌_Function Object
-summary: 자바스크립트 중고급: 근본 핵심 이해 from 인프런 강좌
+title: (Javascript ES5) Function Object
+summary: Effective Java 3판 공부
 author: devhtak
-date: '2020-11-15 13:41:00 +0900'
-category: javascript
+date: '2020-11-15 19:41:00 +0900'
+category: java
 ---
 
 ### Function Object
