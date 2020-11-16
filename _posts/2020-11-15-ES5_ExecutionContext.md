@@ -19,14 +19,13 @@ category: javascript
   - Execution Stack(호출 스택)과 함수 실행 순서
     - 자바스크립트 엔진이 script tag를 처음 만나면 전역 컨텍스트를 만들고 현재 실행되고 있는 호출 스택에 이를 push한다.
   - Execution Context 형태
-    - 환경 (Creation Pashe)
-      - LEC(Lexical Environment Component): Identifier-variable mapping 되는 곳으로 아래 3가지 일을 진행한다.
-        - Environment Records: 함수와 변수를 기록한다. (ER)
-          - DER(Declarative Environment Record) : 변수와 함수 선언을 저장하는 곳이다.
-          - OER(Object Environment Record): 전역 코드에 대한 LE는 OER에 포함된다. 
-        - Reference to the outer environment: 외부 lexical 환경으로 접근할 수있다는 의미이다. (OER)
-      - VEC(Variable Environment Component): LEC와 function, 변수 식별자가 binding 되는 점을 포함해 동일하다.
-      - TBC(This Environment Component): Thid binding, this의 값이 여기서 결정된다.
+    - LEC(Lexical Environment Component): Identifier-variable mapping 되는 곳으로 아래 3가지 일을 진행한다.
+      - Environment Records: 함수와 변수를 기록한다. (ER)
+        - DER(Declarative Environment Record) : 변수와 함수 선언을 저장하는 곳이다.
+        - OER(Object Environment Record): 전역 코드에 대한 LE는 OER에 포함된다. 
+      - Reference to the outer environment: 외부 lexical 환경으로 접근할 수있다는 의미이다. (OLER)
+    - VEC(Variable Environment Component): LEC와 function, 변수 식별자가 binding 되는 점을 포함해 동일하다.
+    - TBC(This Environment Component): Thid binding, this의 값이 여기서 결정된다.
       
     ```javascript
     /*
@@ -68,7 +67,7 @@ category: javascript
       - show function 오브젝트 생성
       - show의 [[Scope]] 에 스코프 설정 (대괄호 2개는 엔진이 설정하는 프로퍼티를 뜻한다.)
       - 스코프는 book() 함수 내로 설정한다.
-    - show() 함수가 호출되면 EC 생성
+    - show() 함수가 호출되면 functional EC 생성
       - 엔진 컨트롤이 show()함수로 이동하기 전에 함수 실행을 위한 Context 환경 구축
       - LEC, VEC, TBC 생성 첨부
       - LEC에 ER, OLER 첨부
