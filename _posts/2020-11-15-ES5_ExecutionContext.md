@@ -27,6 +27,7 @@ category: javascript
         - Reference to the outer environment: 외부 lexical 환경으로 접근할 수있다는 의미이다. (OER)
       - VEC(Variable Environment Component): LEC와 function, 변수 식별자가 binding 되는 점을 포함해 동일하다.
       - TBC(This Environment Component): Thid binding, this의 값이 여기서 결정된다.
+      
     ```javascript
     /*
     show 실행 콘텍스트(EC): {
@@ -62,6 +63,7 @@ category: javascript
 
     book();
     ```
+    
     - book() 함수가 호출되면
       - show function 오브젝트 생성
       - show의 [[Scope]] 에 스코프 설정 (대괄호 2개는 엔진이 설정하는 프로퍼티를 뜻한다.)
@@ -86,15 +88,15 @@ category: javascript
   - resolutation 의 사전적 의미: 해결, 결정
     - 결정도 시맨틱적으로 맞음
     - 시멘틱: 코드 조각의 의미를 나타낸다.
-  ```javascript
-  var point = 100;
-  function getPoint() {
-    var point = 200;
-    return point;
-  }
-  var result = getPoint(); // scope이 getPoint 내부에 있기 때문에 point/200값을 return 한다.
-  console.log(result); // 200
-  ```
+    ```javascript
+    var point = 100;
+    function getPoint() {
+        var point = 200;
+        return point;
+    }
+    var result = getPoint(); // scope이 getPoint 내부에 있기 때문에 point/200값을 return 한다.
+    console.log(result); // 200
+    ```
 - 스코프 용도
   - 식별자 해결을 위한 수단, 방법
     - 스코프가 목적이 아니다.
