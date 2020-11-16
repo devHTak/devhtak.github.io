@@ -4,7 +4,7 @@ title: (Javascript ES5) Function Object
 summary: Effective Java 3판 공부
 author: devhtak
 date: '2020-11-15 19:41:00 +0900'
-category: java
+category: javascript
 ---
 
 ### Function Object
