@@ -52,15 +52,15 @@ category: javascript
     - arguments, caller, length, name 프로퍼티
   ```
   sports = {
-    arguments: {},
-    caller: {},
-    length: 0,
-    name: "sports",
-    prototype: {
-      constructor: sports,
-      __proto__: Object.prototype
-    },
-    __proto__: Function.prototype
+      arguments: {},
+      caller: {},
+      length: 0,
+      name: "sports",
+      prototype: {
+          constructor: sports,
+          __proto__: Object.prototype
+      },
+      __proto__: Function.prototype
   }
   ```  
 - Function Object 구조
@@ -142,7 +142,7 @@ category: javascript
        - 엔진이 function 키워드를 만나면 function object를 생성하고, 함수 이름을 functino object 이름으로 사용
        ```javascript
        function book(value1, value2) {
-        return value1 + ", " + value2;
+         return value1 + ", " + value2;
        }
        console.log(book("JS", "DOM")); // JS, DOM 출려
        ```       
@@ -157,9 +157,9 @@ category: javascript
        
        ```javascript
        var getBook = function(title) {
-        return title;
-      }
-      console.log(getBook("JS Book"); // JS Book 출력
+           return title;
+       }
+       console.log(getBook("JS Book"); // JS Book 출력
        ```
     - new Function(param, body) 문자열로 작성
   - 엔진 해석 방법
@@ -173,23 +173,23 @@ category: javascript
       - 기준 2. 표현식을 순서대로 해석한다. 작성한 순서대로 해석한다.
         - var value = 123;
         - var book = function() {};
-    ```javascript
-    <script type="application/javascript">
-      function book() {
-        console.log(title); // undefined
-        console.log(readBook); // undefined
-        console.log(getBook); // function object
-        debugger;
-        var title = "JS Book";
-        function getBook() {
-          return title;
-        };
-        var readBook = function(){};
-        getBook();
-      }
-      book();
-    </script>
-    ```
+      ```javascript
+      <script type="application/javascript">
+          function book() {
+              console.log(title); // undefined
+              console.log(readBook); // undefined
+              console.log(getBook); // function object
+              debugger;
+              var title = "JS Book";
+              function getBook() {
+                  return title;
+              };
+              var readBook = function(){};
+              getBook();
+          }
+          book();
+      </script>
+      ```
       - 엔진 처리 상태
         - 마지막줄에 book() 함수를 호출하면 엔진이 book 함수를 바라본다. debugger에서 실행이 멈춘다.
         - title, readBook은 undefined, getBook은 function objec
@@ -228,7 +228,7 @@ category: javascript
   var result = book();
   console.log(result); // Hoisting
   function book() {
-    return "Hoisting";
+      return "Hoisting";
   };
   ```
   - 초기화 단계에서 값이 있으면 초기화하지 않는다.
@@ -239,10 +239,10 @@ category: javascript
   var result = book();
   console.log(result); // Hoisting
   function book() {
-    return "Hoisting";
+      return "Hoisting";
   }
   book = function() {
-    return "함수 표현식";
+      return "함수 표현식";
   }
   result = book();
   console.log(result); // 함수 표현식
@@ -258,35 +258,35 @@ category: javascript
     - 1번째 함수 표현식이 실행된다.  이유는 함수선언문 초기화 할때 2번째 함수 선언문에 function object가 생성되고, 변수 선언 당시에는 그대로 유지된다. 하지만 코드 실행 단계에서 1번째 함수 표현식으로 function object가 생성된 후 함수 호출이 되기 때문에 1번째 함수 표현식이 실행된다.
   ```javascript
   function first() {
-    console.log("first - first");
+      console.log("first - first");
   };
   first(); // first - second 출력
   function first() {
-    console.log("first - second");
+      console.log("first - second");
   };
 
   var second = function(){
-    console.log("second - first");
+      console.log("second - first");
   };
   second(); // second - first 출력
   function second() {
-    console.log("second - second");
+      console.log("second - second");
   };
   
   function third() {
-    console.log("third - first");
+      console.log("third - first");
   };
   third(); // third - first 출력
   var third = function() {
-    console.log("third - second");
+      console.log("third - second");
   };
 
   var fourth = function() {
-    console.log("fourth - first");
+      console.log("fourth - first");
   };
   fourth(); // fourth - first 출력
   function fourth() {
-    console.log("fourth - second");
+      console.log("fourth - second");
   };
   ```
 - Overloading(오버로딩)
