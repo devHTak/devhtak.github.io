@@ -1,7 +1,7 @@
 ---
 layout: post
 title: (Javascript ES5) Function Object
-summary: Effective Java 3판 공부
+summary: 인프런 강좌_자바스크립트 중고급: 근본 핵심 이해
 author: devhtak
 date: '2020-11-15 19:41:00 +0900'
 category: javascript
@@ -300,3 +300,5 @@ category: javascript
   - 함수를 호출하면 파라미터 수와 값 타입이 같은 함수가 호출된다.
   - JS는 오버로딩을 지원하지 않는다.
     - JS는 파라미터 수와 값 타입을 구분하지 않고 {name: value} 형태로 저장하기 때문이다.
+
+** 출처1. 인프런 강좌_자바스크립트 중고급: 근본 핵심 이해
