@@ -130,7 +130,99 @@ category: javascript
     - 실행 시점에 스코프 결정
       - with 문 : strict 모드에서 에러 발생
       - eval() 함수: 동적변수를 선언할때 eval 함수를 사용한다. 보안에 문제가 있다.
- 
+
+### Execution Context
+  
+  - Execution Context
+    - 함수가 실행되는 영역, 묶음
+    - 함수 코드를 실행하고 실행 결과를 저장
+    - 스펙 상의 사양 (엔진 처리 과정)
+    - 실행 콘텍스트 스펙
+  ```javascript
+  function music(title) {
+      var musicTitle = title;
+  }
+  music("음악");
+  ```
+  - music("음악"); 으로 함수가 호출하면 엔진은 실행 콘텍스트를 생성하고 실행 컨텍스트 안으로 이동합니다.
+  - 실행 컨텍스트 실행 단계
+    - 준비 단계, 초기화 단계, 코드 실행 단계
+  - Execution Context 생성 시점: 실행 가능한 코드를 만났을 때
+  - 실행 가능한 코드 유형: 함수 코드, 글로벌 코드, eval 코드
+  - 코드 유형을 분리한 이유
+    - Execution Context에서 처리 방법과 실행 환경이 다르기 때문이다.
+    - 함수 코드 -> Lexical 환경, 글로벌 코드 -> Global 환경 , eval 코드 -> 동적 환경
+- Execution Context 상태 컴포넌트
+  - Execution Context 상태를 위한 오브젝트 -> Execution Context 안에 생성
+  - 상태 컴포넌트 유형
+    - Lexical Execution Component(LEC)
+    - Variable Execution Component(VEC)
+    - This Binding Component(TBC)
+  ```
+  Execution Context(EC): {
+      Lexical Execution Component(LEC): {
+          Environment Record(ER): { point: 100 },
+          Object Lexical Environment Reference(OLER): {
+              title: "book", getTitle: function() {}
+          }
+      }
+      Variable Execution Component(VEC): {}
+      This Binding Component(TBC): {}
+  }
+  ```
+  - Lexical Execution Component
+    - 함수와 변수의 식별자 해결을 위한 환경 설정
+    - 함수 초기화 단계에서 해석한 함수와 변수를 {name: value} 형태로 저장, 이름으로 함수와 변수를 검색하게 된다.
+      - 초기화 단계에서 함수 선언문은 {name: function object} 형태 / 변수, 함수 표현식은 {name: undefined} 형태  
+    - 함수 밖의 함수와 변수 참조 환경을 설정한다. 함수 밖의 함수와 변수를 사용할 수 있게끔 한다.
+    - function, with, try-catch를 만났을 때 Lexical Execution Component 생성 
+    - 컴포넌트 구성
+      - Environment Record
+        - Environment Record에 함수안의 함수와 변수를 기록
+        - Object Lexical Environment Reference에 function object의 [[Scope]]를 설정
+        - 따라서 함수 안과 밖의 함수와 변수를 사용할 수 있게 됨
+      - Object Lexical Environment Reference
+        - Scope와 실행중인 함수가 Context 형태이므로 스코프의 변수와 함수를 별도의 처리 없이 즉시 사용할 수 있다.
+        - Execution Context에서 함수 안과 밖의 함수, 변수를 사용할 수 있으므로 함수와 변수를 찾기 위해 Execution Context를 벗어 나지 않아도 된다.
+  - Variable Execution Context
+    - Execution Context 초기화 단계에서 LEC와 함께 설정, 초기값 복원할 때 사용하기 위해 함께 설정된다. 
+    - 코드 실행되며 변경되는 값들은 LEC에 저장되고 초기값은 VEC에 저장된다. VEC에 있는 초기값은 초기화할 때 사용되며 with 문에서 사용된다.
+    - 함수 코드가 실행되면 실행 결과를 LEC에 설정하며 초기값이 변하게 되므로 이를 유지하기 위한 것이 된다.
+
+- Execution Context 실행 과정
+  
+```javascript
+var base = 200;
+function getPoint(bonus) {
+    var point = 100;
+    return point + base + bonus;
+}
+console.log(getPoint(50)); // 350 출력
+```
+  - getPopint function object 생성
+    - 오브젝트의 [[Scope]]에 Global Object 설정
+  - base 선언
+  - base에 200 할당 한 후, getPoint()함수 호출
+  - 엔진은 EC를 생성하고, EC 안으로 이동합니다.
+    - 준비단계 1. Component를 생성하여 EC에 첨부. LEC, VEC, TBC
+    - 준비단계 2. ER을 생성하여 LEC에 첨부 - 함수 안의 함수, 변수를 바인딩한다.
+    - 준비단계 3. OLER을 생성하여 LEC에 첨부하고, function object의 [[Scope]]를 설정
+    ```
+    EC: {
+      LEC= { ER: {}, OLER: { base: 200 } }, VEC: { }, TBC: {}
+    }
+    ```
+    - 초기화 단계 1. 호출한 함수의 파라미터 값을 호출된 함수의 파라미터 이름에 매핑. 환경 레코드에 작성 (변수 선언 전 파라미터가 먼저 설정된다.)
+    - 초기화 단계 2. 함수 선언문을 function object로 생성
+    - 초기화 단계 3. 함수 표현식과 변수에 초기값 설정. 현재까지는 외부에 실행 상태를 제공하지 않는다.
+    ``` 
+    EC: {
+      LEC= { ER: {bonus: 70, point: undefined}, OLER: { base: 200 } }, VEC: { }, TBC: {}
+    }    
+    ```
+    - 실행 단계 1. 함수 안의 코드를 실행합니다. var point = 100;
+    - 실행 단계 2. EC 안에서 관련된 함수와 변수를 사용할 수 있습니다.
+  - 해당 과정은 메모리에서 진행한다.    
 ** 출처1. 인프런 강좌_자바스크립트 중고급: 근본 핵심 이해
 
 ** 출처2. https://velog.io/@imacoolgirlyo/JS-%EC%9E%90%EB%B0%94%EC%8A%A4%ED%81%AC%EB%A6%BD%ED%8A%B8%EC%9D%98-Hoisting-The-Execution-Context-%ED%98%B8%EC%9D%B4%EC%8A%A4%ED%8C%85-%EC%8B%A4%ED%96%89-%EC%BB%A8%ED%85%8D%EC%8A%A4%ED%8A%B8-6bjsmmlmgy
