@@ -7,7 +7,7 @@ date: '2020-11-15 19:41:00 +0900'
 category: javascript
 ---
 
-### Execution Context
+### 
 
   - 실행 컨텍스트란 자바스크립트 코드가 실행되고 연산되는 범위를 나타내는 추상적인 개념으로 코드가 실행된다면 실행 컨텍스트 내부에서 실행되고 있는 것이다.
   - 자바스크립트 엔진은 코드를 실행하기 위해서 여러가지 정보를 알아야 한다.
@@ -180,7 +180,7 @@ category: javascript
       - Environment Record
         - Environment Record에 함수안의 함수와 변수를 기록
         - Object Lexical Environment Reference에 function object의 [[Scope]]를 설정
-        - 따라서 함수 안과 밖의 함수와 변수를 사용할 수 있게 됨
+        - 따라서 함수 안과 밖의 함수와 변수를 사용할 수 있게 됨        
       - Object Lexical Environment Reference
         - Scope와 실행중인 함수가 Context 형태이므로 스코프의 변수와 함수를 별도의 처리 없이 즉시 사용할 수 있다.
         - Execution Context에서 함수 안과 밖의 함수, 변수를 사용할 수 있으므로 함수와 변수를 찾기 위해 Execution Context를 벗어 나지 않아도 된다.
@@ -222,7 +222,110 @@ console.log(getPoint(50)); // 350 출력
     ```
     - 실행 단계 1. 함수 안의 코드를 실행합니다. var point = 100;
     - 실행 단계 2. EC 안에서 관련된 함수와 변수를 사용할 수 있습니다.
-  - 해당 과정은 메모리에서 진행한다.    
+  - 해당 과정은 메모리에서 진행한다.
+
+- Environment Record(환경 레코드)
+  - 기록 대상에 따라 다르기 때문에 Environment Record를 구분한다.
+  - Declarative Environment Record(선언적 환경 레코드)
+    - function, 변수, catch 문에서 사용한다.
+    - 앞 절에서 환경 레코드에 설정한다고 했는데 실제로 DER에 설정된다.
+  - Object Environment Record(오브젝트 환경 레코드)
+    - 글로벌 함수와 변수, with 문에서 사용
+    - 정적이 아니라 동적이기 때문
+- Global Environment
+```
+EC:{
+    GE: {
+        ER: { OER: Global Object },
+        OLER: null
+    }
+}
+```
+  - Global Object에서 사용
+  - Lexical Environment Component와 형태가 같음
+  - 동적으로 함수와 변수 바인딩
+    - 함수에서 var 키워드를 사용하지 않고 변수를 선언하면 글로벌 오브젝트에 설정되기 때문
+    - 이런 이유로 오브젝트 환경 레코드 사용
+  - 외부 렉시컬 환경 참조 값은 null
+
+- This Binding COmponent
+  - 목적
+    - this로, 함수를 호출한 오브젝트의 프로퍼티에 액세스한다.
+    - 예) this.propertyName
+  - Access Mechanism
+    - obj.book() 형태에서 this로 obj를 참조할 수 있도록 This Binding Component에 obj 참조를 설정
+    - obj의 프로퍼티가 변경되면 동적으로 참조 (설정이 아닌 참조)
+  - 실행 과정
+  ```javascript
+  var obj = {point: 100};
+  obj.getPoint = function() {
+      return this.point;
+  }
+  console.log(obj.getPoint()); // 100
+  ```
+    - 마지막 줄에서 getPoint() 함수 호출
+    - Execution Context 생성
+    - 3개의 Component 생성( LEC, VEC, TBC )
+    - This Binding Component에 getPoint()에서 this로 obj의 프로퍼티를 사용할 수 있도록 바인딩
+      - 초기화 단계. 파라미터, 함수 선언문, 변수 선언이 없다.
+      - 실행 단계 1. return this.point 실행
+      - 실행 단계 2. TBC에서 point 검색 - getPoint() 함수를 호출한 오브젝트가 TBC에 참조된 상태
+      - 실행 단계 3. TBC에 point 프로퍼티가 있으므로 100을 반환
+      - 추가 설명: obj.getPoint()에서 obj의 프로퍼티가 TBC에 바인딩되도록 의도적으로 설계해야 한다.
+  ```
+  EC: {
+    LEC= { ER: { DER: {}, OER: {}}, OLER: {},
+    VEC: {},
+    TBC: {
+      point: 100, getPoint: function(){}
+    }
+  }
+  ```
+- 호출 스택 (Call Stack)
+  - Execution Context의 논리적 구조
+  - FILO 순서
+    - 함수가 호출되면 스택의 가장 위에 EC가 위치하게 된다.
+    - 다시 함수 안에서 함수를 호출하면 호출된 함수의 EC가 스택의 가장 위에 놓이게 된다.
+    - 함수가 종료되면 스택에서 빠져 나옴(FILO)
+  - 가장 아래는 Global Object의 함수가 위치한다.
+  ```javascript
+  function one() { two(); console.log(1); }
+  function two() { three(); console.log(2); }
+  function three() { console.log(3); }
+  one();
+  ```
+  //3 2 1 순으로 출력된다.
+
+- 파라미터 매핑
+  - 함수 호출
+    - 함수가 호출되면 3개의 파라미터 값을 EC로 넘겨 줍니다.
+      - 함수를 호출한 오브젝트
+      - 함수 코드
+      - 호출한 함수의 파라미터 값
+    - 함수를 호출한 오브젝트를 TBC에 설정하여 this로 참조
+    - 함수 코드
+      - function object의 [[Code]]에 설정되어 있음
+    - 호출한 함수의 파라미터 값
+      - 호출된 함수의 Argument object에 설정
+  - 파라미터 값 매핑
+    - 호출한 함수에서 넘겨 준 파라미터 값을 호출된 함수의 파라미터 작성 순서에 맞추어 값을 매핑하는 것
+  - 엔진 처리 관점
+    - EC로 넘겨준 파라미터 값과 function object의 [[FormalParameters]]에 작성된 이름에 값을 매핑하고 결과를 DEC에 설정하는 것
+- 파라미터 이름에 값 매핑 방법
+```javascript
+var obj = {};
+obj.getTotal = function(one, two) {
+    return one + two;
+}
+console.log(obj.getTotal(11, 22, 77));
+```
+  - getTotal 오브젝트의 [[FormalParameters]]에서 호출된 함수의 파라미터 이름을 구합니다. 파라미터 이름은 ["one", "two"] 형태로 [[FormalParameters]]는 function object를 생성할 때 설정한다.
+  - 파라미터 이름 배열을 하나씩 읽는다.
+  - 파라미터에서 index 번째의 값을 구한다. 인덱스에 값이 없으면 undefined 반환 (오류가 발생하는 것은 아니다.)
+  - 파라미터 이름의 이름과 값을 DER에 {one: 11, two: 22} 형태로 설정한다. 같은 이름이 있으면 값이 대체된다.
+  - 파라미터 이름을 전부 읽을 때까지 배열을 읽고, 값을 구하는 작업을 반복한다.
+  - 여기서 77(값)은 매핑되는 파라미터 이름이 없어 DER에 저장되지는 않지만 함수에 Argument Object에는 들어가게 된다.
+
 ** 출처1. 인프런 강좌_자바스크립트 중고급: 근본 핵심 이해
 
 ** 출처2. https://velog.io/@imacoolgirlyo/JS-%EC%9E%90%EB%B0%94%EC%8A%A4%ED%81%AC%EB%A6%BD%ED%8A%B8%EC%9D%98-Hoisting-The-Execution-Context-%ED%98%B8%EC%9D%B4%EC%8A%A4%ED%8C%85-%EC%8B%A4%ED%96%89-%EC%BB%A8%ED%85%8D%EC%8A%A4%ED%8A%B8-6bjsmmlmgy
