@@ -288,8 +288,8 @@ public enum ExtendedOperation implements Operation {
     }
   }
   ```
-    - test1은 <T extends Enum<T> & Operation>을 통해 열거 타입이며 Operation 구현체를 입력받는 것을 명시한다.
-    - test2는 와일드 카드 타입 Collection<? extends Operation>을 넘기는 방법이다.
+  - test1은 <T extends Enum<T> & Operation>을 통해 열거 타입이며 Operation 구현체를 입력받는 것을 명시한다.
+  - test2는 와일드 카드 타입 Collection<? extends Operation>을 넘기는 방법이다.
 
 ### ITEM 39. 명명 패턴보다 애너테이션을 사용하라
 
@@ -471,3 +471,5 @@ public int hashCode() {
   ```
 
 ### 정의하려는 것이 타입이라면 마커 인터페이스를 사용하라.
+- 마커 인터페이스
+  
