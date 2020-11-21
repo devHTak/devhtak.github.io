@@ -255,10 +255,10 @@ public enum BasicOperation implements Operation {
 public enum ExtendedOperation implements Operation {
     EXP("^") {
         public double apply(double x, double y) { return Math.pow(x, y); }
-    }
+    },
     REMAINDER("%") {
         public double apply(double x, double y) { return x % y; }
-    }
+    };
     
     private final String symbol;
     Extended(String symbol) { this.symbol = symbol; }
@@ -285,7 +285,7 @@ public enum ExtendedOperation implements Operation {
   private static void test2(Collection<? extends Operation> opSet, double x, double y) {
   	for(Operation op : opSet) { 
         	System.out.println("%f %s %f = %f", x, op, y, op.apply(x, y));
-    	}
+  	}
   }
   ```
   - test1은 <T extends Enum<T> & Operation>을 통해 열거 타입이며 Operation 구현체를 입력받는 것을 명시한다.
