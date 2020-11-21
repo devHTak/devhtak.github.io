@@ -262,7 +262,7 @@ public enum ExtendedOperation implements Operation {
     
     private final String symbol;
     Extended(String symbol) { this.symbol = symbol; }
-     @Override 
+    @Override 
     public String toString() { return symbol; }
 }
 ```
@@ -283,9 +283,9 @@ public enum ExtendedOperation implements Operation {
   }
   
   private static void test2(Collection<? extends Operation> opSet, double x, double y) {
-    for(Operation op : opSet) { 
-        System.out.println("%f %s %f = %f", x, op, y, op.apply(x, y));
-    }
+  	for(Operation op : opSet) { 
+        	System.out.println("%f %s %f = %f", x, op, y, op.apply(x, y));
+    	}
   }
   ```
   - test1은 <T extends Enum<T> & Operation>을 통해 열거 타입이며 Operation 구현체를 입력받는 것을 명시한다.
@@ -442,7 +442,7 @@ public enum ExtendedOperation implements Operation {
   - 결론
     - 애너테이션으로 할 수 있는 일을 명명 패턴으로 처리할 이유는 없다.
     
-### @Override 애너테이션을 일관되게 사용하라.
+### ITEM 40. @Override 애너테이션을 일관되게 사용하라.
 
 - @Override
   - 메서드 선언에만 달 수 있으며, 이 Annotation을 일관되게 사용하여 상위 타입의 메서드를 재정의했음을 뜻한다.
@@ -470,6 +470,18 @@ public int hashCode() {
   }
   ```
 
-### 정의하려는 것이 타입이라면 마커 인터페이스를 사용하라.
+### ITEM 41. 정의하려는 것이 타입이라면 마커 인터페이스를 사용하라.
 - 마커 인터페이스
+  - 자신을 구현하는 클래스가 특정 속성을 가짐을 표시해주는 인터페이스
+  - 예시) Serializable 인터페이스는 자신을 구현한 클래스의 인스턴스는 ObjectOutputStream을 통해 쓸(write)수 있다고 즉, 직렬화(serialization)할 수 있다고 알려준다.
+
+- 마커 인터페이스의 장점(vs 마커 애너테이션)
+  - 마커 인터페이스는 이를 구현한 클래스의 인스턴스들을 구분하는 타입으로 쓸 수 있으나, 마커 애너테이션은 그렇지 않다.
+    - 마커 인터페이스 또한 타입이기 때문에 런타임에만 발견될 오류를 컴파일 타임에 잡을 수 있다.
+  - 적용 대상을 더 정밀하게 지정할 수 있다는 것이다.
+    - 마커 애노테이션은 @Target ElementType.TYPE으로 선언한 애너테이션은 모든 타입(클래스, 인터페이스, 열거 타입, 애너테이션)에 달 수 있다.
+
+- 결론
+  - 클래스와 인터페이스 외의 프로그램 요소를 마킹해야 할 때 애너테이션을 쓸 수밖에 없다.
+  - 다만 마킹이 된 객체를 매개변수로 받는 메서드를 작성할 일이 있는 경우 마커 인터페이스를 사용하는 편이 좋다.
   
