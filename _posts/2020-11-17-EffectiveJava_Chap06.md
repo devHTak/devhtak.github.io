@@ -295,11 +295,179 @@ public enum ExtendedOperation implements Operation {
 
 - 명명 패턴 단점
   - jUnit3는 메소드 앞에 test를 붙여 테스트 메서드임을 알려주는 명명패턴을 사용했다.
-  - 만약 오타가 발생하면 jUnit은 메서드를 무시한체 지나갔기 때문에 테스트가 실행됐는 지 확인할 수 없다.
-  - 매개변수를 전달할 마땅한 방법이 없다.
+  - 단점1. 만약 오타가 발생하면 jUnit은 메서드를 무시한체 지나갔기 때문에 테스트가 실행됐는 지 확인할 수 없다.
+  - 단점2. 올바른 프로그램 요소에서만 사용되리라 보증할 방법이 없다.
+  - 단점3. 매개변수를 전달할 마땅한 방법이 없다. 
 
 - Annotation을 사용하자
-  - Meta Annotation : Annotation 선언에 다는 Annotation
-    - @Retention
-    - @Target
+  - 매개변수를 받지 않는 @Test Annotation
+  ```java
+  @Retetion(RetentionPolicy.RUNTIME)
+  @Target(ElementType.METHOD)
+  public @interface Test {}
+  ```
+    - Meta Annotation : Annotation 선언에 다는 Annotation
+      - @Retention(RetentionPolicy.RUNTIME) : @Test가 런타임에도 유지되어야 한다는 의미
+      - @Target(ElementType.METHOD) : @Test 애너테이션은 메소드 선언에만 사용되어야 한다는 의미
+    - 사용 예
+    ```java
+    public class SampleTest {
+    	  @Test public static void m1() {} // 성공
+	  public static void m2() {} // 실행하지 않는다.
+  	  @Test public static void m3() { throw new RuntimeException("실패"); } // 실패
+  	  public static void m4() {} // 실행하지 않는다.
+	  @Test public void m5() {} // 잘못된 사용 - 정적 메서드가 아니다.
+	  public static void m6() {} // 실행하지 않는다.
+	  @Test public static void m7() { throw new RuntimeException("실패"); } // 실패
+	  public satic void m8() {} // 실행하지 않는다.
+    }
+    pulbic class SampleMain() {
+    	  public static void main(String[] args) {
+	  	  int tests = 0;
+		  int passed = 0;
+		  Class<?> testClass = Class.forName(args[0]); 
+		  for(Method m : testClass.getDeclaredMethods()) {
+			  if(m.isAnnotationPresent(Test.class)) {
+				  tests++;
+				  try {
+				  	  m.invoke(null);
+					  passed++;
+				  } catch(InvocationTargetException wrappedException) {
+					  Throwable exc = wrappedException.getCause();
+					  System.out.println(m + "실패: " + exc);
+				  } catch(Exception e) {
+					  System.out.println("잘못 사용한 @Test: " + m);
+				  }
+			  }
+		  }
+		  System.out.println("성공: %d 실패: %d", passed, tests-passed);
+	  }
+    }
+    ```
+    - m2, 4, 6, 8은 실행되지 않고, m1 는 성공, m3, 7은 실패로 떨어진다. m5 는 정적 메서드가 아니기 때문에 잘못 사용한 예가 된다.
   
+  - 매개변수를 받는 Annotation
+  ```java
+  @Retetion(RetentionPolicy.RUNTIME)
+  @Target(ElementType.METHOD)
+  public @interface ExceptionTest {
+  	Class<? extends Throwable> value();
+  }
+  ```
+    - 매개변수 타입을 <? extends Throwable> 와일드 카드 타입으로 선언했다. 
+      - Throwable을 확장한 클래스의 Class 객체라는 의미를 담는다.
+    ```java
+    public class SampleTest {
+    	  @ExceptionTest(ArithmeticException.class) 
+	  public static void m1() {
+	  	int i = 0; i /= i; // 예외 발생
+	  } // 성공
+	  @ExceptionTest(ArithmeticException.class) 
+	  public static void m2() {
+	 	int[] a = new int[0];
+		int i = a[1]; // OutOfIndex 발생
+	  } // 실패, ArithmeticException 이 아니다.
+	  @ExceptionTest(ArithmeticException.class) 
+	  public static void m3() {} // 실패
+    }
+    pulbic class SampleMain() {
+    	  public static void main(String[] args) {
+	  	  int tests = 0;
+		  int passed = 0;
+		  Class<?> testClass = Class.forName(args[0]); 
+		  for(Method m : testClass.getDeclaredMethods()) {
+			  if(m.isAnnotationPresent(Test.class)) {
+				  tests++;
+				  try {
+				  	  m.invoke(null);
+					  System.out.println(m + "실패: 아무런 예외가 발생하지 않는다.");
+				  } catch(InvocationTargetException wrappedException) {
+					  Throwable exc = wrappedException.getCause();
+					  Class<? extends Throwable> excType = m.getAnnotation(ExceptionTest.class).value();
+					  if(excType.isInstance(exc) {
+					  	passed++;
+					  } else {
+					  	System.out.println(m + "실패. 기대한 예외: " + excTYpe.getName() + " 발생한 예외: " + exc);
+					  }
+				  } catch(Exception e) {
+					  System.out.println("잘못 사용한 @Test: " + m);
+				  }
+			  }
+		  }
+		  System.out.println("성공: %d 실패: %d", passed, tests-passed);
+	  }
+    }
+    ``` 
+    - 애너테이션 매개변수의 값을 추출하여 테스트 메서드가 올바른 예외를 던지는지 확인한다.
+  - 배열을 사용하여 여러 value 를 받는 Annotation
+   ```java
+  @Retetion(RetentionPolicy.RUNTIME)
+  @Target(ElementType.METHOD)
+  public @interface ExceptionTest {
+  	Class<? extends Throwable>[] value();
+  }
+  ```
+  ```java
+  @ExceptionTest( {ArithmeticException.class, IndexOutOfBoundsException.class} )
+  public static void test() {...}
+  ```
+  - @Repeatable을 사용한 annotation (반복 가능 Annotation)
+    - Java 8 부터는 여러개의 매개변수를 받는 방법을 배열로 선언하는 것이 아닌 @Repeatable 메타 애너테이션을 사용하여 할 수 있다.
+    - 컨테이너 애너테이션을 하나 더 정의하여 사용한다.
+    ```java
+    @Retetion(RetentionPolicy.RUNTIME)
+    @Target(ElementType.METHOD)
+    @Repeatable(ExceptionTestContainer.class)
+    public @interface ExceptionTest {
+    	  Class<? extends Throwable> value();
+    }
+    
+    @Retetion(RetentionPolicy.RUNTIME)
+    @Target(ElementType.METHOD)
+    public @interface ExceptionTest {
+  	  ExceptionTest[] value();
+    }
+    ```
+    ```java
+    @ExceptionTest(IndexOutOfBoundsException.class)
+    @ExceptionTest(NullPointerException.class) 
+    public static void doublyBad() { ... }
+    ```
+    - 반복 가능 Annotation을 처리할 때에는 하나만 달았을 때와 구분하기 위해 컨테이너 애너테이션 타입이 적용된다.
+      - getAnnotationByType 메서드는 이 둘을 구분하지 않아 @ExceptionTest, @ExceptionTestContainer를 모두 가져온다.
+      - isAnnotationPresent는 이 둘을 구분한다.
+      - 만약 @ExceptionTest를 여러번 달면 m.isAnnotationPresent(ExceptionTest.class)는 false
+      - 만약 @ExceptionTest를 한번 달면 m.isAnnotationPresent(ExceptionTestContainer.class)는 false
+  
+  - 결론
+    - 애너테이션으로 할 수 있는 일을 명명 패턴으로 처리할 이유는 없다.
+    
+### @Override 애너테이션을 일관되게 사용하라.
+
+- @Override
+  - 메서드 선언에만 달 수 있으며, 이 Annotation을 일관되게 사용하여 상위 타입의 메서드를 재정의했음을 뜻한다.
+  - 이 애너테이션을 일관되게 사용하면 여러 가지 악명 높은 버그를 예방해준다.
+
+- 예제
+```java
+public boolean equals(Bigram b) {
+	return b.first == this.first && b.second == this.second;
+}
+public int hashCode() {
+	return 31 * this.first + this.second;
+}
+```
+  - equals를 재정의(overriding)한 것이 아닌 다중정의를 했다(overloading)
+  - 만약 @Override를 붙였다면 파라미터에 타입이 다르다는 것을 컴파일러가 알려준다.
+  - 예외는 구체 클래스에서 상위 클래스의 추상 메서드를 재정의한 경우에는 이 애너테이션을 달지 않아도 된다.
+  ```java
+  @Override
+  public boolean equals(Object o) {
+  	if( !(o instanceof Bigram) )
+		return false;
+	Bigram bigram = (Bigram)o;
+	return bigram.first == first && bigram.second == second;
+  }
+  ```
+
+### 정의하려는 것이 타입이라면 마커 인터페이스를 사용하라.
