@@ -240,11 +240,138 @@ console.log(obj.getPoint()); // 100
   }
   ```
   
-  
-  
-  
-  
-  
-  
-  
-  
+### this와 prototype
+- this로 인스턴스 참조
+  - this로 메소드를 호출한 인스턴스 참조
+    - var obj = new Book();
+    - obj.get() 형태에서 this로 obj 참조
+  - 인스턴스에서 메소드 호출 방법
+    - prototype에 연결된 프로퍼티가 __proto__에 설정되며 인스턴스 프로퍼티가 된다.
+    - this.prototype.setPoint() 형태가 아닌 this.setPoint()형태로 
+
+- this와 prototype
+```javascript
+function Book() {
+    console.log("1: " + this.point);
+};
+Book.prototype.getPoint = function() {
+    this.setPoint();
+    console.log("2: " + this.point);
+}
+Book.prototype.setPoint = function() {
+    this.point = 100;
+    console.log("3 : " + this.point);
+}
+var obj = new Book(); // 1: undefined
+obj.getPoint(); // 3: 100 <br/> 2: 100
+```
+  - console.log("1: " + this.point);
+    - 생성자 함수에서 this는 생성하는 인스턴스 참조
+    - 생성하는 인스턴스에 point가 없더라도 에러가 나지 않고 undefined를 반환
+  - obj.getPoint(); 
+    - this가 메소드를 호출한 인스턴스 참조
+    - 즉, 메소드 앞에 작성한 인스턴스 참조
+  - this.setPoint();
+    - this가 인스턴스를 참조하며 인스턴스에 있는 setPoint() 호출
+  - this.point = 100;
+    - this가 인스턴스를 참조하며 인스턴스의 point 프로퍼티에 100을 할당
+
+- prototype 메소드 직접 호출
+```javascript
+function Book(point) { this.point = point; };
+Book.prototype.getPoint = function() { return this.point; };
+var obj = new Book(100);
+console.log(obj.getPoint()); // 100
+console.log(Book.prototype.getPoint()); // undefined
+```
+  - Book.prototype.getPoint();
+    - 인스턴스를 생성하지 않고 직접 메서드 호출
+  - Book.prototype을 getPoint()에서 this로 참조
+  - obj 인스턴스에는 point 가 있지만, Book.prototype에 point가 없으므로 undefined를 반환한다. // prototype 밖에 point가 있다.
+    - 인스턴스를 생성하여 메소드를 호출하는 것과 직접 prototype을 작성하여 호출하는 것의 차이
+    
+### prototype 프로퍼티 공유 시점
+- 프로퍼티 공유 시점
+  - 사용하는 시점에 prototype 의 프로퍼티 공유
+  - prototype의 프로퍼티로 인스턴스를 생성하지만 인스턴스의 프로퍼티는 원본 prototype의 프로퍼티를 참조
+    - 복사하여 인스턴스에 갖고 있는 개념이 아님 (참조)
+  - 인스턴스의 메소드를 호출하면 원본 prototype의 메소드를 호출
+  - 원본 prototype에 메소드를 추가하면 생성된 모든 인스턴스에서 추가한 메소드 사용가능
+    - 원본 prototype의 메소드를 호출하기 때문
+
+```javascript
+function Book() { this.point = 100; };
+var obj = new Book(); 
+console.log(obj.getPoint); // undefined
+
+Book.prototype.getPoint = function() { return this.point; };
+var result = obj.getPoint();  
+console.log(result); // 100
+```
+  - var obj = new Book();
+    - 인스턴스를 생성하여 obj에 할당
+  - console.log(obj.getPoint);
+    - obj 인스턴스에 getPoint()가 없음
+  - Book.prototype.getPoint = function() {}
+    - Book.prototype에 getPoint() 추가. 앞에서 생성한 obj 인스턴스에서 getPoint()를 사용할 수 있다.
+  - var result = obj.getPoint(); 
+    - getPoint()를 호출할 때 __proto__에 선언되어 있는지 확인한다.
+    - 인스턴스를 생성할 때는 obj에 getPoint가 없었지만
+    - getPoint()를 호출하기 전에 Book.prototype에 getPoint를 추가했으므로 호출할 수 있다.
+  - return this.point;
+    - 추가하더라도 this가 인스턴스를 참조
+  - 이런 특징을 활용하여 상황(필요)에 따라 메소드를 추가. 역동적인 프로그램 개발 
+
+### 인스턴스 프로퍼티
+- 인스턴스 프로퍼티
+```
+obj instance: {
+    point: 100,
+    getPoint: function() {},
+    __proto__= {
+        constructor: Book,
+        getPoint: function() {},
+        __proto__: Object
+    }
+}
+```
+  - prototype에 연결된 프로퍼티도 인스턴스 프로퍼티가 된다.
+    - 직접 인스턴스에 연결된 프로퍼티와 차이가 있다.
+    - getPoint와 __proto__: {getPoint}가 차이가 있다
+  - 인스턴스의 프로퍼티를 prototype으로 만든 인스턴스 프로퍼티보다 먼저 사용 
+    - getPoint가 __proto__: {getPoint} 보다 먼저 사용
+  - 인스턴스마다 값을 다르게 가질 수 있다.
+    - 인스턴스를 사용하는 중요 목적
+    
+```javascript
+function Book(point) { this.point = point; };
+Book.prototype.getPoint = function() { return this.point + 200; }
+var obj1 = new Book(100);
+obj1.getPoint = function() { return this.point; }
+console.log(obj1.getPoint()); // 100
+var obj2 = new Book(100);
+console.log(obj2.getPoint()); // 300
+```
+  - Book.prototype.getPoint = function() {}
+    - prototype에 getPoint를 연결
+    - 인스턴스의 getPoint()를 호출하면 300을 반환
+  - obj.getPoint = function() { }
+    - 생성한 인스턴스에 getPoint 를 연결
+    - 함수가 호출되면 100을 반환
+  - obj 인스턴스 구현형태
+    ```
+    obj instance: {
+        point: 100,
+        getPoint: function() {},
+        __proto__= {
+            constructor: Book,
+            getPoint: function() {},
+            __proto__: Object
+        }
+    }
+    ```
+  - obj.getPoint();
+    - obj 인스턴스의 getPoint() 호출
+    - prototype의 getPoint()가 호출되지 않고 바로 연결되어 있는 getPoint가 호출된다.
+  - 인스턴스 프로퍼티는 공유되지 않는다. (Book 인스턴스를 새로 생성하면 새로 생성한 instance는 공유하지 않는다.
+  - Class 접근 -> 설계가 중요, OOP 개념 이해 필요
