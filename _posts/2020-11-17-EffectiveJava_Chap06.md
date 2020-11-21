@@ -211,10 +211,10 @@ public enum Ensemble {
   ```java
   Map<Plant.LifeCycle, Set<Plant>> plantsByLifeCycle = new EnumMap<>(Plant.LifeCycle.class);
   for(Plant.LifeCycle lc : Plant.LifeCycle.values()) {
-    plantsByLifeCycle.put(lc, new HashSet<>());
+  	plantsByLifeCycle.put(lc, new HashSet<>());
   }
   for(Plant p: garden) {
-    plantsByLifeCycle.get(p.LifeCycle).add(p);
+  	plantsByLifeCycle.get(p.LifeCycle).add(p);
   }
   ```
   - 안전하지 않은 형변환을 사용하지 않으며, index 접근이 아닌 열거 타입을 key로 사용하기 때문에 안전하다.
