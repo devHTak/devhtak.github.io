@@ -314,8 +314,8 @@ public enum ExtendedOperation implements Operation {
     public class SampleTest {
     	  @Test public static void m1() {} // 성공
 	  public static void m2() {} // 실행하지 않는다.
-  	  @Test public static void m3() { throw new RuntimeException("실패"); } // 실패
-  	  public static void m4() {} // 실행하지 않는다.
+	  @Test public static void m3() { throw new RuntimeException("실패"); } // 실패
+	  public static void m4() {} // 실행하지 않는다.
 	  @Test public void m5() {} // 잘못된 사용 - 정적 메서드가 아니다.
 	  public static void m6() {} // 실행하지 않는다.
 	  @Test public static void m7() { throw new RuntimeException("실패"); } // 실패
