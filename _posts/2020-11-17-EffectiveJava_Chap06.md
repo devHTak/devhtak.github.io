@@ -129,37 +129,37 @@ public enum PayrollDay {
 ```java
 public enum PayrollDay {
     MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY(PayType.WEEKEND), SUNDAY(PayType.WEEKEND);
-  	private final PayType payType;
-	  PayrollDay(PayType payType) {
-		    this.payType = payType;
-	  }
+    private final PayType payType;
+    PayrollDay(PayType payType) {
+        this.payType = payType;
+    }
     int pay(int minutesWorked, int payRate) {
         return payType.pay(minutesWorked, payRate);
     }
-	  enum PayType {
-		    WEEKDAY {
-			      int overtimePay(int minsWorked, int payRate) {
-				        int overtimePay;
-				        if (minsWorked <= MINS_PER_SHIFT) {
-					          overtimePay = 0;
-				        } else {
-					        overtimePay = (minsWorked - MINS_PER_SHIFT) * payRate / 2;
-				        }
-				        return overtimePay;
-			      }
-		    },
-		    WEEKEND {
-			      int overtimePay(int minsWorked, int payRate) {
-				        return minsWorked * payRate / 2;
-			      }
-		    };
-    		abstract int overtimePay(int mins, int payRate);
-    		private static final int MINS_PER_SHIFT = 8 * 60; // 하루 8시간
+    enum PayType {
+        WEEKDAY {
+	    int overtimePay(int minsWorked, int payRate) {
+	        int overtimePay;
+		if (minsWorked <= MINS_PER_SHIFT) {
+		    overtimePay = 0;
+		} else {
+		    overtimePay = (minsWorked - MINS_PER_SHIFT) * payRate / 2;
+		}
+		return overtimePay;
+	    }
+	},
+	WEEKEND {
+	    int overtimePay(int minsWorked, int payRate) {
+	        return minsWorked * payRate / 2;
+	    }
+	};
+    	abstract int overtimePay(int mins, int payRate);
+    	static final int MINS_PER_SHIFT = 8 * 60; // 하루 8시간
         int pay(int minutesWorked, int payRate) {
             int basePay = minutesWorked * payRate;
             return basePay + overtimePay(minutesWorked, payRate);
         }
-	  }
+    }
 }
 ```
 - 열거 타입은 필요한 원소를 컴파일타임에 다 알수있는 상수 집합이라면 사용하자.
@@ -227,6 +227,7 @@ public enum Ensemble {
 ### ITEM 38. 확장할 수 있는 열거 타입이 필요하면 인터페이스를 사용하라
 
 - 열거 타입을 확장하기 위해서는 인터페이스를 사용하면 된다.
+
 ```java
 public interface Operation {
     double apply(double x, double y);
@@ -265,7 +266,9 @@ public enum ExtendedOperation implements Operation {
     public String toString() { return symbol; }
 }
 ```
+  
   - BasicOperation은 열거 타입이기 때문에 확장이 불가능하지만 Operation을 통해 확장이 가능하다.
+  
   ```java
   public static void main(String[] args) {
       double x = args[0]; double y = args[1];
