@@ -192,7 +192,7 @@ category: java
 	@SuppressWarnings("unchecked") E result = (E)elements[--size];
 	elements[size] = null; // 다쓴 참조 해제
 	return result;
-}
+  }
   ```
   - 해당 제네릭 타입을 사용하면 문제는 기본 타입을 사용하지 못한다. 박싱된 타입을 사용하여 우회하는 방법이 있다.
 
@@ -331,17 +331,3 @@ public static void main(String[] args) {
     - 실체화 불가 타입에는 사용할 수 없다.
       - List.class는 가능하나 List<String>.class, List<Integer>.class는 불가능하다. (즉 List.class 하나만 담긴다.)
       - 이를 해결하기 위해 슈퍼타입토큰을 사용할 수 있다.
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
