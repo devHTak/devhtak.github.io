@@ -41,6 +41,166 @@ category: java
   - 메서드 참조를 사용하면 가독성이 좋다. 다만 클래스, 메서드 이름이 길거나 할 때에는 메서드 참조를 사용할 때 가독성이 더 떨어질 수도 있다.
   
 - 메서드 참조 유형 
+  |메서드 참조 유형|예|같은 기능을 하는 람다|
+  |:---|:---|:---|
+  |정적|Integer::parseInt|str->Integer.parseInt(str)|
+  |한정적(인스턴스)|Instant.now()::isAfter|Instant then = Instant.now(); t -> then.isAfter(t)|
+  |비한정적(인스턴스)|String:toLowerCase|str -> str.toLowerCase()|
+  |클래스생성자|TreeMap<K,V>::new|()-> new TreeMap<K,V>()|
+  |배열생성자|int[]::new|len->new int[len]|
+  
+- 람다로는 불가능하나 메서드 참조로는 가능한 유일한 예는 바로 제네릭 함수타입 구현이다.
+
+### ITEM 44. 표준 함수형 인터페이스를 사용하라
+- 람자 지원 이후 변경 사항
+  - 상위 클래스의 기본 메서드를 재정의해 원하는 동작을 구현하는 템플릿 메서드 패턴의 사용이 줄었다.
+    - LinkedHashMap: removeEldestEntry를 재정의하여 캐시로 사용할 수 있다. 
+    ```java
+    protected boolean removeEldestEntry(Map.Entry<K,V> eldest) {
+        return size() > 100;
+    }
+    ```
+    - 원소의 개수가 100개 이상이 되면 가장 오래된 원소를 삭제하여 100개를 유지한다.
+    ```java
+    @FunctionalInterface
+    interface EldestEntryRemovalFunction<K,V>{
+        boolean remove(Map<K,V> map, Map.Entry<K,V> eldest);
+    }
+    ```
+    - 함수형 인터페이스를 제공하여 필요한 용도에 맞게 빠르게 구현할 수 있다.
+
+- 기본 함수형 인터페이스
+  |인터페이스|함수시그니처|예|
+  |:---|:---|:---|
+  |UnaryOperator<T>|T apply(T t)|String::toLowerCase|
+  |BinaryOperator<T>|T apply(T t1, T t2)|BigInteger::add|
+  |Predicate<T>|boolean test(T t)|Collection::isEmpty|
+  |Functoin<T,R>|R apply(T t)|Arrays::asList|
+  |Supplier<T>|T get()|Instant::now|
+  |Comsumer<T>|void accept(T t)|System.out::println|
+  
+  - 주의점
+    - 기본 함수형 인터페이스에 박싱된 기본 타입을 넣어 사용하지는 말자. 계산량이 많을 때는 성능이 처참히 느려진다.
+  - Comparator<T> 인터페이스
+    - 구조적으로 ToIntBiFunction<T,U>와 동일하다.
+    - 특성 1. 자주 쓰이며, 이름 자체가 용도를 명확히 설명해준다.
+    - 특성 2. 반드시 따라야 하는 규약이 있다.
+    - 특성 3. 유용한 디폴트 메서드를 제공할 수 있다.
+
+- @FunctionalInterface
+  - 직접 만든 함수형 인터페이스에는 항상 사용하자.
+  - 이유 1. 해당 클래스의 코드나 설명 문서를 읽을 이에게 그 인터페이스가 람다용으로 설계된 것임을 알려준다.
+  - 이유 2. 해당 인터페이스가 추상 메서드를 오직 하나만 가지고 있어야 컴파일되게 해준다.
+  - 이유 3. 결과 유지보수 과정에서 누군가 실수로 메서드를 추가하지 못하게 막아준다.
+
+- 마지막으로 서로 다른 함수형 인터페이스를 같은 위치의 인수로 받는 메서드들을 다중정의해서는 안된다.
+
+### ITEM 45. 스트림은 주의해서 사용하라.
+- Stream API의 추상 개념 중 핵심
+  - 핵심 1. Stream은 데이터 원소의 유한 혹은 무한 시퀀스를 뜻한다.
+  - 핵심 2. Stream Pipeline은 이 원소들로 수행하는 연산 단계를 표현하는 개념이다.
+  - Stream의 원소들은 대표적으로 컬렉션, 배열, 파일, 정규표현식 패턴 매처, 난수 생성기, 다른 스트림이 있다.
+  
+- Stream Pipeline
+  - Source Stream으로 시작해 종단 연산(terminal operation)으로 끝나며, 그 사이에 하나 이상의 중간 연산(intermediate operation)이 있다.
+  - 지연 평가(lazy evaluation)
+    - 종단 연산이 호출될 때 평가가 이뤄지며 종단 연산에 쓰이지 않는 데이터 원소는 계산ㅇ ㅔ쓰이지 않는다.
+
+- Stream 주의점
+  - Stream을 과용하면 프로그램이 읽거나 유지보수하기 어려워진다.
+  - char 값들을 처리할 때에는 스트림을 삼가는게 좋다
+  ```java
+  "Hello World".chars().forEach(System.out::print); // 720....이 출력된다.
+  "Hello World".chars().forEach(ch->System.out.println((char)ch));
+  ```
+    - chars()는 int값이기 때문이다.
+  - 기존 코드는 스트림을 사용하도록 리펙터링하되, 새 코드가 더 나아 보일 때만 반영하자
+
+- Stream 사용
+  - 원소들의 시퀀스를 일관되게 변환한다.
+  - 원소들의 시퀀스를 필터링한다.
+  - 원소들의 시퀀스를 하나의 연산을 사용해 결합한다.(더하기, 연결하기, 최솟값 구하기 등)
+  - 원소들의 시퀀스를 컬렉션에 모든다(아마도 공통된 속성을 기준으로 묶어가며)
+  - 원소들의 시퀀스에서 특정 조건을 만족하는 원소를 찾는다.
+
+- Stream 사용이 어려운 경우
+  - 한 데이터가 파이프라인의 여러 단계를 통과할 때 이 데이터의 각 단계에서의 값들에 동시에 접근하기 어려운 경우
+  - Stream Pipeline은 일단 한 값을 다른 값에 매핑하고 나면 원래의 값은 잃는 구조이기 때문이다.
+  ```java
+  // 데카르트 곱 계산을 반복 방식으로 구현
+  private static List<Card> newDeck() {
+      List<Card> result = new ArrayList<>();
+      for(Suit suit: Suit.values()) {
+          for(Rank rank: Rank.values()) 
+              result.add(new Card(suit,rank));
+      }
+      return result;
+  }
+  
+  // 데카르트 곱 계산을 스트림 방식으로 구현
+  private static List<Card> newDeck() {
+      return Stream.of(Suit.values())
+          .flatMap(suit -> Stream.of(Rank.values()).map(rank->new Card(suit, rank)))
+          .collect(toList());
+  }
+  ```
+
+### ITEM 46. 스트림에서는 부작용 없는 함수를 사용하라.
+```java
+Map<String, Long> freq = new HashMap<>();
+try( Stream<String> words = new Scanner(file).tokens() ) {
+    words.forEach(word -> {
+        freq.merge(word.toLowerCase(), 1L, Long::sum);        
+    });
+}
+```
+- Stream API의 장점을 살리지 못하며 반복문을 사용하는 것보다 복잡하게 느껴진다.
+```java
+Map<String, Long> freq = new HashMap<>();
+try( Stream<String> words = new Scanner(file).tokens() ) {
+    freq = words.collect(groupingBy(String::toLowerCase, counting()));
+}
+```
+- 스트림을 제대로 활용해 빈도표를 초기화했다.
+
+- Collector
+  - 축소 전략을 캡슐화한 블랙박스 객체 (축소: 스트림의 원소들을 객체 하나에 취합한다는 의미)
+  - toList(), toSet(), toCollection(collectionFactory)
+  - 빈도표에서 가장 흔한 단어 10개를 뽑아내는 파이프라인
+  ```java
+  List<String> topTen = freq.keySet().stream().sorted(comparing(freq::get).reversed()).limit(10).collect(toList());
+  ```
+  - toMap(keyMapper, valueMapper)
+    - 스트림 원소를 키에 매핑하는 함수와 값에 매핑하는 함수를 인수로 받는다.
+    ```java
+    // Enum 에서 fromString 구현
+    private static final Map<String, Operation> stringToEnum = Stream.of(value().collect(toMap(Object::String, e->e));
+    ```
+    - 3번째 인수는 어떤 키와 그 키에 연관된 원소들 중 하나를 골라 연관 짓는 맵을 만들 때 유용하다.
+    - 4번째 인수는 Map Factory를 받는다.
+  - groupingBy()
+    - 사용 1. 메서드의 입력으로 분류 함수(classifier)를 받고 출력으로는 원소들을 카테고리별로 모아 놓은 맵을 담은 수집기를 반환한다.
+    - 분류 함수는 입력받은 원소가 속하는 카테고리를 반환한다.
+    ```java
+    // 알파벳화한 단어를 알파벳화 결과가 같은 단어들의 리스트로 매핑하는 맵을 생성
+    words.collect(groupingBy(word -> alphabetize(word)));
+    ```
+    - 사용 2. toSet()을 넘겨 groupingBy는 원소들의 리스트가 아닌 집합을 값으로 갖는 맵을 만들 수 있다. 또는 toCollection(collectionFactory)를 건네어 컬렉션을 값으로 갖는 맵을 생성할 수 있다.
+    - 사용 3. 다운스트림 수집기에 더해 맵 팩터리도 지정할 수 있게 해준다.
+  - minBy(), maxBy()
+    - 인수로 받은 비교자를 이용해 스트림에서 값이 가장 작거나 큰 원소를 찾아 반환한다.
+  - joining()
+    - 원소들을 연결(concatenate)하는 수집기를 반환한다.
+    
+### ITEM 47. 반환 타입으로는 스트림보다 컬렉션이 낫다
+
+
+
+
+
+
+
+
   
   
   
