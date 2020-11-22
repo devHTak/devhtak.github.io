@@ -194,13 +194,52 @@ try( Stream<String> words = new Scanner(file).tokens() ) {
     - 원소들을 연결(concatenate)하는 수집기를 반환한다.
     
 ### ITEM 47. 반환 타입으로는 스트림보다 컬렉션이 낫다
+- 자바 8 이전 원소 시퀀스
+  - Collection, Set, List와 같은 Collection Interface
+  - Iterable (일부 Collection 메서드를 구현할 수 없을 때)
+  - 배열
+  
+- Stream 특징
+  - Stream은 반복(Iteration)을 지원하지 않는다.
+    - Iterable 인터페이스가 정의한 추상 메서드를 전부 포함하고, 정의한 방식대로 동작하지만 for-each를 사용할 수 없다. Iterable을 확장하지 않았기 때문이다.
+    - Stream 을 Iterator로 중개해주는 어댑터
+    ```java
+    public static <E> Iterable<E> iterableOf(Stream<E> stream) {
+        return stream::iterator;
+    }
+    ```
+    ```java
+    for(ProcessHandle p: iterableOf(ProcessHandle.allProcesses())) { ...}
+    ```
+    - 하지만, Iterable을 반환하면 스트림 파이프라인에서 처리하기 어려워 진다.
+  - 원소 시퀀스를 반환하는 공개 API 반환 타입에는 Collection이나 그 하위 타입을 쓰는게 일반적으로 최선이다.
+    - Collection 인터페이스는 Iterable의 하위 타입이고, stream 메서드도 제공하기 때문에 반복과 스트림을 동시에 지원한다.
 
+- Collection 내의 시퀀스가 크면 전용 Collection을 구현하라
+  - 반환하는 시퀀스의 크기가 메모리에 올려도 안전할 만큼 작다면 ArrayList나 HashSet같은 표준 컬렉션 구현체를 반환하는게 최선일 수 있다. 하지만 단지 컬렉션을 반환한다는 이유로 덩치 큰 시퀀스를 메모리에 올려서는 안된다.
+  - Stream이 나을 때도 있다.
+ 
+### ITEM 48. 스트림 병렬화는 주의해서 적용하라
+- Stream과 병렬화
+  - 중간 연산으로 limit 등을 사용하면 병렬화로는 성능 개선이 불가능하다.
+  - Stream의 소스가 ArrayList, HashMap, HashSet, ConcurrentHashMap의 인스턴스거나 배열, int, long 범위일 때 병렬화의 효과가 가장 좋다.
+  - 종단 연산의 동작 방식 역시 병렬 수행 효율에 영향을 준다.
+    - 병렬화의 적합한 것은 축소(reduction) 종단 연산이다.
+    - 축소는 파이프라인에서 만들어진 모든 원소를 하나로 합치는 작업으로 reduce 메서드 중 하나, min, max, count, sum 또는 anyMatch, allMatch, noneMatch처럼 조건에 맞으면 바로 반환하는 메서드가 병렬화에 적합하다.
+  - Stream을 잘못 병렬화하면 성능이 나빠질 뿐만 아니라 결과 자체가 잘못되거나 에상 못한 동작이 발생할 수 있다.
 
-
-
-
-
-
+- Stream 병렬화는 오직 성능 최적화 수단이다.
+  - 소수계산 스트림 파이프라인(병렬화를 통한 성능 최적화한 예시)
+  ```java
+  static long pi(long n) {
+      return LongStream.rangeClosed(2, n)
+          .parallel()
+          .mapToObj(BigInteger::valueOf)
+          .filter(i -> i.isProbablePrime(50))
+          .count();
+  }
+  ```
+  
 
   
   
