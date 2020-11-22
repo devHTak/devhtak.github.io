@@ -127,6 +127,7 @@ category: java
 - Stream 사용이 어려운 경우
   - 한 데이터가 파이프라인의 여러 단계를 통과할 때 이 데이터의 각 단계에서의 값들에 동시에 접근하기 어려운 경우
   - Stream Pipeline은 일단 한 값을 다른 값에 매핑하고 나면 원래의 값은 잃는 구조이기 때문이다.
+  
   ```java
   // 데카르트 곱 계산을 반복 방식으로 구현
   private static List<Card> newDeck() {
@@ -137,7 +138,6 @@ category: java
       }
       return result;
   }
-  
   // 데카르트 곱 계산을 스트림 방식으로 구현
   private static List<Card> newDeck() {
       return Stream.of(Suit.values())
