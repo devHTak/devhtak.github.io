@@ -7,7 +7,7 @@ date: '2020-11-21 17:41:00 +0900'
 category: javascript
 ---
 
-### function instance
+### Function Instance
 
 - function instance 기준
   - function 구분
