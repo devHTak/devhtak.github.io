@@ -8,6 +8,7 @@ category: javascript
 ---
 
 ### function instance
+
 - function instance 기준
   - function 구분
     - 빌트인 function object
