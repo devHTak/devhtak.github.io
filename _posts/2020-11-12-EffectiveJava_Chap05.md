@@ -314,6 +314,7 @@ public static void main(String[] args) {
 		return type.cast(favorites.get(type));
 	}
   }
+  
   public class MainTest {
   	public static void main(String[] args) {
 		Favorites f = new Favorites();
