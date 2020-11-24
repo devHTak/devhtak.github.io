@@ -107,7 +107,7 @@ category: javascript
     - 생성한 scope를 scope chain에 연결하고 scope chain에서 식별자를 해결
     - 동적 처리
     - ES3의 실행 콘텍스트 환경 (scope chain, Artivation Object)
-  - ES5에는 LEC의 DERd에 함수의 변수와 함수 이름을 바인드. ES5부터 Scope chain을 사용하지 않으며 DER에서 변수와 함수이름을 검색하여 실행
+  - ES5에는 LEC의 DER에 함수의 변수와 함수 이름을 바인드. ES5부터 Scope chain을 사용하지 않으며 DER에서 변수와 함수이름을 검색하여 실행
   - ES3에서는 함수가 호출될 때마다 scope chain을 생성하여 동적으로 처리하는 데, ES5는 정적으로 미리 설정하기 때문에 엔진 처리가 ES5가 빠르다.
 - Lexical Environment
   - 정적 환경
@@ -199,7 +199,7 @@ function getPoint(bonus) {
 }
 console.log(getPoint(50)); // 350 출력
 ```
-  - getPopint function object 생성
+  - getPoint function object 생성
     - 오브젝트의 [[Scope]]에 Global Object 설정
   - base 선언
   - base에 200 할당 한 후, getPoint()함수 호출
@@ -248,7 +248,7 @@ EC:{
     - 이런 이유로 오브젝트 환경 레코드 사용
   - 외부 렉시컬 환경 참조 값은 null
 
-- This Binding COmponent
+- This Binding Component
   - 목적
     - this로, 함수를 호출한 오브젝트의 프로퍼티에 액세스한다.
     - 예) this.propertyName
@@ -274,11 +274,11 @@ EC:{
       - 추가 설명: obj.getPoint()에서 obj의 프로퍼티가 TBC에 바인딩되도록 의도적으로 설계해야 한다.
   ```
   EC: {
-    LEC= { ER: { DER: {}, OER: {}}, OLER: {},
-    VEC: {},
-    TBC: {
-      point: 100, getPoint: function(){}
-    }
+      LEC= { ER: { DER: {}, OER: {}}, OLER: {},
+      VEC: {},
+      TBC: {
+        point: 100, getPoint: function(){}
+      }
   }
   ```
 - 호출 스택 (Call Stack)
