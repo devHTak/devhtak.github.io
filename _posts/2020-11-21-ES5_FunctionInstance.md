@@ -111,6 +111,7 @@ var book = new Book(100);
 
 ### constructor
 - constructor 프로퍼티
+
 ```
 Book function object: {
     prototype: {
@@ -118,6 +119,7 @@ Book function object: {
     }
 }
 ```
+
   - 생성하는 function object를 참조
     - function object를 생성할 때 설정
     - prototype에 연결되어 있다.
@@ -126,6 +128,7 @@ Book function object: {
   - ES6: constructor 변경 가능 (활용성이 높다)
 
 - constructor 비교
+
 ```javascript
 var Book = function() {};
 console.log(Book === Book.prototype.constructor); // true
@@ -136,6 +139,7 @@ console.log(Book === obj.constructor); // true
 console.log(typeof Book); // function
 console.log(typeof obj); // object
 ```
+
   - Book === Book.prototype.constructor;
     - 실행결과 true;
     - Book object와 Book.prototype.constructor가 타입까지 같다는 뜻.
@@ -376,3 +380,5 @@ console.log(obj2.getPoint()); // 300
     - prototype의 getPoint()가 호출되지 않고 바로 연결되어 있는 getPoint가 호출된다.
   - 인스턴스 프로퍼티는 공유되지 않는다. (Book 인스턴스를 새로 생성하면 새로 생성한 instance는 공유하지 않는다.
   - Class 접근 -> 설계가 중요, OOP 개념 이해 필요
+
+** 출처1. 인프런 강좌_자바스크립트 중고급: 근본 핵심 이해
