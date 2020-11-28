@@ -1,0 +1,203 @@
+---
+layout: post
+title: (Javascript ES5) 재귀 함수, 즉시 실행 함수, 클로저
+summary: 인프런 강좌_자바스크립트중고급_근본 핵심 이해
+author: devhtak
+date: '2020-11-24 18:41:00 +0900'
+category: javascript
+---
+
+### 재귀 함수
+
+- 프로퍼티 연동 방지
+  - Object에 Object를 할당하면 프로퍼티 값이 연동된다.
+    ```javascript
+    var origin = {member: 100};
+    var dup = origin;
+    dup.member = 200;
+    console.log(origin.member); //200;
+    ```
+    - origin 오브젝트를 dup 변수에 할당한 후 dup.member에 200을 설정하면 origin.member 값이 연동되어 바뀐다.
+    - 오브젝트를 할당하면 값을 공유하기 때문이다.
+  - 배열도 마찬가지로 연동된다.
+    ```javascript
+    var origin = [1, 2, 3];
+    var dup = origin;
+    dup[1] = 200;
+    console.log(origin); // [1, 200, 3]
+    ```
+    - 배열도 마찬가지로 배열을 할당하면 값을 공유한다.
+  - 연동방지: 프로퍼티 단위로 할당
+    ```javascript
+    var origin = {member: 100};
+    var dup = {};
+    for(var name in origin) {
+        dup[name] = origin[name];
+    }
+    dup.member = 200;
+    console.log(origin.member); // 100
+    console.log(dup.member); // 200    
+    ``
+    ```javascript
+    var origin = [1, 2, 3];
+    var dup = []
+    for(var i = 0; i < origin.length; i++) {
+        dup[i] = origin[i];
+    }    
+    dup[1] = 200;
+    console.log(origin); // [1, 2, 3]
+    console.log(dup); // [1, 200, 3]
+    ```
+    - 값의 공유를 방지하려면 프로퍼티 단위로 할당해야 한다.
+
+- 재귀함수
+  - 함수 안에서 자신 함수를 호출하는 형태
+  - 사용사례
+    - {name: {name: {name: value} } }
+    - [ [1, 2], [3, 4], [5, 6] ]
+  - 재귀 함수 형태
+    ```javascript
+    var book = {
+        member: {name: 100},
+        point: {value: 200}
+    };
+    function show(param) {
+        for(var type in param) {
+            typeof param[type] === "object" ? show(param[type]) : console.log(type + " : " + param[type]);
+        }
+    }
+    show(book); // name : 100 / value : 200
+    ```
+    - show(book);
+      - 마지막 줄에서 show(book)을 호출하면서 book 오브젝트를 파라미터 값으로 넘겨준다.
+    - for(var type in param) {...}
+      - fon-in으로 파라미터로 받은 오브젝트 전개
+    - typeof param[type] === "object" ? show(param[type]) : console.log(type + " : " + param[type]);
+      - value가 object 타입이면, 다시 show 함수 호출 아니면 key, value를 로그로 찍는다.
+      - book["member"], book["point"] 의 value가 오브젝트이므로 다시 재귀 호출
+      - member["name"] 은 object가 아니므로 name : 100 을 로그로 찍는다.
+      - member["value"] 는 object가 아니므로 value : 200을 로그로 찍는다.
+      
+### 즉시 실행 함수
+
+- 즉시 
+  - 엔진이 함수를 만났을 때 자동으로 함수를 실행. 즉시에 실행하므로 즉시 실행 함수
+    ```javascript
+    (function() { console.log("JS북"); } ());
+    ```
+  - IIFE: Immediately Invoked Function Expression
+  - (function() {...}()) 형태
+    - 함수 이름이 없으므로 함수 선언문, 함수 표현식도 아니다.
+    - 문법 에러가 발생하지 않는다.
+    - 무명함수, 익명함수라고도 부른다.
+  - 함수 즉시 실행 과정
+    - 표현식을 평가 소괄호()는 그룹핑 연산자
+      ```javascript
+      var total = (1 + 2);
+      console.log(total); // 3
+      ```
+      - (1 + 2) 형태에서 소괄호()는 그룹핑 연산자이며 1 + 2 는 표현식
+      - 그룹핑 연산자는 소괄호 안의 표현식을 평가하고 평가 결과를 반환
+      - 소괄호()와 표현식 평가가 키포인트
+    - 함수 이름 필요
+      - 함수에 이름이 없으면 문법 에러
+      ```javascript
+      var value = function() {
+          return 100;   
+      };
+      console.log(value()); // 100
+      ```
+      - 함수 표현식으로 엔진이 function 키워드를 만나면 function object를 생성하여 value 변수에 할당
+      - value 변수를 선언하지 않으면 함수 이름이 없으므로 문법 에러, 함수 표현식도, 함수 선언문도 아니기 때문이다.
+      - value()처럼 function 끝에 붙는 소괄호는 함수 호출 용도(그룹핑이 아니다)
+    - 함수 표현식 끝에 소괄호 작성
+      ```javascript
+      var value = function() {
+          return 100;   
+      }();
+      console.log(value); // 100
+      ```
+      - 함수 끝에 소괄호를 첨부한 형태
+      - function 키워드를 만나 function object 생성
+      - 소괄호가 있으므로 함수 호출
+      - 함수에서 반환한 100을 변수 value에 할당
+    - 소괄호 안에 함수 작성
+      ```javascript
+      var value = (function() {
+          return 100;   
+      }());
+      console.log(value); // 100
+      ```
+      - 소괄호 안에 함수 작성
+      - 소괄호는 그룹핑 연산자
+      - 그룹핑 연산자이므로 소괄호 안의 표현식을 평가
+      - 표현식이 함수이므로 function object 생성
+      - function 끝에 소괄호가 있으므로 함수 실행
+    - 그룹핑 연산자에서 반환된 값이 할당되는 변수를 작성하지 않은 상태
+      ```javascript
+      (function() { console.log(100); }()); // 100
+      ```
+      - 그룹핑 연산자를 작성하지 않으면 함수 이름이 없으므로 문법 에러 발생
+      - 하지만, 그룹핑 연산자를 작성하면 표현식에 function을 작성한 것이므로 문법 에러가 발생하지 않는다. 즉, (1+2)에서 1 + 2 대신에 함수를 작성한 것
+      - 표현식과 표현식 평가 결과는 평가 결과가 반환할 때까지 메모리에 저장하고 평가 결과를 반환하면 지워진다.
+      - ( 1 + 2 )의 결과가 메모리에 저장된다면 매우 많은 메모리가 필요할 것이다.
+      - function(){}(); 
+        - 코드로 만든 오브젝트도 메모리에 저장되지 않으며 실행 결과도 메모리에 저장되지 않는다.
+        - 따라서 저장해야 할 것이 있다면 표현식 밖의 변수, 프로퍼티에 저장해야 한다.
+        - 저장할 필요가 없는 1회성 코드이면서 엔진이 function 키워드를 만나는 시점에 즉시 실행해야 한다면 그룹핑 연산자 안에 표현식으로 작성
+        - 무명 함수는 그룹핑 연산자 안의 코드를 한번만 사용할 때 사용. 주로 초깃값 설정할 때 사용
+  
+  ### Closure
+  
+    - Closure
+      - function object를 생성할 때 함수가 속한 스코프를 [[Scope]]에 설정하고
+      - 함수가 호출되었을 때 [[Scope]]의 프로퍼티를 사용하는 메커니즘
+      - [[Scope]]의 설정과 사용방법을 이해하면 클로저는 단지 논리적인 설명
+    
+    - Closure 논리
+      ```
+      실행 콘텍스트(EC): {
+          렉시컬 환경 컴포넌트(LEC): {
+              환경 레코드(ER): {
+                  선언적 환경 레코드(DER): {},
+                  오브젝트 환경 레코드(OER): {}
+              },
+              외부 렉시컬 환경 참조(OLER): {}
+          },
+          ...
+      }
+      ```
+      - 실행중인 function object에 작성한 변수, 함수를 선언적 환경 레코드(DER)에 설정
+      - [[Scope]]의 변수, 함수를
+        - 외부 렉시컬 환경 참조(OLER)에 바인딩
+        - 변수 이름으로 접근하여 값을 사용하거나 변경할 수 있음
+        - 함수로 호출할 수 있음
+      - Closure 논리는 외부 렉시컬 환경 참조(OLER)에 있는 변수와 함수를 내것처럼 사용하는 것이다.
+      ```javascript
+      function book() {
+          var point = 100;
+          var getPoint = function(param) {
+              point = point + param;
+              return point;
+          }
+          return getPoint;
+      };
+      var object = book();
+      console.log(book(200)); // 300
+      ```
+        - 
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
