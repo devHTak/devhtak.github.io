@@ -125,20 +125,177 @@ category: java
   
 ### ITEM 51. 메서드 시그니처를 신중히 설계하라
 
+- 메서드 이름을 신중히 짓자
+  - 표준 명명 규칙을 따르자.
+  
+- 편의 메서드를 너무 낳이 만들지 말자.
+  - 메서드가 너무 많은 클래스 또는 인터페이스는 익히고, 사용, 문서화, 테스트, 유지보수등이 어렵다
+  
+- 매개변수는 목록은 짧게 유지하자
+  - 4개 이하가 좋다.
+  - 같은 타입의 매개변수 여러 개가 연달아 나오는 경우 특히 해롭다.
+    - 실수로 순서를 바꿔 입력해도 그대로 컴파일되고 실행되기 때문
+  - 긴 매개변수 목록을 짧게 줄여주는 기술
+    - 여러 메서드로 쪼갠다. 
+      - 자칫 메서드의 수가 많아질 수 있지만 직교성(orthogonality)를 높여 오히려 메서드 수를 줄여주는 효과가 있을 수 있다.
+      - 직교성은 수학에서 온 용어로 직각을 이루며 교차한다는 뜻이다.
+      - SW에서 직교성이 높다는 것은 공통점 없이 기능들을 잘 분리되어 있다는 의미다.
+    - 매개변수 여러개를 묶어주는 도우미 클래스를 만들자
+    - 객체 생성에 사용한 빌더 패턴을 메서드 호출에 응용하자.
+      - 먼저 모든 매개변수를 하나로 추상화한 객체를 정의하고, 클라이언트에서 세터 메서드를 호출해 필요한 값을 설정하게 하는 것
 
+- 매개변수의 타입은 클래스보다는 인터페이스가 더 낫다.
+  - 다형성을 존중하며 사용 범위가 더 높아진다.
+  - 입력 데이터가 다른 형태로 존재한다면 명시한 특정 구현체의 객체로 옮겨 담는 비싼 복사 비용을 치룬다.
+  
+- boolean 보다는 원소 2개짜라 열거타입을 사용하자
+  - 메서드 이름상 boolean을 받아야 의미가 더 명확할 때에는 예외다.
+  
+### ITEM 52. 다중 정의는 신중히 사용하라
+
+- 재정의한 메서드는 동적으로 선택되고, 다중정의한 메서드는 정적으로 선택된다.
+  - 재정의한 메서드는 하위클래스에서 정의한 재정의 메서드가 실행된다.
+  - 다중정의된 메서드는 객체의 런타임 타입은 전혀 중요하지 않다.
+    - 선택은 컴파일 타임에, 오직 매개변수의 컴파일 타임 타입에 의해 이뤄진다.
+  - 매개변수 수가 같은 다중 정의는 만들지 말자.
+    - 매개변수에 타입 결정이 클라이언트에 계산과 다를 수 있다.
     
+- 다중정의하는 대신 메서드 이름을 다르게 지워주는 길도 있다.
+  - write 메서드 대신 writeBoolean, writeInt, writeLong 등과 같은 형식 사용
+  
+- 한편 생성자는 이름을 다르게 지을 수 없으므로 무조건 다중정의가 된다.
+  - 헷갈릴 만한 매개변수는 형변환하여 정확한 다중정의 메서드가 선택되도록 해야 한다.
+  - 불가능하면, 기존 클래스를 수정해 새로운 인터페이스를 구현해야 할 때는 같은 객체를 입력받는 다중정의 메서드들이 모두 동일하게 동작하도록 만들어야 한다.
+  
+- 메서드를 다중정의할 때, 서로 다른 함수형 인터페이스라도 같은 위치의 인수로 받아서는 안된다.
+  - 서로 다른 함수형 인터페이스라도 서로 근본적으로 다르지 않기 때문이다.
+  
+### ITEM 53. 가변 인수는 신중히 사용하라.
+
+- 가변인수 메서드
+  - 명시한 타입의 인수를 0개 이상 받을 수 있다.
+  ```java
+  static int sum(int... args) {
+      int sum = 0;
+      for(int arg : args) {
+          sum += arg;
+      }
+      return sum;
+  }
+  ```
+  - 1개 이상 인수를 받아야 할때
+  ```java
+  static int min(int firstArg, int... args) {
+      int min = firstArg;
+      for(int arg: args) {
+          if(arg < min)
+            min = arg;
+      }
+      return min;
+  }
+  ```
+
+- 성능에 민감한 상황이면 가변인수가 걸림돌이 된다.
+  - 가변인수 메서드는 호출될 때마다 배열을 새로 하나 할당하고 초기화한다.
+  - 가변인수의 유연성이 필요할 때는 선택할 수 있는 멋진 패턴이 있다.
+    - public void foo() {} public void foo(int a1) {}... public void foo(int a1, int a2, int a3, int... rest) {}
+    - 95%가 3개 이하의 foo를 사용하고 나머지 5%가 이상을 사용할 때 메서드 호출 중 단 5%만 배열을 생성한다.
+    - EnumSet의 정적 팩터리도 이 기법을 사용해 열거 타입 집합 생성 비용을 최소화한다.
+      - EnumSet은 비트 필드를 대체하면서 성능까지 유지해야 하므로 아주 적절하게 사용한 것
+      
+### ITEM 54. null이 아닌 빈 컬렉션이나 배열을 반환하라
+
+- null이 반환될 가능성이 있는 경우
+  ```java
+  List<Cheese> cheeses = shop.getChesses();
+  if( cheeses != null && cheeses.contains(Cheese.STILTON) ) {
+    //...
+  }
+  ```
+  - 항상 예제와 같이 null임을 체크하는 방어적 코드를 넣어주어야 한다.
+  
+- 빈 컬렉션이나 배열을 반환하자
+  ```java
+  public List<Cheese> getCheeses() {
+      // return new ArrayList<>(cheesesInStock);
+      return cheesesInStock.isEmpty() ? Collections.emptyList() : new ArrayList<>(cheeseInStock);
+  }  
+  ```
+  - 성능 분석 결과 해당 할당이 성능 저하의 주범이 확인되지 않는 한 이 정도의 성능 차이는 신경 쓸 수진이 못된다.
+  - 빈 컬렉션과 배열은 굳이 새로 할당하지 않고도 반환할 수 있다.
+  - 만약, 할당이 성능을 눈에 띄게 떨어뜨린다면,
+    - '불변' 컬렉션을 반환하자.
+    - Collections.emptyList, Collections.emptySet, Collections.emptyMap 등
+  
+  - 배열
+  ```java
+  private static final Cheese[] EMPTY_CHEESE_ARRAY = new Cheese[0];
+  public Cheese[] getCheeses() {
+      // return cheeseInStock.toArray(new Cheese[0]);
+      return cheeseInStock.toArray(EMPTY_CHEESE_ARRAY);
+  }
+  ```
+    - 만약 이 또한 성능이 걱정되면 길이 0 짜리 배열을 미리 선언해두고 해당 배열을 반환하자.
+    - 길이가 0인 배열은 모두 불변이기 때문이다.
+   
+### ITEM 55. Optional 반환은 시중히 하라
+
+- Optional
+  - 8 버전 이전에는 메서드가 특정 조건에서 값을 반환할 수 없을 때에는
+    - 예외를 던지거나 -> 예외는 진짜 예외적인 상황에서만 사용해야 하며, stack 전체를 갭처하므로 비용이 많이 든다.
+    - null을 반환했다. -> null 값을 어딘가에 저장해두면 언젠가 NullPointerException이 발생할 수 있다.
+  - 8 버전 이후 Optional<T> 객체를 반환할 수 잇게 되었다.
+
+    ```java
+    public static <E extends Comparable<E>> E max(Collection<E> c) {
+        if(c.isEmpty()) throw new IllegalArgumentException("빈 컬렉션");
+        E result = null;
+        for(E e : c) {
+            if(result == null || e.compareTo(result) > 0) result = Objects.requireNonNull(e);
+        }
+        return result;
+    }
+    ```
+    ```java
+    public static <E extends Comparable<E>> Optional<E> max(Collection<E> c) {
+        if(c.isEmpty()) return Optional.empty();
+        E result = null;
+        for(E e: c) {
+            if(result == null || e.compareTo(result) > 0) result = objects.requireNonNull(e);
+        }
+        return Optional.of(result);
+    }
+    ```
+    - Optinoal을 반환하는 메서드에서는 절대 null을 반환하지 말자.
+    ```java
+    //stream 활용
+    public static <E extends Comparable<E>> Optional<E> max(Collection<E> c) {
+        return c.stream().max(Comparator.naturalOrder());
+    }
+    ```
+    - null 반환, 에외를 던지는 대신 Optional 반환을 선택해야 하는 기준
+      - Optional은 검사 예외와 취지가 비슷하다.
+      - 즉, 반환값이 없을 수도 있음을 API 사용자에게 명확히 알려주는 것이다.
+      ```java
+      String lastWordInLexicon = max(words).orElse("단어 없음..."); //기본값을 정할 수 있다.
+      String lastWordInLexicon = max(words).orElseThrow(TemperTantrumException::new); //예외를 던질 수 있다.
+      String lastWordInLexicon = max(words).get(); //항상 값이 채워져 있다고 가정한다.
+      ```
+  - 9 버전 이후부터는 Optional에 stream(0 메서드가 추가되었다.
+    - Optional을 Stream으로 반환해주는 어댑터다.
+    - Stream의 flatMap 메서드와 조합하면 명료하게 바꿀 수 있다.
+    ```java
+    streamOfOptionals.flatMap(Optional::stream);
+    ```
+  
+  - 컬렉션, 스트림, 배열, 옵셔널과 같은 컨테이너 타입은 옵셔널로 감싸면 안된다.
+    - Optional<List<T>> 보다는 빈 List<T>를 반환하는 것이 좋다.
     
+  - 박싱된 기본 타입을 담은 옵셔널을 반환하는 일은 없도록 하자.
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+### ITEM 56. 공개된 API 요소에는 항상 문서화 주석을 작성하라.
+
+-
     
     
     
