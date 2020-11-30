@@ -103,7 +103,7 @@ category: Javascript ES6+
   - 스코프에 같은 이름의 변수 사용 불가
   
 
-###스코프
+### 스코프
 - function 블록
   - function name(){} 블록 스코프
   - 스코프가 다르기 때문에 function 안과 밖에 같은 이름에 let 변수 선언 가능하다
