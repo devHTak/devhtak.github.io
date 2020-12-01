@@ -29,7 +29,7 @@ category: Javascript ES6+
       function point() {
           value = 300;
           console.log(value);
-      }
+      };
       point(); // 300
       console.log(value); // 300
       ```
@@ -47,8 +47,8 @@ category: Javascript ES6+
           value = 300;
       } catch(e) {
           console.log("글로벌 변수 사용 불가");
-      }
-  }
+      };
+  };
   point(); //글로벌 변수 사용 불가
   ```
   - ES6+ 에서는 default로 "use strict"가 사용된다. 전체는 아니다.
@@ -112,7 +112,7 @@ category: Javascript ES6+
     function show() {
         let sports = "농구";
         console.log(sports); 
-    }
+    };
     show(); // 농구
     console.log(sports); // 축구
     ```
@@ -137,7 +137,7 @@ category: Javascript ES6+
         abc = error;
     } catch(e) {
         console.log("catch: " + sports); // "cathch: 축구"
-    }
+    };
     console.log(sports); // 축구
     ```
     - try 블록 {} 또한 블록스코프이기 때문에 새롭게 변수 선언이 가능하며 log를 찍는다.
@@ -182,3 +182,140 @@ category: Javascript ES6+
     ```
       - let 변수는 for문 안에서 스코프가 결정되기 때문에 이벤트를 설정할 때의 k 값을 출력한다.
       
+### let 변수와 this
+
+- 글로벌 오브젝트에서 let 변수를 this로 참조 불가
+  ```javascript
+  var music = "음악";
+  let sports = "축구";
+  console.log(this.music + " " + + this.sports); //음악 undefined
+   ```
+   - 현재 위치는 글로벌 오브젝트이다.
+   - var music = "음악"; 은 window object에 설정되지만 let sports = "축구"; 은 window object에 설정되지 않는다.
+   - this.music 에서 this는 window object를 참조하지만 this.sports에서 sports가 window object에 설정되지 않으므로 undefined
+   - global object에 선언된 let 변수는 script 블록에 속하게 된다.
+- 글로벌 오브젝트에서 var와 let 변수가 설정되는 위치 구조
+
+### JS 파일 다수 사용
+
+- 다수의 JS 파일 사용
+  - 모든 JS 파일에서 글로벌 오브젝트에 작성한 var 변수와 let 변수를 공유
+    - 글로벌 오브젝트, script 블록에 있는 변수들을 공유할 수 있다.
+  - let 변수는 블록 안에 작성하면 공유되지 않는다.
+    - 새로운 블록 안에 작성한 let 변수는 공유할 수 없다.
+
+- let 변수의 scope
+  - debugging 모드로 살펴보면 let 변수는 script(global), block({}), local(function(){})에 선언된 블록에 따라 설정된다.
+
+- 정리
+  - 글로벌 오브젝트 작성 
+    ```javascript
+    var globalVar = "var 변수";
+    let globalLet = "let 변수";
+    {
+        let globalBlock = "block 변수";
+    };
+    ```
+    - var 변수: window 객체에 설정, 공유
+    - let 변수: script에 설정, 공유
+      - window.sports = {} 처럼 의도적으로 작성하지 않아도 된다.
+    - 블록안 let 변수: Block에 설정, 공유하지 않음
+      - 글로벌 오브젝트에서만 사용하는 로컬 변수로 사용
+  - 함수에 작성
+    ```javascript
+    function showLocal() {
+        var localVar = "var 변수";
+        let localLet = "let 변수";
+        {
+            let localBlock = "block 변수";
+        };
+    }
+    ```
+    - var 변수, let 변수 : Local에 설정
+    - { let localBlock } : Block에 설정
+
+### Hoisting
+
+- ES5의 실행 컨텍스트 처리 순서
+  - 함수 선언문 설정
+  - 변수 이름 바인딩 변수값은 undefined (+함수 표현식)
+  - 소스 코드 실행
+    ```javascript
+    console.log(music); // undefined
+    var music="음악";
+    ```
+    - music 변수를 아래에 선언했지만, 먼저 undefined로 바인딩 하였기 때문에 식별자 해결을 할 수 있다.
+    - 이 것이 호이스팅이다.
+    - 식별자 해결을 하지 못하면 에러가 발생한다.
+
+- let 변수는 호이스팅이 되지 않는다.
+  - 즉, let 변수는 앞에서 변수 사용일 불가능하다.
+  ```javascript
+  try { 
+      console.log(sports);
+  } catch(e) {
+      console.log('호이스팅 불가');
+  };
+  let sports = "축구";
+  // 호이스팅 불가 출력
+  ```
+
+- let 변수를 인식하는 시점
+  - let 변수는 선언을 한 후에야 변수를 인식할 수 있다. 즉, 식별자를 해결할 수 있다.
+  - let globalList; // 엔진이 undefined를 할당한다.
+  
+- block 안에 let 변수 작성
+  - 초기화 단계(Initializer)
+    - 정적 환경의 선언적 환경 레코드에 변수 이름을 바인딩 한다.
+    - 이때 var 변수는 undefined를 초기값으로 설정하고 let 변수는 초기값을 설정하지 않는다.
+  - 변수에 값을 넣으면 변수로 인식하고, 변수에 값이 없으면 변수로 인식하지 않는다. (Binding List)
+    - let 변수 선언을 실행하면 그 때 값이 설정되며, 값을 할당하지 않고 변수를 선언만 하면 엔진이 undefined를 할당
+    - 따라서, 변수 선언을 실행한 후에는 변수가 값을 갖고 있으므로 변수를 인식할 수 있다.
+  - 엔진에서는 Initializer와 Binding List 메커니즘을 사용
+  - 즉, var 변수는 초기화 단계에서 undefined 값을 갖게 되고 let 변수는 값을 갖지 않는다. 그래서 엔진이 값을 갖고 있는 변수를 인식하여 var 는 hoisting이 가능하고 값을 갖고 있지 않는 let 변수는 hoisting이 불가능하다.
+  
+### const 변수
+
+- const 변수
+  - 구문: const name1 = value1 [, name2 = value2]
+  - 값을 바꿀 수 없는 변수 선언
+  - name1에 변수 이름 작성, 식별자로 사용
+    ```javascript
+    const sports = "운동";
+    try {
+        sports = "농구";
+    } catch(e) {
+        console.log("const 할당 불가");
+    };
+    ```
+  - value1, value2에 초기값 작성
+    - 반드시 값을 작성, 변수 선언만 불가
+    - 표현식 작성 가능, 평가 결과 사용
+  - 우선 let이 아닌 const 사용 가능을 검토
+  
+- const 변수는 값을 바꿀 수 있는가?
+  - const 변수 전체를 바꿀수는 없다.
+  - Object의 프로퍼티는 변경할 수 있다.
+    ```javascript
+    const book = {title: "책"};
+    try {
+        book = {title: "음악 책"};
+    } catch(e) {
+        console.log("const 전체 할당 불가");
+    };
+    book.title = "미술 책";
+    console.log(book.title); // 미술 책
+    ```
+    - book 객체 전체를 변경할 수는 없지만, book.title과 같이 프로퍼티 값을 변경하는 것은 가능하다.
+  - 배열의 엘리먼트 값도 바꿀 수 있다.
+    ```javascript
+    const book = ["책"];
+    try {
+        book = ["음악 책"];
+    } catch(e) {
+        console.log("const 전체 할당 불가");
+    }
+    book[0] = "미술 책";
+    console.log(book[0]); // 미술 책
+    ```
+    - book 배열 전체를 변경할 수는 없지만, 배열 index 요소는 변경할 수 있다.
