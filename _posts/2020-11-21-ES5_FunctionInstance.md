@@ -13,7 +13,7 @@ category: javascript
   - function 구분
     - 빌트인 function object
     - function object: function 키워드로 생성
-    - function isntance: new 연산자로 생성  
+    - function instance: new 연산자로 생성  
   - function object 또한 인스턴스다
     - 빌트인 Function Object로 생성하기 때문이다.
     - 성격적으로는 인스턴스지만 new 연산자로 생성한 인스턴스와 구분하기 위해 강좌에서는 function object로 표기
@@ -24,14 +24,14 @@ category: javascript
 function Book(point) {
     this.point = point;
 }
-Book.prototype.getPoint() = funciton() {
+Book.prototype.getPoint() = function() {
     return this.point + 200; 
 }
 var book = new Book(100);
 console.log(book.point); // 100
 console.log(book.getPoint()); // 300
 ```
-  - 해당 코드는 funcion instance를 생성하는 전형적인 형태이다.
+  - 해당 코드는 function instance를 생성하는 전형적인 형태이다.
   - function Book(point) { ... }
     - Book Object를 생성
     - Book.prototype이 만들어진다.
