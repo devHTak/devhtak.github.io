@@ -319,3 +319,4 @@ category: Javascript ES6+
     console.log(book[0]); // 미술 책
     ```
     - book 배열 전체를 변경할 수는 없지만, 배열 index 요소는 변경할 수 있다.
+** 출처1. 인프런 강좌_자바스크립트 ES6+ 기본
