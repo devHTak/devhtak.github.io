@@ -36,16 +36,16 @@ category: Javascript ES6+
     - Iterator protocol
   - 개발자 코드로 프로토콜을 맞추면 iteration할 수 없은 오브젝트를 iteration할 수 있도록 할 수 있다.
   
-  ### Iterable Object
+### Iterable Object
   
-  - Iterable Protocol
-    - Iterable Protocol이란?
-      - 오브젝트가 반복할 수 있는 구조여야 한다.
-        - Symbol.iterator를 작고 있어야 한다.
-          ```javascript
-          const list = [10, 20];
-          console.log(list[Symbol.iterator]); // function values() { [native code] }
-          ```
+- Iterable Protocol
+  - Iterable Protocol이란?
+    - 오브젝트가 반복할 수 있는 구조여야 한다.
+      - Symbol.iterator를 작고 있어야 한다.
+        ```javascript
+        const list = [10, 20];
+        console.log(list[Symbol.iterator]); // function values() { [native code] }
+        ```
   - 아래의 빌트인 오브젝트는 디폴트로 이터러블 프로토콜을 할 수 있다.
     - 즉, Symbol.iterator를 갖고 있다.
     - Array, Arguments, String, TypedArray, Map, Set, DOM NodeList
@@ -61,8 +61,8 @@ category: Javascript ES6+
       const obj = {one: 10, two: 20};
       console.log(obj[Symbol.iterator]); // undefine
       ```
-      - [] 리터럴로 생성한 list에 Symbol.iterator가 있으므로 Array Iterable Object입니다.
-      - {} 리터럴로 생성한 obj에 Symbol.iterator가 없으므로 Object는 Iterable Object가 아니다.
+      - [] 리터럴(Array Object)로 생성한 list에 Symbol.iterator가 있으므로 Array Iterable Object입니다.
+      - {} 리터럴(prototype으로 이뤄진 object)로 생성한 obj에 Symbol.iterator가 없으므로 Object는 Iterable Object가 아니다.
         - obj는 property로 구성된 object
       - for 문의 반복과 iteration과는 차이가 있고, for-in 문의 반복과 iteration 또한 차이가 있다.
         ```javascript
