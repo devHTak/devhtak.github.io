@@ -95,4 +95,78 @@ category: Javascript ES6+
     result.push(..."abc");
     console.log(result); // [21, 22, 51, 52, "a","b", "c"];
     ```
+    
+### Rest Parameter
+
+- Function spread
+  - 호출하는 함수의 파라미터네 spread 대상 작성
+    ```javascript
+    function add(one, two, three) {
+        for(const a in arguments) {
+            console.log(a, arguments[a]);
+        }
+        console.log(one, two, three);
+    }
+    const values = [ 10, 20, 30, 40 ];
+    add(...values); // 0 10, 1 20, 2 30, 3 40, 10 20 30
+    ```
+    - one에 10, two에 20, three에 30이 매핑된다.
+  - 처리 순서 방법
+    - 함수가 호출되면 우선, 파라미터의 배열을 엘리먼트 단위로 전개
+    - 전개한 순서대로 파라미터 값으로 넘겨줌
+    - 호출받는 함수의 파라미터에 순서대로 매핑됨
+    
+- Rest parameter
+  - Syntax : function(param, paramN, ..name) 
+  - 분리하여 받은 파라미터를 배열로 결합
+    - spread: 분리, rest: 결합
+    ```javascript
+    function point(...param) {
+        console.log(param);
+        console.log(Array.isArray(param));
+    }
+    const values = [ 10, 20, 30 ];
+    point(...values); // [10 20 30], true
+    ```
+    - one, two, three에 10, 20, 30이 매핑된다.
+  - 작성 방법
+    - 호출받는 함수의 파라미터에 ...에 이어서 파라미터 이름 작성
+    - 호출한 함수에서 보낸 순서로 매핑
+  - 파라미터와 Rest 파라미터 혼합 사용
+    ```javascript
+    function point(ten, ...rest) {
+        console.log(ten);
+        console.log(rest);
+    }
+    const value = [10, 20, 30];
+    point(...value); // 10, [20, 30]
+    ```
+    - ten에 10이 설정되고 설정되지 않은 나머지 값 전체가 파라미터 rest에 설정된다. 그래서 rest 파라미터이다.
+    - 나머지는 시맨틱을 나타내기 위해 파라미터 이름을 rest로 사용하기도 한다.
+    
+- Array-like
+  - Object 타입이지만 배열처럼 이터러블 가능한 오브젝트
+    - for()문으로 전개할 수 있음
+    ```javascript
+    const values = { 0: "가", 1: "나", 2: "다", length: 3};
+    for(let k = 0; k < values.length; k++){
+        console.log(values[k]);  // 가, 나, 다
+    }    
+    ```
+    - length 프로퍼티는 전개되지 않는다.
+    - for in 문으로 적상하면 length 프로퍼티도 전개된다.
+  - 작성 방법
+    - 프로퍼티 key값을 0부터 1씩 증가하면서 프로퍼티 값을 수정
+    - length에 전체 프로퍼티 수 작성
+    
+- rest와 arguments 차이
+  - arguments object
+    - 파라미터 작성에 관계없이 전체를 설정
+    - Array-like 형태로 Array method를 사용할 수 없음
+    - __proto__ 가 Object
+  - rest 파라미터
+    - 매핑되지 않은 나머지 파라미터만 설정
+    - Array Object 형태로 Array 메서드를 사용할 수 있음
+    - __proto__가 Array
+    
 ** 출처 1. 인프런 강좌_자바스크립트 ES6+ 기본
