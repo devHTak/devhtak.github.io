@@ -91,74 +91,74 @@ category: Javascript ES6+
  ### Number 함수
  
  - isNaN()
-  - 형태: Number.isNaN(), 파라미터: 비교 대상, 반환: NaN이면 true, 아니면 false
-  - NaN 값의 여부를 체크
-    - NaN이면 true, 아니면 false
-      ```javascript
-      const value = (0/0);
-      console.log(Number.isNaN(value), isNaN(value)); // true true
-      console.log(Number.isNaN("ABC"), isNaN("ABC")); // false, true
-      ```
-  - NaN 체크 방법
-    - NaN === NaN
-      - 결과가 false이므로 사용 불가
-    - isNaN(), 글로벌 오브젝트
-      - is Not a Number에 약자로, 숫자 객체가 아닌지를 반환한다.
-      - String 이더라도, 숫자로 변환한 다음 그 결과를 반환한다.
+    - 형태: Number.isNaN(), 파라미터: 비교 대상, 반환: NaN이면 true, 아니면 false
+    - NaN 값의 여부를 체크
+      - NaN이면 true, 아니면 false
         ```javascript
-        console.log(Number.isNaN("200"), isNaN("200")); // false, false
+        const value = (0/0);
+        console.log(Number.isNaN(value), isNaN(value)); // true true
+        console.log(Number.isNaN("ABC"), isNaN("ABC")); // false, true
         ```
-    - Number.isNaN()
-    - Object.is(NaN, NaN) : true
+    - NaN 체크 방법
+      - NaN === NaN
+        - 결과가 false이므로 사용 불가
+      - isNaN(), 글로벌 오브젝트
+        - is Not a Number에 약자로, 숫자 객체가 아닌지를 반환한다.
+        - String 이더라도, 숫자로 변환한 다음 그 결과를 반환한다.
+          ```javascript
+          console.log(Number.isNaN("200"), isNaN("200")); // false, false
+          ```
+      - Number.isNaN()
+      - Object.is(NaN, NaN) : true
 
 - isInteger()
-  - 형태: Number.isInteger(), 파라미터: 비교 대상, 반환: 정수이면 true, 아니면 false
-  - 파라미터 값이 정수면 true, 아니면 false 반환
-  - 정수로 인식
-    ```javascript
-    console.log(Number.isInteger(0)); // true
-    console.log(Number.isInteger(1.0)); // true
-    console.log(Number.isInteger(1.01)); // false
-    ```
-    - 1.0 또한 정수로 판단한다.
-  - 정수가 아닌 것으로 인식
-    ```javascript
-    console.log(Number.isInteger("12")); // false
-    console.log(Number.isInteger(true)); // false
-    ```
-    - Number.isInteger는 액면 그대로(변수에 타입까지) 구분하여 확인한다.
+    - 형태: Number.isInteger(), 파라미터: 비교 대상, 반환: 정수이면 true, 아니면 false
+    - 파라미터 값이 정수면 true, 아니면 false 반환
+    - 정수로 인식
+      ```javascript
+      console.log(Number.isInteger(0)); // true
+      console.log(Number.isInteger(1.0)); // true
+      console.log(Number.isInteger(1.01)); // false
+      ```
+      - 1.0 또한 정수로 판단한다.
+    - 정수가 아닌 것으로 인식
+      ```javascript
+      console.log(Number.isInteger("12")); // false
+      console.log(Number.isInteger(true)); // false
+      ```
+      - Number.isInteger는 액면 그대로(변수에 타입까지) 구분하여 확인한다.
 
 - isSafeInteger()
-  - 형태: Number.isSafeInteger(), 파라미터: 비교 대상, 반환: safe 정수이면 true, 아니면 false
-  - 파라미터 값이 safe 정수이면 true, 아니면 false
-  - -(2^53 - 1) ~ (2^53 - 1): true / 아니면 false
-  - true로 인식
-    ```javascript
-    console.log(Number.isSafeInteger(7.0)); // true
-    console.log(Number.isSafeInteger(Number.MAX_SAFE_INTEGER)); // true
-    console.log(Number.isSafeInteger(Number.MIN_SAFE_INTEGER)); // true
-    ```
-  - false로 인식
-    ```javascript
-    console.log(Number.isSafeInteger(7.1)); // false
-    console.log(Number.isSafeInteger("100")); // false - 타입또한 검사한다.
-    console.log(Number.isSafeInteger(NaN)); // false
-    console.log(Number.isSafeInteger(Infinity)); // false
-    ```
+    - 형태: Number.isSafeInteger(), 파라미터: 비교 대상, 반환: safe 정수이면 true, 아니면 false
+    - 파라미터 값이 safe 정수이면 true, 아니면 false
+    - -(2^53 - 1) ~ (2^53 - 1): true / 아니면 false
+    - true로 인식
+      ```javascript
+      console.log(Number.isSafeInteger(7.0)); // true
+      console.log(Number.isSafeInteger(Number.MAX_SAFE_INTEGER)); // true
+      console.log(Number.isSafeInteger(Number.MIN_SAFE_INTEGER)); // true
+      ```
+    - false로 인식
+      ```javascript
+      console.log(Number.isSafeInteger(7.1)); // false
+      console.log(Number.isSafeInteger("100")); // false - 타입또한 검사한다.
+      console.log(Number.isSafeInteger(NaN)); // false
+      console.log(Number.isSafeInteger(Infinity)); // false
+      ```
 
 - isFinite()
-  - 형태: Number.isFinite(), 파라미터: 비교 대상, 반환: 유환 값이면 true, 아니면 false를 반환
-  - 파라미터 값이 유한 값이면 true 아니면 false 반환
-  - 글로벌 오브젝트의 isFinite()와 체크 결과가 다르다.
-    ```javascript
-    console.log(Number.isFinite(100), isFinite(200)); // true, true
-    console.log(Number.isFinite("70"), isFinite("80")); // false, true - Global은 타입을 신경쓰지 않는다.
-    console.log(Number.isFinite(true), isFinite(true)); // false, true - Global은 타입을 신경쓰지 않아 true/false를 1/0으로 구분한다.
-    
-    console.log(Number.isFinite(NaN), isFinite(NaN)); // false, false
-    console.log(Number.isFinite(undefined), isFinite(undefined)); // false, false
-    ```
-    - 함수는 오브젝트에 속해야 하므로 Number와 관련된 것은 Number 오브젝트의 함수 사용
-    - 글로벌 오브젝트의 함수는 글로벌 사용이 목적 - 파라미터를 Number로 변환하여 체크한다.
+    - 형태: Number.isFinite(), 파라미터: 비교 대상, 반환: 유환 값이면 true, 아니면 false를 반환
+    - 파라미터 값이 유한 값이면 true 아니면 false 반환
+    - 글로벌 오브젝트의 isFinite()와 체크 결과가 다르다.
+      ```javascript
+      console.log(Number.isFinite(100), isFinite(200)); // true, true
+      console.log(Number.isFinite("70"), isFinite("80")); // false, true - Global은 타입을 신경쓰지 않는다.
+      console.log(Number.isFinite(true), isFinite(true)); // false, true - Global은 타입을 신경쓰지 않아 true/false를 1/0으로 구분한다.
+
+      console.log(Number.isFinite(NaN), isFinite(NaN)); // false, false
+      console.log(Number.isFinite(undefined), isFinite(undefined)); // false, false
+      ```
+      - 함수는 오브젝트에 속해야 하므로 Number와 관련된 것은 Number 오브젝트의 함수 사용
+      - 글로벌 오브젝트의 함수는 글로벌 사용이 목적 - 파라미터를 Number로 변환하여 체크한다.
     
 ** 출처1. 인프런 강좌_자바스크립트 ES6+
