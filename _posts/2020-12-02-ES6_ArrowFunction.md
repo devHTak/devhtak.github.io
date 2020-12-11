@@ -29,7 +29,7 @@ category: Javascript ES6+
   - 함수 블록과 return 작성 생략 가능
     ```javascript
     const total = (one, two) => one + two;
-    console.log(totla(one, two)); // 3
+    console.log(total(one, two)); // 3
     ```
     - => 앞에서 줄을 분리하면 syntax error 발생하지만 => 뒤에서는 줄을 분리할 수 있다.
   - 함수 블록{}만 작성한 형태
@@ -126,7 +126,7 @@ category: Javascript ES6+
 - this가 정적 스코프 참조
   - 화살표 함수에서 정적 스코프의 this를 사용
   - 정적(lexical) 스코프란
-    - 엔진이 해석할 때 화살표 함수를 만나면 functoin object를 생성하고 화살표 함수가 속한 스코프를 생성한 오브젝트에 바인딩
+    - 엔진이 해석할 때 화살표 함수를 만나면 function object를 생성하고 화살표 함수가 속한 스코프를 생성한 오브젝트에 바인딩
   - 오브젝트에 바인딩된 스코프의 this를
     - 화살표 함수에서 this로 사용
   
