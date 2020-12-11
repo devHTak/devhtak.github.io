@@ -24,7 +24,7 @@ category: Javascript ES6+
       const get = (param) => param + 100; // 함수는 const 사용
       ```
 
--spread
+- spread
   - Syntax: [...iterable]
   - [...iterable]
     - [...] 처럼 [] 안에 점(.) 3개를 작성하고 이어서 이터러블 오브젝트 작성
@@ -57,7 +57,7 @@ category: Javascript ES6+
     ```
     - 값을 대체하는 것이 아닌 전개한다.
 
-- Spring Spread
+- String Spread
   - spread 대상 문자열을 작성한 위치에 문자 단위로 전개
   - String spread 작성 형태
     ```javascript
@@ -117,7 +117,7 @@ category: Javascript ES6+
     - 호출받는 함수의 파라미터에 순서대로 매핑됨
     
 - Rest parameter
-  - Syntax : function(param, paramN, ..name) 
+  - Syntax : function(param, paramN, ...name) 
   - 분리하여 받은 파라미터를 배열로 결합
     - spread: 분리, rest: 결합
     ```javascript
