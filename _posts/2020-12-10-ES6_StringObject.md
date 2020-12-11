@@ -236,4 +236,68 @@ category: Javascript ES6+
       ```
       - "A"가 있지만 0번 인덱스에 있기 때문에 false
       - 정규표현식 사용이 불가하다.
+      
+- padStart()
+  - 형태: String.prototype.padStart()
+  - 파라미터: 늘릴 길이 값, 설정할 값(option)
+  - 반환: 길이를 늘리고 값을 채운 결과
+  
+  - 첫번째 파라미터 값만큼 길이를 늘리고 늘어난 끝에 대상 문자열을 설정한 후 앞의 남은 공간에 두 번째 파라미터를 채운다.
+  - 두번째 파라미터에 채울 문자열 작성
+    ```javascript
+    console.log("ABC".padStart(10, "123")); // 1231231ABC
+    console.log("ABC".padStart(6, "123456")); //123ABC
+    console.log("ABCDE".padStart(3, "123")); // ABCDE
+    console.log("ABC".padStart(6).length); // 6
+    ```
+    
+- padEnd()
+  - 형태: String.prototype.padEnd()
+  - 파라미터: 늘릴 길이 값, 설정할 값(option)
+  - 반환: 길이를 늘리고 값을 채운 결과
+  
+  - 첫번째 파라미터 값만큼 길이를 늘리고 늘어난 끝에 대상 문자열을 설정한 후 뒤의 남은 공간에 두 번째 파라미터를 채운다.
+  - 두번째 파라미터에 채울 문자열 작성
+    ```javascript
+    console.log("ABC".padEnd(10, "123")); // ABC1231231
+    console.log("ABC".padEnd(6, "123456")); //ABC123
+    console.log("ABCDE".padEnd(3, "123")); // ABCDE
+    console.log("ABC".padEnd(6).length); // 6
+    ```
+
+- trimStart()
+  - 형태: String.prototype.trimStart(), ES2019
+  - 파라미터: 없음
+  - 반환: 앞 공백을 삭제한 결과
+  
+  - 문자열 앞의 공백을 삭제
+    ```javascript
+    const value = "  123";
+    console.log(value.length); // 5
+    console.log(value.trimStart().length); // 3
+    
+    const split = "a, b, c".split(",");
+    for(let value of split) {
+        console.log(value, value.length); // a, 1/ b, 2/ c, 2
+        console.log(value.trimStart().length); // 1/1/1
+    }
+    ```
+
+- trimEnd()
+  - 형태: String.prototype.trimEnd(), ES2019
+  - 파라미터: 없음
+  - 반환: 뒤 공백을 삭제한 결과
+  
+  - 문자열 뒤의 공백을 삭제
+    ```javascript
+    const value = "123  ";
+    console.log(value.length); // 5
+    console.log(value.trimStart().length); // 3
+    
+    const split = "a ,b ,c".split(",");
+    for(let value of split) {
+        console.log(value, value.length); // a , 2/ b , 2/ c , 1
+        console.log(value.trimEnd().length); // 1/1/1
+    }
+    ```
 ** 출처1. 인프런 강좌_자바스크립트 ES6+
