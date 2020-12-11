@@ -162,7 +162,7 @@ category: Javascript ES6+
     ```javascript
     var node = document.querySelector(".sports");
     for(var i = 0; i < node.children.length; i++) {
-        node.children[k].onclick = function(event) {
+        node.children[i].onclick = function(event) {
             event.target.style.backgroundColor = "yellow";
             console.log(k);                                
         }
@@ -174,7 +174,7 @@ category: Javascript ES6+
     ```javascript
     var node = document.querySelector(".sports");
     for(let i = 0; i < node.children.length; i++) {
-        node.children[k].onclick = function(event) {
+        node.children[i].onclick = function(event) {
             event.target.style.backgroundColor = "yellow";
             console.log(k);                                
         }
@@ -188,8 +188,8 @@ category: Javascript ES6+
   ```javascript
   var music = "음악";
   let sports = "축구";
-  console.log(this.music + " " + + this.sports); //음악 undefined
-   ```
+  console.log(this.music + " " + this.sports); //음악 undefined
+  ```
    - 현재 위치는 글로벌 오브젝트이다.
    - var music = "음악"; 은 window object에 설정되지만 let sports = "축구"; 은 window object에 설정되지 않는다.
    - this.music 에서 this는 window object를 참조하지만 this.sports에서 sports가 window object에 설정되지 않으므로 undefined
@@ -286,7 +286,7 @@ category: Javascript ES6+
         sports = "농구";
     } catch(e) {
         console.log("const 할당 불가");
-    };
+    }
     ```
   - value1, value2에 초기값 작성
     - 반드시 값을 작성, 변수 선언만 불가
