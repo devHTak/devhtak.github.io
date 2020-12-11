@@ -61,7 +61,7 @@ console.log( ( 2 ** 3) ** 2 ) // 64
       getValue: function() { return this.point; },
       getPoint() { return this.point; }
   }
-  console.log(sport.getPoint(); // 100
+  console.log(sport.getPoint()); // 100
   ```
 - 참고: Object에 함수를 작성하는 이유
   - 함수에서 this로 Object 전체 참조
