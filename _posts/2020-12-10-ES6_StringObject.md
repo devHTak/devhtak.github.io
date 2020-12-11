@@ -300,4 +300,120 @@ category: Javascript ES6+
         console.log(value.trimEnd().length); // 1/1/1
     }
     ```
+    
+### Template Literal
+
+- Template Literal
+  - Syntax: `문자열`, `문자열${표현식}문자열`, tag`문자열${표현식}문자열`  
+  - template literal
+    - 문자열 처리를 위한 리터럴
+    - 표현식을 포함할 수 있다.
+    
+  - backtick 안에 표현식 작성
+    - 표현식을 ${표현식} 형태로 작성
+    ```javascript
+    console.log(`ABC`); // ABC
+    const one = 1, two = 2;
+    const result = `${one} + ${two} 는 ${one + two}이 된다.`;
+    console.log(result); // 1 + 2 는 3이 된다.
+    ```
+
+- Tagged Template
+  - 템플릿에 함수 이름을 작성한 형태
+    ```javascript
+    const one = 1, two = 2;
+    const show = (text, value) => {
+        console.log(`${text[0]}${value}`);
+        console.log(text[1]);
+    };
+    show `1 + 2 = ${one + two}`; // 1 + 2 = 3, ""
+    ```
+    - template에서 문자열과 표현식을 분리
+    - 1 + 2 = 까지가 문자열이고, ${one + two}가 표현식이며 평가하면 3이 된다.
+    - show() 함수를 호출
+    - 문자열을 배열로 넘겨 준다.
+      - 왼쪽에서 오른쪽으로 배열 엘리먼트로 추가. 마지막에 빈 문자열을 엘리먼트로 추가
+    - 표현식은 평가 결과를 넘겨 준다.
+    - console.log(text[1]); 
+      - 호출하는 함수에서 넘겨 준 빈 문자열 text[1]이 없으면 undefined가 출력
+  - 호출되는 함수를 태그 함수(tag function)이라고 부른다.
+  - show 함수를 호출하면서 문자열을 배열로 파라미터로 넘기고 표현식 결과를 하나씩 파라미터로 넘긴다.
+  
+  - 호출하는 곳에서 
+    - 표현식을 평가한 값을 다수 넘겨 줄 때 사용
+    - 태그 함수에 대응하는 파라미터 이름을 작성한 형태
+      ```javascript
+      const one = 1, two = 2;
+      const show = (text, plus, minus) => {
+          console.log(`${text[0]}${plus}`);
+          console.log(`${text[1]}${minus}`);
+          console.log(`${text[2]}${text[3]}`);
+      };
+      show `1 + 2 = ${one + two} 고 1 - 2 = ${one - two} 이다.`; // 1 + 2 = 3, 고 1 - 2 = -1, 이다.undefined
+      ```
+  - 문자열을 분리하면 ["1 + 2 =", " 이고 1- 2=", " 이다."]
+    - 3개의 배열 엘리먼트가 된다.
+  - 표현식을 분리하면
+    - ${one + two} 와 ${one - two}
+  - show 태그 함수를 호출
+  - Rest 파라미터 사용
+    ```javascript
+    const one = 1, two = 2;
+    const show = (text, ...rest) => {
+        console.log(`${text[0]}${rest[0]}`);
+        console.log(`${text[1]}${rest[1]}${text[2]}`);
+    };
+    show `1 + 2 = ${one + two} 고 1 - 2 = ${one - two} 이다.`; // 1 + 2 = 3, 고 1 - 2 = -1 이다.
+    ```
+    
+- raw()
+  - 형태: String.raw `template string`
+  - 반환: 반환 형태 (option)
+  
+  - String.raw에
+    - 이어서 template을 작성
+      ```javascript
+      const one = 1, two = 2;
+      const result = String.raw `1+2=${one + two}`;
+      console.log(result); // 1+2=3
+      ```
+      - 표현식을 평가하고 결과를 표현식 위치에 설정
+    - 줄 바꿈을 문자로 처리
+      ```javascript
+      console.log(`one\ntwo`); // one, two
+      console.log(String.raw `one\ntwo`); // one\ntwo
+      ```
+      - \n을 문자 그대로로 인식한다.
+    - 유니코드의 코드 포인트 처리
+      ```javascript
+      console.log(`\u{31}\u{32}`); //12
+      console.log(String.raw `\u{31}\u{32}`); // \u{31}\u{32}
+      ```
+      - 유니코드를 반환하지 않고 문자 그대로로 사용한다.
+  
+  - raw의 "문자열"을 문자 하나씩 전개하면서
+    - 두번째 파라미터부터 조합하고 연결
+    - 문자열
+      ```javascript
+      const one = 1, two = 2;
+      console.log(String.raw({raw: "ABCD"}, one, two, 3)); // A1B2C3D
+      ```
+      - 첫번째 파라미터에 인스턴스는 항상 raw로 사용해야 한다.
+      - 항상 마지막은 문자열로 만든다.
+      - A를 반환 버퍼에 넣고 raw()의 2번째 파라미터 값을 버퍼에 첨부 -> one 변숫값인 1을 첨부하여 A1이 된다.
+      - B를 반환 버퍼 끝에 첨부하고 raw()의 3번째 파라미터 값을 버퍼에 첨부 -> 즉, two 변숫값인 2를 첨부
+      - raw()의 3번째 파라미터 값을 버퍼에 첨부 -> two 변숫값인 2를 첨부
+      - 반복하여 A1B2C3D를 만들어 조합한 결과를 반환한다.
+    - 배열
+      ```javascript
+      const rawValue = {raw: ["A", "B", "C"]};
+      console.log(String.raw(rawValue, 1, 2, 3)); // A1B2C
+      ```
+      - `A${1}B${2}C`
+      - 마지막을 문자열로 생성해야 하기 때문에 3을 사용하지 않고 C에서 끝이 난다.
+  - 첫 번째 파라미터는 {raw: 값} 형태
+  - 두 번째 파라미터부터 조합할 값 작성
+    - ({raw: "ABCD"}, 1, 2, 3)
+    
+  
 ** 출처1. 인프런 강좌_자바스크립트 ES6+
