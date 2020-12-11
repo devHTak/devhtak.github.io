@@ -103,7 +103,7 @@ category: Javascript ES6+
       - 두번째 next() 호출 {value: 20, done: false}를 반환 한다. value는 list의 두번째 값이고 done: false는 iterator 상태입니다.
       - 세번째 next() 호출 {value: undefined, done: true}를 반환 한다. undefined는 처리할 값이 없다는 뜻이며 done:true는 이터레이터의 종료를 뜻한다.
   - Iterator Object 구조
-    - const obj = list[[Symbol.iterator]]();
+    - const obj = list[[Symbol.iterator]] ();
       - 위 형태로 호출하면 이터레이터 오브젝트를 생성하여 반환한다.
       - obj의 __proto__를 펼치면 next()가 있다. next()가 있으므로 obj는 iterator object이다. 
   
