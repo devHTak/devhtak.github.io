@@ -427,4 +427,5 @@ console.log(obj.next(); // {value: undefined, done: true}
       ```
       - 첫 번째 yield에서 빠져 나오기 때문에 무한루프에 빠지지 않는다.
       - int count = 0; while(true) { count += 10; yield point + count }; 와 같다
+      
 ** 출처1. 인프런 강좌_자바스크립트 ES6+
