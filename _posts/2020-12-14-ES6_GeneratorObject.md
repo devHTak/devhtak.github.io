@@ -234,5 +234,197 @@ console.log(obj.next(); // {value: undefined, done: true}
     - 함수를 빠져 나온 후 다시 obj.next()를 호출하면 함수 안으로 이동, 함수 안의 변수에 초깃값을 설정, 앞의 obj.next()로 one 변수에 할당한 값이 그대로 남는다.
     - 이 것이 Generator function의 특징
       - 제너레이터 오브젝트를 생성할 때 초깃값을 설정하고 next()를 호출할 때마다 초깃값을 설정하지 않는다.
+      
+### yield 반복
+  ```javascript
+  let status = true;
+  function* sports() {
+      let count = 0;
+      while(status) {
+          yield ++count;
+      };
+  };
+  const obj = sports();
+  console.log(obj.next()); // {value: 1, done: false}
+  console.log(obj.next()); // {value: 2, done: false}
+  status = false;
+  console.log(obj.next()); // {value: undefined, done: false}
+  ```
+  - yield 반복하는 형태
+  - next()가 호출될 때마다 status 상태에 따라 while이 반복된다.
+  - next() 호출되면 반복이 한번 실행(yield를 만나기 전까지)되기 때문에 done이 false이다.
 
+### 다수의 yield 처리
+  ```javascript
+  function* sports() {
+      return yield yield yield;
+  }
+  const obj = sports();
+  console.log(obj.next()); // {value: undefined, done: false}
+  console.log(obj.next(10)); // {value: 10, done: false}
+  console.log(obj.next(20)); // {value: 20, done: false}
+  console.log(obj.next(30)); // {value: 30, done: true}
+  ```
+  - 한줄에 yield와 return 작성
+    - return yield yield yield;
+  - 첫 번째 next() 호출
+    - 첫 번째 yield를 수행합니다. yield에 반환 값이 없으므로 {value: undefined, done: false} 반환
+  - 두 번째 next(10) 호출
+    - 파라미터 값: 10
+    - 두 번째 yield를 수행
+    - 함수에 파라미터 값을 받을 변수가 없으면 파라미터로 넘겨준 값 반환
+  - 세 번째 next(20) 호출
+    - 파라미터 값: 20
+    - 세 번째 yield를 수행
+    - 함수에 파라미터 값을 받을 변수가 없으면 파라미터로 넘겨준 값 반환
+  - 네 번째 next(30) 호출
+    - 파라미터 값: 30
+    - 처리할 yield가 없으므로 done:true 반환
+    - return 문을 작성했으므로 파라미터로 넘겨 준 값을 반환 {value: 30, done: true} 반환
+    - return 문을 작성하지 않으면 30이 아닌 undefined를 반환
+  
+### yield 분할 할당
+  
+  ```javascript
+  function* sports() {
+      return [yield yield];
+  };
+  const obj = sports();
+  console.log(obj.next()); // {value: undefined, done: false}
+  console.log(obj.next(10)); // {value: 10, done: false}
+  const last = obj.next(20);
+  console.log(last); // {value: [20], done: true}
+  console.log(last.value); // [20]
+  ```
+  - 대괄호 [] 안에 다수의 yield 작성
+    - return [yield yield];
+  - next(), next(10) 호출
+    - yield를 연속 작성한 것과 같아 yield를 2개 모두 수행했으므로 더 이상 처리할 yield가 없다.
+  - 세 번째 next(20) 호출
+    - return param이 되고, 배열 안에 param을 넣어 반환   
+
+### for-of 문
+
+  ```javascript
+  function* sports(count) {
+      while(true) {
+          yield ++count;
+      }
+  };
+  for(let point of sports(10) {
+      console.log(point); // 11, 12, 13
+      if(point > 12) {
+          break;
+      }
+  }
+  ```
+  - 생성한 제너레이터 오브젝트를 저장할 변수가 없으며 엔진 내부에 저장
+  - const engine = sports(10); 과 같으며 engine이 엔진 내부의 이름으로 가정
+  - for-of문을 실행하면 {value: 11, done: false}가 아닌 value값만 point에 담는다.
+  
+### Generator Object Method
+
+- return()
+  - 형태: generatorObject.return()
+  - 파라미터: 제너레이터로 넘겨 줄 값(option)
+  - 반환: return()의 파라미터 값
+  
+  - 이터레이터를 종료시킨다.
+    ```javascript
+    function* sports(count) {
+        while(true) {
+            yield ++count;
+    };
+    const obj = sports(10);
+    console.log(obj.next()); // {value: 11, done: false}
+    console.log(obj.return(20)); // {value: 20, done: true}
+    console.log(obj.next(50)); // {value: undefined, done: true}
+    ```
+  - return() 파라미터 값을 {value: param, done: true}로 value에 설정한다.
+
+- throw()
+  - 형태: generatorObject.throw()
+  - 파라미터: 에러 메시지, Error object
+  - 반환: {value: 에러 메시지, done: true}
+  
+  - Error를 의도적으로 발생
+  - Generator function의 catch()문에서 에러를 받음
+    ```javascript
+    function* sports() {
+        try {
+            yield 10;
+        } catch(message) {
+            yield message;
+        }
+        yield 20;
+    };
+    
+    const obj = sports();
+    console.log(obj.next()); // {value: 10, done: false}
+    const.obj(throw("에러 발생")); // {value: 에러 발생, done: false} - catch문에 있기 때문에 false 반환
+    console.log(obj.next()); // {value: 20, done: true}
+    ```
+  - Generator function에 throw 문을 작성
+    ```javascript
+    function* sports() {
+        throw "에러 발생";
+        yield 10;
+    };
+    const obj = sports();
+    try {
+        const result = obj.next();
+    } catch(message) {
+        console.log(message); // 에러 발생
+    }
+    console.log(obj.next()); // {value: undefined, done: true}
+    ```
+    - Generator function에 에러가 발생하는 경우 종료한다.
+    
+### yield* 표현식
+
+- yield*
+  - Syntax: yield* 표현식
+  - yield* 표현식에 따라 처리하는 방법이 다르다.
+  - yield* 의 표현식이 배열
+    - next()로 호출할 때마다 배열의 엘리먼트를 하나씩 처리
+      ```javascript
+      function* sports() {
+          yield* [10, 20];
+      };
+      const obj = sports();
+      console.log(obj.next()); // {value: 10, done: false} 
+      console.log(obj.next()); // {value: 20, done: false}
+      ```
+  - yield* 의 표현식이 제너레이터 함수
+    - 함수의 yield를 먼저 처리
+      ```javascript
+      function* point(count) {
+          yield count + 5;
+          yield count + 10;
+      };
+      function* sports(value) {
+          yield* point(value);
+          yield value + 20;
+      };
+      const obj = sports(10);
+      console.log(obj.next()); // {value: 15, done: false}
+      console.log(obj.next()); // {value: 20, done: false}
+      console.log(obj.next()); // {value: 30, done: false}
+      ```
+      - 첫 번째, 두 번째 next() 호출 -> yield* point(value) 호출 -> point의 yield를 먼저 반환
+      - 세 번째 next() 호출 -> sports()의 value+20; 반환
+  - yield* 표현식에서 자신 호출  
+    - 재귀 호출
+      ```javascript
+      function* sports(point) {
+          yield point;
+          yield* sports(point + 10);
+      };
+      const obj = sports(10);
+      console.log(obj.next()); // {value: 10, done: false}
+      console.log(obj.next()); // {value: 20, done: false}
+      console.log(obj.next()); // {value: 30, done: false}
+      ```
+      - 첫 번째 yield에서 빠져 나오기 때문에 무한루프에 빠지지 않는다.
+      - int count = 0; while(true) { count += 10; yield point + count }; 와 같다
 ** 출처1. 인프런 강좌_자바스크립트 ES6+
