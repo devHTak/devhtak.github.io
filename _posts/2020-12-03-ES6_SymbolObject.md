@@ -107,4 +107,253 @@ category: Javascript ES6+
       - 위 형태로 호출하면 이터레이터 오브젝트를 생성하여 반환한다.
       - obj의 __proto__를 펼치면 next()가 있다. next()가 있으므로 obj는 iterator object이다. 
   
+### Symbol Object
+
+- primitive 값
+  - 자바스크립트에서 Primitive 값은 오브젝트가 아니라 값이며 함수를 갖고 있지 않음
+  - const num = 100; 을 할당하면 num 변수에 100만 할당되며 아무것도 첨부되지 않음
+    - 100이 primitive 값
+  - ES5의 primitive 값 타입
+    - string, number, boolean, null, undefined
+  - ES6의 symbol 타입 추가
+ 
+- Wrapper object
+  - wrapper object
+    - primitive 값이 포함된 오브젝트
+    - wrapper object에는 메소드가 있음
+  - wrapper object가 있는 primitive 값 ㅇ타입
+    - string: String, number: Number object, boolean: Boolean, symbol: Symbol object
+  - const obj = new String(100);
+    - obj 인스턴스의 [[PrimitiveValue]]에 100이 설정
+    - [[PrimitiveValue]] 형태
+      ```javascript
+      const sports = new String(100);
+      const sym = Symbol("ABC");
+      ```
+      - debugger 모드에서 sports를 펼치면 [[PrimitiveValue]]: "100"이 있다.
+      - [[PrimitiveValue]]가 프리미티브 값을 나타내는 프로퍼티 이름이며 "100"이 프로퍼티 값이다.
+      - sports는 wrapper object이다.
+      - sym은 펼칠 수가 없으며 [[PrimitiveValue]]가 표시되지 않는다.
+      - 그렇다고 Symbol에 Primitive 값이 없는 것은 아니며 이 Symbol은 Primitive 값을 외부에 노출시키지 않는 특성 때문이다.      
+  - undefined, null은 wrapper 오브젝트 없다
+
+- Symbol() 함수
+  - 형태: Symbol()
+  - 파라미터: 설명, 주석(option)
+  - 반환: 유일한 Symbol 값
+  
+  - Symbol() 함수는 값을 생성하여 반환
+    - 반환된 값을 볼 수 없다.
+      ```javascript
+      const sym = Symbol();
+      console.log(sym);
+      console.log(typeof sym);
+      ```
+      - const sym = Symbol(); // Symbol 오브젝트가 아닌 Symbol 값을 생성하여 반환
+      - console.log(sym); // 생성한 Symbol 값이 출력되지 않고 Symbol 값을 생성한 코드 형태가 표시
+      - console.log(typeof sym); // Symbol로 생성한 값 타입은 symbol이다.
+    - new 연산자를 사용할 수 없다.
+  - 프로그램 전체를 통해 유일한 값 제공
+    ```javascript
+    const one = Symbol(); const two = Symbol();
+    console.log(one === two); // false
+    ```
+    - Symbol() 을 실행할 때마다 프로그램 전체에서 하나만 있는 값을 생성
+  - Symbol 값으로 연산 불가
+    ```javascript
+    let sym = Symbol();
+    try {
+        const add = sym + 5;
+    } catch(e) {
+        console.log("연산 불가");
+    }
+    ```
+    - Symbol은 값이지만 연산할 수 없다.
+  - Symbol 타입 변경 불가 
+    ```
+    let sym = Symbol();
+    try {
+      +sym
+    } catch(e) {
+        console.log("값 타입 변경 불가");
+    }
+    ```
+    - +sym: 단항 +연산자는 Number 타입으로 변경. Symbol 타입을 바꿀 수는 없다.
+    - 외부에 Symbol 값이 노출되는 처리(계산, 변환 등) 을 할 수 없다.
+  - 파라미터에 주석, 설명을 작성
+    ```javascript
+    const sym = Symbol("주석, 설명");
+    console.log(sym); // Symbol(주석, 설명);
+    ```
+    - 파라미터에 작성한 문자를 생성한 값의 문자열로 작성한다.
+    - 생성한 Symbol 값을 볼 수 없으므로 값 설명이 필요할 때 사용한다.
+    - Symbol() 실행에 영향을 미치지 않는다.
+  - Symbol 값을 문자열로 바꿔서 연결
+    ```javascript
+    const sym = Symbol("설명");
+    console.log(sym.toString() + "연결"); // Symbol(설명)연결
+    ```
+    - Symbol 값을 toString()으로 변환하면 에러가 발생하지 않지만 값이 변환되지 않고 값을 만든 형태에 문자열을 연결
+    - new String(sym) 형태는 에러가 발생
+  - Template에 사용
+    ```javascript
+    const sym = Symbol("주석, 설명");
+    try {
+        `${sym}`
+    } catch(e) {
+        console.log("`${sym}` 불가");
+    }
+    ```
+    - Symbol 값을 Template에 사용할 수 없다.
+    - `${sym}` 불가
+
+- Symbol 사용 형태
+  - Object의 프로퍼티 키로 사용
+    - Symbol 값이 유일하므로 중복되지 않는다.
+    - symbol-keyed property라고 부른다.
+      ```javascript
+      const sym = Symbol("설명");
+      const obj = {[sym]: 100};
+      ```
+      - const obj = {[sym]: 100};
+        - Symbol 값을 Object의 프로퍼티 키로 사용
+        - [sym] 처럼 대괄호 안에 Symbol()로 할당한 변수 이름을 작성
+        - 이를 symbol-keyed property라고 부른다.
+    - 프로퍼티 값 추출 방법
+      ```javascript
+      const sym = Symbol("설명");
+      const obj = {[sym]: 100};
+      console.log(obj[sym]); // 100
+      console.log(obj.sym); // undefined
+      ```
+      - obj[sym]: Symbol() 결과를 할당한 sym을 프로퍼티 키로 사용하여 값을 구한다.
+        - 프로퍼티 값인 100 출력
+      - obj.sym : undefined가 출력되며 obj[sym] 형태로 사용해야 한다. 
+  - Object에서 함수 이름으로 사용
+    ```javascript
+    const sym = Symbol("함수 이름");
+    const obj = {
+        [sym](param) {
+            return param;
+        }
+    };
+    console.log(obj[sym](200)); // 200
+    ```
+    - [sym](param) { } // 형태로 함수 정의
+    - obj[sym](param); // 형태로 함수 호출
+
+  - for-in 문에서 사용
+    - Symbol이 열거되지 않음
+    - [[Enumerable]]: false이기 때문
+      ```javascript
+      const obj = {
+          [Symbol("100")]: 100,
+          two: 200
+      };
+      for(let key in obj) {
+          console.log(key); // two
+      }
+      ```
+      - Object에 Symbol-keyed 프로퍼티를 사용하여 프로퍼티 값을 작성
+      - for-in 문으로 열거되지 않고, 에러가 발생하지 않는다.
+  - Object.getOwnPropertySymbols()로 열거 가능
+  - for-of 문에서 사용
+    - 배열 안에 Symbol() 작성
+      ```javascript
+      const list = [Symbol(100)];
+      for(let value of list) {
+          console.log(value); // Symbol(100)
+      }
+      ```
+  - JSON.stringify()에서 사용
+    - Symbol 값이 문자열로 변환되지 않음
+      ```javascript
+      const sym = Symbol("JSON");
+      const result = JSON.stringify({[sym]: "ABC"});
+      console.log(result); // {}
+      ```
+      - Symbol은 변환에서 제외된다. 이것은 Symbol 값을 외부에 노출하지 않기 위해서이다.
+
+### Symbol Property
+
+- Well-Known Symbols
+  - 스펙에서 @@iterator 형태를 볼 수 있음
+  - @@은
+    - Well-Known Symbol을 나타내는 기호
+    - @@match 와 Symbol.match가 같다
+    - 스펙에서는 @@match 형태를 사용하고, 개발자는 Symbol.match를 사용
+  - Well-Known Symbol 이란?
+    - 스펙에서 알고리즘에 이름을 부여하고 이름으로 참조하기 위한 빌트인 Symbol 값
+  - 개발자 코드 우선 실행
+    - match()를 실행하면 Symbol.match 를 오버라이딩하지 않았으면 디폴트로 @@match 실행
+    - 소스 코드에서 Symbol.match를 작성하면 @@match가 실행되지 않고, Symbol.match가 실행
+    - 개발자 코드로 디폴트 기능을 오버라이딩할 수 있다.
+  - Symbol 12개(ES2019 기준)
+    |Symbol|대응|Symbol|대응|
+    |------|---|---|---|
+    |Symbol.asyncIterator|for-await-of|Symbol.hasInstance|instanceof|
+    |Symbol.isConcatSpreadable|Array.prototype.concat()|Symbol.iterator|for-of|
+    |Symbol.match|String.prototype.match()|Symbol.replace|String.prototype.replace()|
+    |Symbol.search|String.prototype.search()|Symbol.species|cosntructor|
+    |Symbol.split|String.prototype.split()|Symbol.toPrimitive|ToPrimitive()|
+    |Symbol.toStringTag|Object.prototype.toString()|Symbol.unscopables|with|
+    
+    - Symbol.toStringTag
+      - Object.prototype.toString()의 확장(overriding)
+      - toString()으로 인스턴스 타입을 구하면 [object Object] 형태로 반환
+        - 인스턴스 타입을 명확하게 구할 수 없다.
+          ```javascript
+          const Book = function() {}
+          const obj = new Book();
+          console.log(obj.toString()); // [object Object]
+          console.log({}.toString()); // [object Object]
+          ```
+      - Symbol.toStringTag로 구분 가능
+        - [object Object] 에서 두 번째에 표시될 문자열을 작성
+        - 예: "ABC" 지정, [object "ABC"]로 반환
+          ```javascript
+          const Sports = function() {}
+          console.log(Sports.toString()); //[object Object]
+          
+          Sports.prototype[Symbol.toStringTag] = "농구";
+          console.log(obj.toString()); // [object 농구]
+          ```
+          - Sports.prototype[Symbol.toStringTag] = "농구";
+            - prototype에 Symbol.toStringTag를 연결하고 Object에 작성할 문자를 농구로 작성했다.
+            - 표시될 문자를 임의로 작성할 수 있으며 function 마다 지정할 수 있다.
+    - Symbol.isConcatSpreadable
+      - Array.prototype.concat()은 배열의 엘리먼트를 전개하여 반환
+        ```javascript
+        const one = [10, 20], two = ["A", "B"];
+        const show = () => {
+            console.log(one.concat(two));
+        };
+        show(); // [10, 20, A, B]
+        two[Symbol.isConcatSpreadable] = true;
+        show(); // [10, 20, A, B]
+        two[Symbol.isConcatSpreadable] = false;
+        show(); // [10, 20, [A, B]]
+        ```
+        - 대상이 Array이면, 전개하는 것이 default이다.
+        - [Symbol.isConcatSpreadable] = true
+          - one 배열 끝에 two 배열의 엘리먼트를 하나씩 연결
+        - [Symbol.isConcatSpreadable] = false
+          - 전개하지 않고 two 배열 자체를 연결
+      - Array-like 전개
+        ```javascript
+        const one = [10, 20];
+        const like = {0: "A", 1: "B", length: 2};
+        const show = () => {
+            console.log(one.concat(like));
+        };
+        show(); // [10, 20, {0: A, 1: B, length: 2}]
+        two[Symbol.isConcatSpreadable] = true;
+        show(); // [10, 20, A, B]
+        two[Symbol.isConcatSpreadable] = false;
+        show(); // [10, 20, {0: A, 1: B, length: 2}]
+        ```
+        - Array-Like는 전개하지 않는 것이 default로, Array와 반대이다.
+        - Symbol.isConcatSpreadable이 true면 그때 전개한다.
+
+
 ** 출처 1. 인프런 강좌_자바스크립트 ES6+ 기본
