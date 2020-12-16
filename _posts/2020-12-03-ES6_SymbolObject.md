@@ -354,6 +354,37 @@ category: Javascript ES6+
         ```
         - Array-Like는 전개하지 않는 것이 default로, Array와 반대이다.
         - Symbol.isConcatSpreadable이 true면 그때 전개한다.
-
+    
+    - Symbol.species
+      - Symbol.species 는 cosntructor를 반환
+        - constructor를 실행하면 인스턴스를 생성하여 반환하므로 결국, 인스턴스를 반환        
+      - Symbol.species 를 오버라이드하면 다른 인스턴스를 반환할 수 있다는 의미
+      - 메서드를 실행한 후의 결과 형태
+        ```javascript
+        const obj = [1, 2, 3];
+        const one = obj.slice(1, 3);
+        const two = one.slice(1, 2); 
+        ```
+        - [1, 2, 3]으로 Array Object를 생성하여 obj에 할당
+          - debugger 모드에서 obj 구조를 보면 prototype은 없고 __proto__만 있으므로 obj는 빌트인 Array Object가 아니라 Array.prototype에 연결된 메서드로 생성한 인스턴스.
+        - const one = obj.slice(1, 3);
+          - 구조는 차이가 없으며 값 [2, 3]만 다르다. 이 것은 인스턴스에 있는 메서드를 호출하면 메서드 실행 결괏값을 반환하지 않고 결괏값이 설정된 인스턴스를 반환하기 때문이다.
+        - const two = one.slice(2, 3); 
+          - 바로 앞에서 반환된 one으로 메서드를 호출할 수 있다는 것은 one이 인스턴스이기 때문, two 또한 인스턴스로 구조 또한 같다
+      - Symbol.species 기능
+        ```javascript
+        class Sports extends Array {};
+        const obj = new Sports(10, 20, 30);
+        const one = obj.slice(1, 2);
+        console.log(one); // [20]
+        ```
+        - class Sports extends Array{}
+          - 빌트인 Array object를 상속(확장, 연결) 받습니다.
+        - const obj = new Sports(10, 20, 30);
+          - 인스턴스 생성
+        - const one = obj.slice(1, 2);
+          - obj 인스턴스의 slice()를 호출하면 slice() 처리 결과를 인스턴스에 설정하여 인스턴스를 반환
+          - 즉, obj 안에 prototype - constructor 가 없는데, 인스턴스를 반환해주는 것이 Symbol.species 기능이다.
+        - 이렇게 인스턴스의 메서드를 호출했을 때 인스턴스를 반환하도록 하는 것이 Symbol.species 기능
 
 ** 출처 1. 인프런 강좌_자바스크립트 ES6+ 기본
