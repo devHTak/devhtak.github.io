@@ -386,5 +386,152 @@ category: Javascript ES6+
           - obj 인스턴스의 slice()를 호출하면 slice() 처리 결과를 인스턴스에 설정하여 인스턴스를 반환
           - 즉, obj 안에 prototype - constructor 가 없는데, 인스턴스를 반환해주는 것이 Symbol.species 기능이다.
         - 이렇게 인스턴스의 메서드를 호출했을 때 인스턴스를 반환하도록 하는 것이 Symbol.species 기능
+      - Symbol.species 오버라이드
+        ```javascript
+        class Sports extends Array {
+            static get [Symbol.species]() {
+                return Array;
+            }
+        };
+        const one = new Sports(10, 20, 30);
+        console.log(one instanceof Sports); // true
+        
+        const two = one.slice(1, 2);
+        console.log(two instanceof Sports); // false
+        console.log(two instanceof Array); // true
+        // Symbol.species가 Array를 return하기 때문에 Array에서 true다
+        ```
+        - Symbol.species 는 static Accessor property 이고, getter만 있고, setter가 없다.
+        - Symbol.species를 사용할 수 있는 빌트인 오브젝트
+          - Array, Map, Set, RegExp
+          - Promise, ArrayBuffer, TypedArray
+        - 빌트인 오브젝트를 상속받은 class에 Symbol.species를 작성하면 빌트인 오브젝트의 @@species가 오버라이드 된다.
+    - Symbol.toPrimitive
+      - 오브젝트를 대응하는 Primitive 값으로 변환
+      - 대응, 기대하는 타입
+        - number, string, default
+      - 오브젝트를 문자열에 대응
+        ```javascript
+        const point = {bonus: 100};
+        console.log(point.toString()); // [object Object]
+        const book = {
+            toString() {
+                return "책";
+            }
+        };
+        console.log(`${book}`); // 책
+        ```
+        - 문자열은 toString()을 오버라이딩한다.
+      - 오브젝트를 숫자에 대응
+        ```javascript
+        const point = {bonus: 100};
+        console.log(point.valueOf()); // {bonus: 100}
+        
+        const book = {
+            toString() { return 70 },
+            valueOf() { return 30}
+        };
+        console.log(book * 20); // 600
+        ```
+        - 숫자는 valueOf()를 오버라이딩한다.
+      - Symbol.toPrimitive() 사용
+        ```javascript
+        const obj = {
+            [Symbol.toPrimitive](hint) {
+                return hint === "number" ? 30 : hint === "string" ? "책" : "default";
+            }
+        };
+        console.log(20 * obj); // 600
+        console.log(`${obj}` + 100); //책100
+        console.log(obj + 50); // default50
+        console.log("default" == obj); // true
+        ```
+        - 20* obj
+          - *에 맞는 Primitive로 변환하므로 number가 된다.
+        - `${obj}`
+          - template에 경우 string으로 판단한다
+        - obj + 50
+          - obj에 대한 값이 없으므로 default로 판단한다
+        - "default" == obj
+          - == 와 같은 비교에는 default가 설정된다.
+    - Symbol.iterator
+      - @@iterator가 있는 빌트인 오브젝트
+        - String, Array, Map, Set, TypedArray
+      - 빌트인 Object에는 @@iterator가 없지만, 구현할 수 있다.
+      - Array Object
+        - Array object의 [Symbol.iterator]()를 호출하면 iterator object 반환
+          - next()로 배열 엘리먼트 값을 구할 수 있다.
+            ```javascript
+            const list = [10, 20];
+            const obj = list[Symbol.iterator]();
+            console.log(obj.next()); // {value: 10, done: false}
+            console.log(obj.next()); // {value: 20, done: false}
+            console.log(obj.next()); // {value: undefined, done: true}
+            ```
+      - String Object
+        - String object의 [Symbol.iterator]()를 호출하면 iterator object 반환
+          - next()로 배열 엘리먼트 값을 구할 수 있다.
+            ```javascript
+            const list = "1A";
+            const obj = list[Symbol.iterator]();
+            console.log(obj.next()); // {value: 1, done: false}
+            console.log(obj.next()); // {value: A, done: false}
+            console.log(obj.next()); // {value: undefined, done: true}
+            ```
+      - 빌트인 Object
+        - 빌트인 Object에는 Symbol.iterator가 없다.
+          - Symbol.iterator가 반복을 처리하므로 Object에 Symbol.iterator를 작성하면 반복할 수 있다.
+            ```javascript
+            const obj = {
+                [Symbol.iterator]() {
+                    return {
+                        count: 0,
+                        maxCount: this.maxCount,
+                        next() {
+                            if(this.count < this.maxCount) {
+                                return {value: this.count++, done: false};
+                            }
+                            return {value: undefined, done: true};
+                        }
+                    };
+                }
+            };
+            obj.maxCount = 2;
+            for(const value of obj) {
+                console.log(value); // 0, 1
+            }
+            ```
+            - 엔진이 for-of 문을 시작하면 먼저 obj에서 [Symbol.iterator]를 검색, 이를 위해 obj에 [Symbol.iterator] 작성
+      - 제너레이터 함수 연결
+        - Object{}에 Symbol.iterator를 작성하고 generator 함수를 연결하면 반복할 때마다 yield를 수행
+          ```javascript
+          const obj = {};
+          obj[Symbol.iterator] = function*() {
+              yield 1; 
+              yield 2; 
+              yield 3;
+          };
+          console.log([...obj]); // [1, 2, 3]
+          ```
+          - [...obj]를 실행하면 [Symbol.iterator]를 검색하고 있는 경우 yield가 끝날 때까지 반복하여 배열을 만든다
+        - 연결 구조
+          - Symbol.iterator의 __proto__에 제너레이터 오브젝트가 있는 구조
+        - 제너레이터 오브젝트에 이터레이터 오브젝트를 연결하여 값을 공유하는 형태
+          - 제너레이터 오브젝트에 이터레이터 오브젝트가 포함된 구조
+            ```javascript
+            const gen = function*() {
+                yield 10;
+                yield 20;
+            };
+            const genObj = gen();
+            console.log(genObj.next()); // {value: 10, done: false}
+            
+            const obj = genObj[Symbol.iterator]();
+            console.log(obj.next); // {value: 20, done: false}
+            ```
+            - const obj = genObj[Symbol.iterator]();
+              - iterator 객체를 반환하기 때문에 다음 yield가 나온다.
+          
 
+        
 ** 출처 1. 인프런 강좌_자바스크립트 ES6+ 기본
