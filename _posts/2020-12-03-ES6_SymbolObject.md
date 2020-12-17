@@ -531,7 +531,164 @@ category: Javascript ES6+
             ```
             - const obj = genObj[Symbol.iterator]();
               - iterator 객체를 반환하기 때문에 다음 yield가 나온다.
-          
+    - String 메소드
+      - match()
+        - String.prototype.match()
+        - 문자열에 패턴을 매치하고 매치된 결과를 배열로 반환
+          ```javascript
+          const result = "Sports".match(/s/);
+          console.log(result); // [s]
+          ```
+          - 문자열 "Sports"에 패턴 /s/를 매치한다, 소문자인 끝 s를 매치한다.
+      - replace()
+      - search()
+      - split()
+      
+      - Symbol.match()
+        - 개발자 코드를 함수 블록에 작성
+        - String.prototype.match() 대신에 Symbol.match()가 실행됨
+          ```javascript
+          const sports = {
+              base: "ball",
+              [Symbol.match](value) {
+                  return this.base.indexOf(value) < 0 ? "없음" : "있음";
+              }
+          };
+          console.log("al".match(sports)); // 있음
+          ```
+        - Symbol.match = false
+          - //를 패턴으로 인식하지 않고 문자열로 인식
+            ```javascript
+            try {
+                "/book/".startsWtih(/book/);
+            } catch {
+                console.log("정규 표현식으로 처리");
+            }
+            // 정규 표현식으로 처리
+            let check = /book/;
+            check[Symbol.match] = false;
+            console.log("/book/".startsWith(check)) // false
+            ```
+        - 메소드를 오버라이드하는 것이므로 메소드의 시맨틱은 유지해야 한다.
 
-        
+### Symbol 함수
+
+- for()
+  - 형태: Symbol.for()
+  - 파라미터: Symbol key 값
+  - 반환: 생성 또는 검색된 Symbol
+  
+  - 글로벌 Symbol registry에 {key: value} 형태로 Symbol을 저장
+    - 파라미터()의 문자열이 key가 되고 Symbol()로 생성한 값이 value가 된다.
+      ```javascript
+      const one = Symbol.for("sports");
+      console.log(one); // Symbol(sports);
+      ```
+      - {key: value} 형태로 {sports: Symbol() 로 생성한 값} 형태로 one에 설정하여 one이 글로벌 Symbol registry에 저장된다. Symbol(주석)과는 다르다
+    - registry의 사전적 의미: 등록, 기록
+  - 글로벌 Symbol registry는 공유 영역
+    - 다른 오브젝트에서도 사용 가능
+    - 같은 key가 존재하면 등록된 값을 사용
+      ```javascript
+      const one = Symbol.for("sports");
+      const two = Symbol.for("sports");
+      console.log(one === two); // true - one과 two가 key가 같으므로 같은 value를 사용한다.
+      
+      console.log(Symbol.for(true)); // Symbol(true)
+      ```
+      
+- keyFor()
+  - 형태: Symbol.keyFor()
+  - 파라미터: 검색할 Symbol
+  - 반환: Symbol key 값, undefined
+  
+  - 글로벌 Symbol registry에서 Symbol의 key 값을 구한다.
+    - 파라미터에 Symbol.for() 로 등록한 Symbol 작성
+      ```javascript
+      const one = Symbol.for("book");
+      const six = Symbol.keyFor(one);
+      console.log(six) // book 
+      ```
+      - one의 key 값을 반환
+  - Symbol key 값이 존재하면 key 값을 반환하고 존재하지 않으면 undefined 반환
+
+- toString()
+  - 형태: Symbol.prototype.toString()
+  - 파라미터: 파라미터 없음
+  - 반환: 변환된 문자열
+  
+  - Symbol을 생성했던 형태를 문자열로 변환하여 반환
+    - Symbol 값은 반환되지 않음
+      ```javascript
+      console.log(Symbol("100").toString()); // Symbol(100);
+      const sym = Symbol.for("book");
+      console.log(sym.toString()); // Symbol(book);
+      
+      try {
+          console.log(Symbol() + "ABC");
+      } catch {
+          console.log("+로 연결 불가");
+      }
+      // +로 연결 불가
+      
+      ```
+  - +로 문자열을 연결하면 TypeError
+    - toString()으로 변환하면 연결은 되지만 Symbol 값은 연결되지 않음
+
+- description
+  - Symbol.prototype.description
+  - Syntax, ES2019
+    - Symbol("설명").description;
+    - Symbol.for("키").description;
+    - Symbol.iterator.description;
+  - Symbol 오브젝트의 주석, 설명을 반환
+    - Symbol() 함수의 파라미터를 반환
+      ```javascript
+      console.log(Symbol("sports").description); // sports
+      console.log(Symbol.for("book").description); // book
+      console.log(Symbol.iterator.description); // Symbol.iterator
+      ```  
+  - toString() 과의 차이
+    ```javascript
+    console.log(Symbol("book").toString()); // Symbol(book)
+    console.log(Symbol("").toString()); // Symbol()
+    console.log(Symbol().toString()); // Symbol()
+    
+    console.log(Symbol("book").description); // sports
+    console.log(Symbol.for("book").description); // book
+    console.log(Symbol("").description); // ""
+    console.log(Symbol().description); // undefined
+    ```
+
+- valueOf()
+  - 형태: Symbol.prototype.valueOf()
+  - 파라미터: 없음
+  - 반환: 프리미티브 값
+  
+  - valueOf()가 프리미티브 값을 반환하지만 Symbol은 값을 반환하지 않고 Symbol을 생성한 형태를 반환
+    ```javascript
+    console.log(Symbol("100").valueOf()); // Symbol(100)
+    console.log(Symbol.for("200").valueOf()); // Symbol(200)
+    ```
+  - Symbol.for()는 for를 제외하고 반환
+  
+- getOwnPropertySymbols()
+  - 형태: Object.getOwnPropertySymbols()
+  - 파라미터: Object
+  - 반환: 배열
+  
+  - Object의 함수이지만 Symbol이 대상이므로 여기서 다룬다.
+  - 파라미터의 Object에서 Symbol만 배열로 반환
+    - 다른 프로퍼티는 반환하지 않음
+      ```javascript
+      consot obj = {point: 100};
+      obj[Symbol("one")] = 200;
+      obj[Symbol.for("two")] = 300;
+      console.log(Object.getOwnPropertyNames(obj)); // [point] - String 타입의 key를 배열로 반환
+      const list = Object.getOwnPropertySymbols(obj);  // Symbol 타입의 key를 배열로 반환
+      for(const sym of list) {
+          console.log(`${sym.description}: ${obj[sym]}`); // one: 200, two: 300
+      }
+      ```
+      
 ** 출처 1. 인프런 강좌_자바스크립트 ES6+ 기본
