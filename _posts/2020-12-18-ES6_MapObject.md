@@ -28,7 +28,7 @@ category: Javascript ES6+
     
 - new Map()
   - 형태: new Map()
-  - 파라미터: [이터러블 오브젝트](option)
+  - 파라미터: \[이터러블 오브젝트](option)
   - 반환: 생성한 Map 인스턴스
   
   - Map 인스턴스를 생성하여 반환
