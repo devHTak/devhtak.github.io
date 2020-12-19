@@ -15,7 +15,7 @@ category: javascript
   - function object
     - function book(..) {..}
     - var book = function(...) {...}
-    - 인스턴스지만, new 연산자로 생성한 인스턴스와 구분하기 위해 강좌에서는 function 오브젝트로 표기
+    - 함수를 선언하면, function object의 인스턴스를 생성한 것
   - function 인스턴스
     - new Book() 처럼 new 연산자를 사용하여 Book.prototype에 연결된 메소드로 사용
 - Function Object 생성
@@ -42,12 +42,12 @@ category: javascript
   - sports 오브젝트에 prototype오브젝트 첨부
   - prototype에 constructor 프로퍼티 첨부
     - property.constructor가 sports 오브젝트 참조
-  - prototype에 __proto__ 오브젝트 첨부
+  - prototype에 \__proto__ 오브젝트 첨부
     - ES5 스펙에 __proto__가 기술되어 있지 않으며 ES6스펙에 기술
     - 엔진이 사용한다는 뉘앙스로 정의
-  - 빌트인 Object.prototype의 메소드로 Object 인스턴스를 생성하여 prototype.__proto__에 첨부
-  - sports Object에 __proto__ 오브젝트 첨부. sports.__proto__ 구조가 된다.
-  - 빌트인 Function.prototype의 메서드로 function 인스턴스를 생성하여 sports.__proto__에 첨부
+  - 빌트인 Object.prototype의 메소드로 Object 인스턴스를 생성하여 prototype.\__proto__에 첨부
+  - sports Object에 \__proto__ 오브젝트 첨부. sports.\__proto__ 구조가 된다.
+  - 빌트인 Function.prototype의 메서드로 function 인스턴스를 생성하여 sports.\__proto__에 첨부
   - sports object property에 초기값 설정
     - arguments, caller, length, name 프로퍼티
   ```
@@ -68,7 +68,7 @@ category: javascript
     - constructor가 연결된다.
     - __proto__가 연결된다.
     - Object 인스턴스가 연결된다.
-  - function 오브젝트에 __proto__가 있으며
+  - function 오브젝트에 \__proto__가 있으며
     - Function 인스턴스가 연결된다.
     - Array면 Array 인스턴스가 연결되고, String이면 String 인스턴스가 연결된다.
 - Function 실행 환경
@@ -86,7 +86,7 @@ category: javascript
   
 - 내부 프로퍼티란?
   - 엔진이 내부 처리에 사용하는 프로퍼티로 스펙 표기로 외부에서 사용 불가한다.
-  - [[...]] 형태. ex) [[Scope]]
+  - \[\[...]] 형태. ex) \[\[Scope]]
   - 내부 프로퍼티 분류
     - 공통 프로퍼티
       - 모든 오브젝트에 공통으로 설정되는 프로퍼티
@@ -97,35 +97,35 @@ category: javascript
   
   |프로퍼티 이름|값 형태|개요|
   |------|---|---|
-  | [[Prototype]] | Object 또는 Null | 오브젝트의 prototype |
-  | [[Class]] | String | 오브젝트 유형 구분 |
-  | [[Extensible]] | Boolean | 오브젝트에 프로퍼티 추가 가능 여부 |
-  | [[Get]] | any | 이름의 프로퍼티 값 (getter) |
-  | [[GetOwnProperty]] | 프로퍼티 디스크립터 | 오브젝트 소유의 프로퍼티 디스크립터 속성 |
-  | [[GetProperty]] | 프로프터 디스크립터 | 오브젝트의 프로퍼티 디스크립터 속성 |
-  | [[Put]] | - | 프로퍼티 이름으로 프로퍼티 값 설정 |
-  | [[CanPut]] | Boolean | 값(value) 설정 가능 여부 |
-  | [[HasProperty]] | Boolean | 프로퍼티의 존재 여부 |
-  | [[Delete]] | Boolean | 오브젝트에서 프로퍼티 삭제 가능 여부|
-  | [[DefaultValue]] | any | 오브젝트의 디폴트 값 |
-  | [[DefinedOwnProperty]] | Boolean | 프로퍼티 추가, 프로퍼티 값 변경 가능 여부 |
+  | \[\[Prototype]] | Object 또는 Null | 오브젝트의 prototype |
+  | \[\[Class]] | String | 오브젝트 유형 구분 |
+  | \[\[Extensible]] | Boolean | 오브젝트에 프로퍼티 추가 가능 여부 |
+  | \[\[Get]] | any | 이름의 프로퍼티 값 (getter) |
+  | \[\[GetOwnProperty]] | 프로퍼티 디스크립터 | 오브젝트 소유의 프로퍼티 디스크립터 속성 |
+  | \[\[GetProperty]] | 프로프터 디스크립터 | 오브젝트의 프로퍼티 디스크립터 속성 |
+  | \[\[Put]] | - | 프로퍼티 이름으로 프로퍼티 값 설정 |
+  | \[\[CanPut]] | Boolean | 값(value) 설정 가능 여부 |
+  | \[\[HasProperty]] | Boolean | 프로퍼티의 존재 여부 |
+  | \[\[Delete]] | Boolean | 오브젝트에서 프로퍼티 삭제 가능 여부|
+  | \[\[DefaultValue]] | any | 오브젝트의 디폴트 값 |
+  | \[\[DefinedOwnProperty]] | Boolean | 프로퍼티 추가, 프로퍼티 값 변경 가능 여부 |
   
   - 선택적 내부 프로퍼티: 오브젝트에 따라 선택적 설정
   
   |프로퍼티 이름|값 형태|개요|
   |------|---|---|
-  | [[PrimitiveValue]] | 프리미티브 값 | Boolean, Date, Number, String 오브젝트에서 제공 |
-  | [[Construct]] | Object | new 연산자로 호출되며 인스턴스를 생성 |
-  | [[Call]] | any | 함수 호출 |
-  | [[HasInstance]] | Boolean | 지정한 오브젝트로 생성한 인스턴스 여부 |
-  | [[Scope]] | 렉시컬 환경 | Function 오브젝트가 실행되는 렉시컬(정적) 환경 |
-  | [[FormalParameters]] | 문자열 리스트 | 호출된 함수의 파라미터 이름 리스트 |
-  | [[Code]] | JS Code | 함수에 작성한 JS 코드 설정, 함수가 호출되었을 때 실행 | 
-  | [[TargetFunction]] | Object | Function 오브젝트의 bind()에 생성한 타깃 함수 오브젝트 설정 |
-  | [[BoundThis] | any | bind()에 바인딩된 this object |
-  | [[BoundArguments]] | list | bind()에 바인딩된 아규먼트 리스트 |
-  | [[Match]] | 매치 결과 | 정규 표현식의 매치 결과 |
-  | [[ParameterMap]] | Object | 아규먼트 오브젝트와 함수의 파라미터 매핑 |
+  | \[\[PrimitiveValue]] | 프리미티브 값 | Boolean, Date, Number, String 오브젝트에서 제공 |
+  | \[\[Construct]] | Object | new 연산자로 호출되며 인스턴스를 생성 |
+  | \[\[Call]] | any | 함수 호출 |
+  | \[\[HasInstance]] | Boolean | 지정한 오브젝트로 생성한 인스턴스 여부 |
+  | \[\[Scope]] | 렉시컬 환경 | Function 오브젝트가 실행되는 렉시컬(정적) 환경 |
+  | \[\[FormalParameters]] | 문자열 리스트 | 호출된 함수의 파라미터 이름 리스트 |
+  | \[\[Code]] | JS Code | 함수에 작성한 JS 코드 설정, 함수가 호출되었을 때 실행 | 
+  | \[\[TargetFunction]] | Object | Function 오브젝트의 bind()에 생성한 타깃 함수 오브젝트 설정 |
+  | \[\[BoundThis] | any | bind()에 바인딩된 this object |
+  | \[\[BoundArguments]] | list | bind()에 바인딩된 아규먼트 리스트 |
+  | \[\[Match]] | 매치 결과 | 정규 표현식의 매치 결과 |
+  | \[\[ParameterMap]] | Object | 아규먼트 오브젝트와 함수의 파라미터 매핑 |
   
 - 함수 정의 형태
   - 함수 정의
