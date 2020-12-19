@@ -27,54 +27,53 @@ category: javascript
     - VEC(Variable Environment Component): LEC와 function, 변수 식별자가 binding 되는 점을 포함해 동일하다.
     - TBC(This Environment Component): Thid binding, this의 값이 여기서 결정된다.
       
-    ```javascript
-    /*
-    show 실행 콘텍스트(EC): {
-        렉시컬 환경 컴포넌트(LEC): {
-            환경 레코드(ER): {
-                선언적 환경 레코드(DER):{
-                    title: 'Javascript book'
-                },
-                오브젝트 환경 레코드(OER): {}
-            },
-            외부 렉시컬 환경 참조(OLER):{
-                point: 123,
-                getPoint: function(){}
-            }
-        },
-        변수 환경 컴포넌트(VEC): {}
-        this 바인딩 컴포넌트(TBC):{
-            글로벌 오브젝트(window)
-        }
-    }
-    */
-    function book() {
-        var point = 123;
-        function show() {
-            var title ="Javascript book";
-            // getPoint();
-            // this.bookAmount;
-        }
-        function getPoint() {return point;}
+      ```javascript
+      /*
+      show 실행 콘텍스트(EC): {
+          렉시컬 환경 컴포넌트(LEC): {
+              환경 레코드(ER): {
+                  선언적 환경 레코드(DER):{
+                      title: 'Javascript book'
+                  },
+                  오브젝트 환경 레코드(OER): {}
+              },
+              외부 렉시컬 환경 참조(OLER):{
+                  point: 123,
+                  getPoint: function(){}
+              }
+          },
+          변수 환경 컴포넌트(VEC): {}
+          this 바인딩 컴포넌트(TBC):{
+              글로벌 오브젝트(window)
+          }
+      }
+      */
+      function book() {
+          var point = 123;
+          function show() {
+              var title ="Javascript book";
+              // getPoint();
+              // this.bookAmount;
+          }
+          function getPoint() {return point;}
 
-        show();
-    };
+          show();
+      };
 
-    book();
-    ```
-    
-    - book() 함수가 호출되면
-      - show function 오브젝트 생성
-      - show의 [[Scope]] 에 스코프 설정 (대괄호 2개는 엔진이 설정하는 프로퍼티를 뜻한다.)
-      - 스코프는 book() 함수 내로 설정한다.
-    - show() 함수가 호출되면 functional EC 생성
-      - 엔진 컨트롤이 show()함수로 이동하기 전에 함수 실행을 위한 Context 환경 구축
-      - LEC, VEC, TBC 생성 첨부
-      - LEC에 ER, OLER 첨부
-      - ER에 DER, OER 첨부
-    - DER에 show()의 변수, 함수 기록
-    - OLER에 show()의 \[\[Scope]] 를 설정
-    - this 바인딩 컴포넌트에 this 참조 설정
+      book();
+      ```    
+      - book() 함수가 호출되면
+        - show function 오브젝트 생성
+        - show의 [[Scope]] 에 스코프 설정 (대괄호 2개는 엔진이 설정하는 프로퍼티를 뜻한다.)
+        - 스코프는 book() 함수 내로 설정한다.
+      - show() 함수가 호출되면 functional EC 생성
+        - 엔진 컨트롤이 show()함수로 이동하기 전에 함수 실행을 위한 Context 환경 구축
+        - LEC, VEC, TBC 생성 첨부
+        - LEC에 ER, OLER 첨부
+        - ER에 DER, OER 첨부
+      - DER에 show()의 변수, 함수 기록
+      - OLER에 show()의 [[Scope]] 를 설정
+      - this 바인딩 컴포넌트에 this 참조 설정
   
 - 식별자 해결 (Identifier Resolution)
   - 식별자 해결
@@ -87,15 +86,15 @@ category: javascript
   - resolutation 의 사전적 의미: 해결, 결정
     - 결정도 시맨틱적으로 맞음
     - 시멘틱: 코드 조각의 의미를 나타낸다.
-    ```javascript
-    var point = 100;
-    function getPoint() {
-        var point = 200;
-        return point;
-    }
-    var result = getPoint(); // scope이 getPoint 내부에 있기 때문에 point/200값을 return 한다.
-    console.log(result); // 200
-    ```
+      ```javascript
+      var point = 100;
+      function getPoint() {
+          var point = 200;
+          return point;
+      }
+      var result = getPoint(); // scope이 getPoint 내부에 있기 때문에 point/200값을 return 한다.
+      console.log(result); // 200
+      ```
 - 스코프 용도
   - 식별자 해결을 위한 수단, 방법
     - 스코프가 목적이 아니다.
@@ -138,38 +137,39 @@ category: javascript
     - 함수 코드를 실행하고 실행 결과를 저장
     - 스펙 상의 사양 (엔진 처리 과정)
     - 실행 콘텍스트 스펙
-  ```javascript
-  function music(title) {
-      var musicTitle = title;
-  }
-  music("음악");
-  ```
-  - music("음악"); 으로 함수가 호출하면 엔진은 실행 콘텍스트를 생성하고 실행 컨텍스트 안으로 이동합니다.
-  - 실행 컨텍스트 실행 단계
-    - 준비 단계, 초기화 단계, 코드 실행 단계
-  - Execution Context 생성 시점: 실행 가능한 코드를 만났을 때
-  - 실행 가능한 코드 유형: 함수 코드, 글로벌 코드, eval 코드
-  - 코드 유형을 분리한 이유
-    - Execution Context에서 처리 방법과 실행 환경이 다르기 때문이다.
-    - 함수 코드 -> Lexical 환경, 글로벌 코드 -> Global 환경 , eval 코드 -> 동적 환경
+      ```javascript
+      function music(title) {
+          var musicTitle = title;
+      }
+      music("음악");
+      ```
+      - music("음악"); 으로 함수가 호출하면 엔진은 실행 콘텍스트를 생성하고 실행 컨텍스트 안으로 이동합니다.
+      - 실행 컨텍스트 실행 단계
+        - 준비 단계, 초기화 단계, 코드 실행 단계
+      - Execution Context 생성 시점: 실행 가능한 코드를 만났을 때
+      - 실행 가능한 코드 유형: 함수 코드, 글로벌 코드, eval 코드
+      - 코드 유형을 분리한 이유
+        - Execution Context에서 처리 방법과 실행 환경이 다르기 때문이다.
+        - 함수 코드 -> Lexical 환경, 글로벌 코드 -> Global 환경 , eval 코드 -> 동적 환경
 - Execution Context 상태 컴포넌트
   - Execution Context 상태를 위한 오브젝트 -> Execution Context 안에 생성
   - 상태 컴포넌트 유형
     - Lexical Execution Component(LEC)
     - Variable Execution Component(VEC)
     - This Binding Component(TBC)
-  ```
-  Execution Context(EC): {
-      Lexical Execution Component(LEC): {
-          Environment Record(ER): { point: 100 },
-          Object Lexical Environment Reference(OLER): {
-              title: "book", getTitle: function() {}
+      ```
+      Execution Context(EC): {
+          Lexical Execution Component(LEC): {
+              Environment Record(ER): { point: 100 },
+              Object Lexical Environment Reference(OLER): {
+                  title: "book", getTitle: function() {}
+              }
           }
+          Variable Execution Component(VEC): {}
+          This Binding Component(TBC): {}
       }
-      Variable Execution Component(VEC): {}
-      This Binding Component(TBC): {}
-  }
-  ```
+      ```
+      
   - Lexical Execution Component
     - 함수와 변수의 식별자 해결을 위한 환경 설정
     - 함수 초기화 단계에서 해석한 함수와 변수를 {name: value} 형태로 저장, 이름으로 함수와 변수를 검색하게 된다.
@@ -207,19 +207,21 @@ console.log(getPoint(50)); // 350 출력
     - 준비단계 1. Component를 생성하여 EC에 첨부. LEC, VEC, TBC
     - 준비단계 2. ER을 생성하여 LEC에 첨부 - 함수 안의 함수, 변수를 바인딩한다.
     - 준비단계 3. OLER을 생성하여 LEC에 첨부하고, function object의 [[Scope]]를 설정
-    ```
-    EC: {
-      LEC= { ER: {}, OLER: { base: 200 } }, VEC: { }, TBC: {}
-    }
-    ```
+      ```
+      EC: {
+        LEC= { ER: {}, OLER: { base: 200 } }, VEC: { }, TBC: {}
+      }
+      ```
+      
     - 초기화 단계 1. 호출한 함수의 파라미터 값을 호출된 함수의 파라미터 이름에 매핑. 환경 레코드에 작성 (변수 선언 전 파라미터가 먼저 설정된다.)
     - 초기화 단계 2. 함수 선언문을 function object로 생성
     - 초기화 단계 3. 함수 표현식과 변수에 초기값 설정. 현재까지는 외부에 실행 상태를 제공하지 않는다.
-    ``` 
-    EC: {
-      LEC= { ER: {bonus: 70, point: undefined}, OLER: { base: 200 } }, VEC: { }, TBC: {}
-    }    
-    ```
+      ``` 
+      EC: {
+        LEC= { ER: {bonus: 70, point: undefined}, OLER: { base: 200 } }, VEC: { }, TBC: {}
+      }    
+      ```
+      
     - 실행 단계 1. 함수 안의 코드를 실행합니다. var point = 100;
     - 실행 단계 2. EC 안에서 관련된 함수와 변수를 사용할 수 있습니다.
   - 해당 과정은 메모리에서 진행한다.
@@ -256,31 +258,33 @@ EC:{
     - obj.book() 형태에서 this로 obj를 참조할 수 있도록 This Binding Component에 obj 참조를 설정
     - obj의 프로퍼티가 변경되면 동적으로 참조 (설정이 아닌 참조)
   - 실행 과정
-  ```javascript
-  var obj = {point: 100};
-  obj.getPoint = function() {
-      return this.point;
-  }
-  console.log(obj.getPoint()); // 100
-  ```
-    - 마지막 줄에서 getPoint() 함수 호출
-    - Execution Context 생성
-    - 3개의 Component 생성( LEC, VEC, TBC )
-    - This Binding Component에 getPoint()에서 this로 obj의 프로퍼티를 사용할 수 있도록 바인딩
-      - 초기화 단계. 파라미터, 함수 선언문, 변수 선언이 없다.
-      - 실행 단계 1. return this.point 실행
-      - 실행 단계 2. TBC에서 point 검색 - getPoint() 함수를 호출한 오브젝트가 TBC에 참조된 상태
-      - 실행 단계 3. TBC에 point 프로퍼티가 있으므로 100을 반환
-      - 추가 설명: obj.getPoint()에서 obj의 프로퍼티가 TBC에 바인딩되도록 의도적으로 설계해야 한다.
-  ```
-  EC: {
-      LEC= { ER: { DER: {}, OER: {}}, OLER: {},
-      VEC: {},
-      TBC: {
-        point: 100, getPoint: function(){}
-      }
-  }
-  ```
+    ```javascript
+    var obj = {point: 100};
+    obj.getPoint = function() {
+        return this.point;
+    }
+    console.log(obj.getPoint()); // 100
+    ```
+      - 마지막 줄에서 getPoint() 함수 호출
+      - Execution Context 생성
+      - 3개의 Component 생성( LEC, VEC, TBC )
+      - This Binding Component에 getPoint()에서 this로 obj의 프로퍼티를 사용할 수 있도록 바인딩
+        - 초기화 단계. 파라미터, 함수 선언문, 변수 선언이 없다.
+        - 실행 단계 1. return this.point 실행
+        - 실행 단계 2. TBC에서 point 검색 - getPoint() 함수를 호출한 오브젝트가 TBC에 참조된 상태
+        - 실행 단계 3. TBC에 point 프로퍼티가 있으므로 100을 반환
+        - 추가 설명: obj.getPoint()에서 obj의 프로퍼티가 TBC에 바인딩되도록 의도적으로 설계해야 한다.
+        
+    ```
+    EC: {
+        LEC= { ER: { DER: {}, OER: {}}, OLER: {},
+        VEC: {},
+        TBC: {
+          point: 100, getPoint: function(){}
+        }
+    }
+    ```
+    
 - 호출 스택 (Call Stack)
   - Execution Context의 논리적 구조
   - FILO 순서
@@ -288,13 +292,13 @@ EC:{
     - 다시 함수 안에서 함수를 호출하면 호출된 함수의 EC가 스택의 가장 위에 놓이게 된다.
     - 함수가 종료되면 스택에서 빠져 나옴(FILO)
   - 가장 아래는 Global Object의 함수가 위치한다.
-  ```javascript
-  function one() { two(); console.log(1); }
-  function two() { three(); console.log(2); }
-  function three() { console.log(3); }
-  one();
-  ```
-  //3 2 1 순으로 출력된다.
+    ```javascript
+    function one() { two(); console.log(1); }
+    function two() { three(); console.log(2); }
+    function three() { console.log(3); }
+    one();
+    ```
+      - 3 2 1 순으로 출력된다.
 
 - 파라미터 매핑
   - 함수 호출
@@ -312,19 +316,19 @@ EC:{
   - 엔진 처리 관점
     - EC로 넘겨준 파라미터 값과 function object의 [[FormalParameters]]에 작성된 이름에 값을 매핑하고 결과를 DEC에 설정하는 것
 - 파라미터 이름에 값 매핑 방법
-```javascript
-var obj = {};
-obj.getTotal = function(one, two) {
-    return one + two;
-}
-console.log(obj.getTotal(11, 22, 77));
-```
-  - getTotal 오브젝트의 \[\[FormalParameters]]에서 호출된 함수의 파라미터 이름을 구합니다. 파라미터 이름은 \["one", "two"] 형태로 \[\[FormalParameters]]는 function object를 생성할 때 설정한다.
-  - 파라미터 이름 배열을 하나씩 읽는다.
-  - 파라미터에서 index 번째의 값을 구한다. 인덱스에 값이 없으면 undefined 반환 (오류가 발생하는 것은 아니다.)
-  - 파라미터 이름의 이름과 값을 DER에 {one: 11, two: 22} 형태로 설정한다. 같은 이름이 있으면 값이 대체된다.
-  - 파라미터 이름을 전부 읽을 때까지 배열을 읽고, 값을 구하는 작업을 반복한다.
-  - 여기서 77(값)은 매핑되는 파라미터 이름이 없어 DER에 저장되지는 않지만 함수에 Argument Object에는 들어가게 된다.
+  ```javascript
+  var obj = {};
+  obj.getTotal = function(one, two) {
+      return one + two;
+  }
+  console.log(obj.getTotal(11, 22, 77));
+  ```
+    - getTotal 오브젝트의 \[\[FormalParameters]]에서 호출된 함수의 파라미터 이름을 구합니다. 파라미터 이름은 \["one", "two"] 형태로 \[\[FormalParameters]]는 function object를 생성할 때 설정한다.
+    - 파라미터 이름 배열을 하나씩 읽는다.
+    - 파라미터에서 index 번째의 값을 구한다. 인덱스에 값이 없으면 undefined 반환 (오류가 발생하는 것은 아니다.)
+    - 파라미터 이름의 이름과 값을 DER에 {one: 11, two: 22} 형태로 설정한다. 같은 이름이 있으면 값이 대체된다.
+    - 파라미터 이름을 전부 읽을 때까지 배열을 읽고, 값을 구하는 작업을 반복한다.
+    - 여기서 77(값)은 매핑되는 파라미터 이름이 없어 DER에 저장되지는 않지만 함수에 Argument Object에는 들어가게 된다.
 
 ** 출처1. 인프런 강좌_자바스크립트 중고급: 근본 핵심 이해
 
