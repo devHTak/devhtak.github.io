@@ -309,14 +309,158 @@ category: Javascript ES6+
     - Map 인스턴스의 entry 수를 반환
     - 개발자 코드로 수정할 수 없다.
     
+### WeakMap
+
+  - WeakMap은 Object만 Key로 사용 가능
+    - Number 등의 프리미티프 타입 사용 불가, value는 제한이 없다.
+  - Map에서 key로 참조한 object를 삭제하면 object를 사용할 수 없게 되지만 Map에 Object가 남는다.
+    - memory leak 발생
+      ```javascript
+      let sports = {like: "축구"};
+      const obj = new Map([
+          [sports, "like:축구"]
+      ]);
+      
+      sports = {like: "농구"};
+      ```
+        - let sports = {like: "축구"} 에서 {like: "농구"}로 변경하면 참조하는 메모리가 변경되기 때문에 메모리 leak이 발생한다.
+        
+  - WeakMap의 object를 GC가 지운다.
+    - GC: Garbage Collection
+  - WeakMap 오브젝트 메소드는 CRUD와 관련된 메서드만 있다.
+  - WeakMap entry 열거 불가
+  - 이터레이션 불가
     
-    
-    
-    
-    
-    
-    
-    
-    
+- new WeakMap()
+  - 형태: new WeakMap()
+  - 파라미터: \[이터러블 오브젝트] (option)
+  - 반환: 생성한 WeakMap 인스턴스
+  - WeakMap 인스턴스 생성, 반환
+  - 파라미터 작성
+    - 대괄호 안에 이터러블 오브젝트 작성
+      ```javascript
+      const empty = new WeakMap();
+      const sports = {};
+      const obj = new WeakMap([
+          [sports, "sports object"]
+      ]);
+      console.log(typeof obj); // object
+      ```
+    - WeakMap 오브젝트 구조
+      ```javascript
+      "use strict"
+      const map = Map;
+      const weakMap = WeakMap;
+      
+      const sports = {};
+      const obj = new WeakMap([
+          [sports, "종목"]
+      ]);
+      ```
+        - map 과 weakmap이 구조에서 크게 다르지 않는다.
+        - Map 오브젝트에 Symbol(Symbol.species)가 있지만 WeakMap은 없다.
+        - map.prototype에 SYmbol.iterator가 있지만 WeakMap은 없다.
+        - map.prototype에는 forEach()가 있지만 weakMap.prototype에는 forEach()가 없다.
+        - 오른쪽의 obj를 펼치면 \[\[Entries]]가 있다.
+        - \[\[Entries]]를 펼치면 0: {object=>"종목"} gudxodlek.
+          - \[Object, "종목"] 형태로 작성한 것을 인덱스를 부여하여 배열로 만들고 엘리먼트에 {Object: "종목"} 형태로 변환
+        - Map 인스턴스와 구조가 같다.
+
+### WeakMap 오브젝트 메소드
+
+- get()
+  - 형태: WeakMap.prototype.get()
+  - 파라미터: key (object)
+  - 반환: 엘리먼트 value
+  - WeakMap 인스턴스에서 key 값이 같은 value 반환
+    - 존재하지 않으면 undefined 반환
+      ```javascript
+      const fn = () => {}
+      const obj = new WeakMap([
+          [fn, "함수"]
+      ]);
+      console.log(obj.get(fn)); // 함수
+      ```
+      
+- set()
+  - 형태: WeakMap.prototype.set()
+  - 파라미터: key (object), value(임의의 값)
+  - 반환: key, value가 설정된 인스턴스
+  - WeakMap 인스턴스에 key, value 설정
+    ```javascript
+    const fn = function() {}
+    const obj = new WeakMap([
+        [fn, "함수"]
+    ]);
+    console.log(obj.get(fn)); // 함수
+    obj.set(fn, "함수 변경");
+    console.log(obj.get(fn)); // 함수 변경
+    ```
+    - 같은 메모리에 fn 변수이기 때문에 value 가 변경된다.
+  - 첫 번째 파라미터에 key로 사용할 오브젝트 작성 - string과 같은 프리미티브 값 사용 불가
+  - 두 번째 파라미터는 값
+    - 첫 번째 파라미터의 오브젝트에 대한 값보다는 오브젝트 구분 등의 용도, 오브젝트에 따라 연동되는 함수 등록
+  
+- has()
+  - 형태: WeakMap.prototype.has()
+  - 파라미터: key (object)
+  - 반환: 존재하면 true, 아니면 false
+  - WeakMap 인스턴스에서 key 값이 존재하면 true, 존재하지 않으면 false
+    ```javascript
+    const obj = {};
+    const weakObj = new WeakMap([
+        [obj, "오브젝트"]
+    ]);
+    console.log(weakObj.has(obj)); // true
+    ```  
+
+- delete()
+  - 형태: WeakMap.prototype.delete()
+  - 파라미터: key (object)
+  - 반환: 삭제 성공 true, 실패 false
+  - WeakMap 인스턴스에서 key와 일치하는 entry 삭제
+    - 삭제 성공하면 true, 실패하면 false
+      ```javascript
+      const fn = () => {}
+      const obj = new WeakMap([
+          [fn, "함수"]
+      ]);
+      console.log(obj.delete(fn)); // true
+      console.log(obj.has(fn)); // false
+      ```
+
+### WeakMap의 GC
+  - Garbage Collection
+    - 참조하는 object가 바뀌면 참조했던 오브젝트가 가비지 컬렉션 처리됨
+    - 가바지 컬렉션 처리
+      ```javascript
+      let obj = new WeakMap();
+      let sports = () => {point: 1};
+      obj.set(sports, "변경전");
+      
+      sports = () => {point: 2};
+      obj.set(sports, "변경후");
+      ```
+      - let sports = () => {point: 1}; obj.set(sports, "변경전");
+        - sports에 function을 할당하고 이것을 WeakMap 인스턴스에 key 설정
+      - sports = () => {point: 2};
+        - 새로운 함수를 생성하여 할당. 바로 위의 sports가 참조하는 메모리 주소가 바뀐다.
+        - sports가 참조하는 메모리 주소가 바뀌면 앞의 sports가 참조했던 오브젝트를 호출할 수 없게 된다.
+        - 이렇게 사용할 수 없게 된 {point: 1} object는 GC 대상이되어 엔진이 주기적으로 GC 처리를 한다.
+          - ()=> {point: 1} 은 garbage가 된다.
+        - 두 개의 sports가 참조하는 주소가 다르므로 sports가 추가된다.          
+      - WeakMap 인스턴스의 GC 상태
+        ```
+        > [[Entries]]
+          > 0: {() => {point: 2} => "변경후"}
+          > 1: {() => {point: 1} => "변경전"}
+        ```
+        - 변수값은 하나지만 WeakMap 인스턴스는 두 개가 있다.
+        - {point: 1}과 {point: 2}의 메모리 주소가 다르며 sports는 사람이 보는 것으로 WeakMap은 값인 메모리 주소가 다르므로 각각 저장
+        - 그래서 엔진은 key가 아닌 인덱스로 저장하여 관리
+        - 시간이 지나면 {point: 1}은 GC가 삭제한다.
+      
+  - WeakMap과 Map의 차이
+    - 참조하는 Object를 삭제하면 Map은 그대로 갖고있지만 WeakMap은 GC가 삭제한다.    
     
 ** 출처1. 인프런 강좌_자바스크립트 ES6+
