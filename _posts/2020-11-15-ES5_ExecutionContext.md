@@ -73,7 +73,7 @@ category: javascript
       - LEC에 ER, OLER 첨부
       - ER에 DER, OER 첨부
     - DER에 show()의 변수, 함수 기록
-    - OLER에 show()의 [[Scope]] 를 설정
+    - OLER에 show()의 \[\[Scope]] 를 설정
     - this 바인딩 컴포넌트에 this 참조 설정
   
 - 식별자 해결 (Identifier Resolution)
@@ -179,7 +179,7 @@ category: javascript
     - 컴포넌트 구성
       - Environment Record
         - Environment Record에 함수안의 함수와 변수를 기록
-        - Object Lexical Environment Reference에 function object의 [[Scope]]를 설정
+        - Object Lexical Environment Reference에 function object의 \[\[Scope]]를 설정
         - 따라서 함수 안과 밖의 함수와 변수를 사용할 수 있게 됨        
       - Object Lexical Environment Reference
         - Scope와 실행중인 함수가 Context 형태이므로 스코프의 변수와 함수를 별도의 처리 없이 즉시 사용할 수 있다.
@@ -200,7 +200,7 @@ function getPoint(bonus) {
 console.log(getPoint(50)); // 350 출력
 ```
   - getPoint function object 생성
-    - 오브젝트의 [[Scope]]에 Global Object 설정
+    - 오브젝트의 \[\[Scope]]에 Global Object 설정
   - base 선언
   - base에 200 할당 한 후, getPoint()함수 호출
   - 엔진은 EC를 생성하고, EC 안으로 이동합니다.
@@ -304,7 +304,7 @@ EC:{
       - 호출한 함수의 파라미터 값
     - 함수를 호출한 오브젝트를 TBC에 설정하여 this로 참조
     - 함수 코드
-      - function object의 [[Code]]에 설정되어 있음
+      - function object의 \[\[Code]]에 설정되어 있음
     - 호출한 함수의 파라미터 값
       - 호출된 함수의 Argument object에 설정
   - 파라미터 값 매핑
@@ -319,7 +319,7 @@ obj.getTotal = function(one, two) {
 }
 console.log(obj.getTotal(11, 22, 77));
 ```
-  - getTotal 오브젝트의 [[FormalParameters]]에서 호출된 함수의 파라미터 이름을 구합니다. 파라미터 이름은 ["one", "two"] 형태로 [[FormalParameters]]는 function object를 생성할 때 설정한다.
+  - getTotal 오브젝트의 \[\[FormalParameters]]에서 호출된 함수의 파라미터 이름을 구합니다. 파라미터 이름은 \["one", "two"] 형태로 \[\[FormalParameters]]는 function object를 생성할 때 설정한다.
   - 파라미터 이름 배열을 하나씩 읽는다.
   - 파라미터에서 index 번째의 값을 구한다. 인덱스에 값이 없으면 undefined 반환 (오류가 발생하는 것은 아니다.)
   - 파라미터 이름의 이름과 값을 DER에 {one: 11, two: 22} 형태로 설정한다. 같은 이름이 있으면 값이 대체된다.
