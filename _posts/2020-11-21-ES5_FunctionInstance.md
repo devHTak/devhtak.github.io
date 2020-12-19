@@ -340,9 +340,9 @@ category: javascript
   ```
   - prototype에 연결된 프로퍼티도 인스턴스 프로퍼티가 된다.
     - 직접 인스턴스에 연결된 프로퍼티와 차이가 있다.
-    - getPoint와 \__proto__: {getPoint}가 차이가 있다
+    - getPoint와 \_\_proto__: {getPoint}가 차이가 있다
   - 인스턴스의 프로퍼티를 prototype으로 만든 인스턴스 프로퍼티보다 먼저 사용 
-    - getPoint가 \__proto__: {getPoint} 보다 먼저 사용
+    - getPoint가 \_\_proto__: {getPoint} 보다 먼저 사용
   - 인스턴스마다 값을 다르게 가질 수 있다.
     - 인스턴스를 사용하는 중요 목적
 
