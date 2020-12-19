@@ -87,8 +87,8 @@ category: Javascript ES6+
       - Map Object에 get Symbol(Symbol.species)가 있다. 따라서 constructor를 오버라이드 할 수 있다.
       - prototype을 펼치면 Symbol.iterator가 있다. iterator 오브젝트이기 때문에 for-of 가능
     - const list = [1, 2]; const obj = new Map([ ["one", "첫 번째"], ["two", "두 번째"] ]);
-      - 오른쪽 obj를 펼치면 [[Entries]]가 있다. 대괄호 2개는 엔진에서 설정하는 것을 뜻한다.
-      - [[Entries]]를 펼치면 0: {"one" => "첫 번째"} 형태
+      - 오른쪽 obj를 펼치면 \[\[Entries]]가 있다. 대괄호 2개는 엔진에서 설정하는 것을 뜻한다.
+      - \[\[Entries]]를 펼치면 0: {"one" => "첫 번째"} 형태
       - 인덱스를 부혀하여 key로 사용하고 {"one": "첫 번째"}를 value로 설정
       - 이것은 배열 형태와 구조가 비슷, size가 length 기능
       - 인덱스를 부여하여 저장하므로 작성한 순서로 읽혀진다. 
@@ -138,7 +138,7 @@ category: Javascript ES6+
 - get()
   - 형태: Map.prototype.get()
   - 파라미터: key 값
-  - 반환: [key, value] 에서 value, undefined
+  - 반환: \[key, value] 에서 value, undefined
   
   - Map에서 key 값이 같은 value 반환
     - key 값이 같지 않거나 타입이 다르면 undefined 반환
@@ -225,7 +225,7 @@ category: Javascript ES6+
     ```
 
 - Symbol.iterator()
-  - 형태: Map.prototype[Symbol.iterator]
+  - 형태: Map.prototype\[Symbol.iterator]
   - 파라미터: 파라미터 없음
   - 반환: {done: true/false, value: 값]
   
@@ -285,7 +285,7 @@ category: Javascript ES6+
       obj.set(sports, "스포츠");
       console.log(obj.delete(sports)); // true
       ```
-      - obj.delete({}) 에서 [{}, "오브젝트"]에 {}는 다르다 - 참조하는 메모리 주소가 다르다.
+      - obj.delete({}) 에서 \[{}, "오브젝트"]에 {}는 다르다 - 참조하는 메모리 주소가 다르다.
       
 - clear()
   - 형태: Map.prototype.clear()
