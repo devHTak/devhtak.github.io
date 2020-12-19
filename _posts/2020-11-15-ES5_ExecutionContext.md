@@ -191,40 +191,40 @@ category: javascript
 
 - Execution Context 실행 과정
   
-```javascript
-var base = 200;
-function getPoint(bonus) {
-    var point = 100;
-    return point + base + bonus;
-}
-console.log(getPoint(50)); // 350 출력
-```
-  - getPoint function object 생성
-    - 오브젝트의 \[\[Scope]]에 Global Object 설정
-  - base 선언
-  - base에 200 할당 한 후, getPoint()함수 호출
-  - 엔진은 EC를 생성하고, EC 안으로 이동합니다.
-    - 준비단계 1. Component를 생성하여 EC에 첨부. LEC, VEC, TBC
-    - 준비단계 2. ER을 생성하여 LEC에 첨부 - 함수 안의 함수, 변수를 바인딩한다.
-    - 준비단계 3. OLER을 생성하여 LEC에 첨부하고, function object의 [[Scope]]를 설정
-      ```
-      EC: {
-        LEC= { ER: {}, OLER: { base: 200 } }, VEC: { }, TBC: {}
-      }
-      ```
-      
-    - 초기화 단계 1. 호출한 함수의 파라미터 값을 호출된 함수의 파라미터 이름에 매핑. 환경 레코드에 작성 (변수 선언 전 파라미터가 먼저 설정된다.)
-    - 초기화 단계 2. 함수 선언문을 function object로 생성
-    - 초기화 단계 3. 함수 표현식과 변수에 초기값 설정. 현재까지는 외부에 실행 상태를 제공하지 않는다.
-      ``` 
-      EC: {
-        LEC= { ER: {bonus: 70, point: undefined}, OLER: { base: 200 } }, VEC: { }, TBC: {}
-      }    
-      ```
-      
-    - 실행 단계 1. 함수 안의 코드를 실행합니다. var point = 100;
-    - 실행 단계 2. EC 안에서 관련된 함수와 변수를 사용할 수 있습니다.
-  - 해당 과정은 메모리에서 진행한다.
+  ```javascript
+  var base = 200;
+  function getPoint(bonus) {
+      var point = 100;
+      return point + base + bonus;
+  }
+  console.log(getPoint(50)); // 350 출력
+  ```
+    - getPoint function object 생성
+      - 오브젝트의 \[\[Scope]]에 Global Object 설정
+    - base 선언
+    - base에 200 할당 한 후, getPoint()함수 호출
+    - 엔진은 EC를 생성하고, EC 안으로 이동합니다.
+      - 준비단계 1. Component를 생성하여 EC에 첨부. LEC, VEC, TBC
+      - 준비단계 2. ER을 생성하여 LEC에 첨부 - 함수 안의 함수, 변수를 바인딩한다.
+      - 준비단계 3. OLER을 생성하여 LEC에 첨부하고, function object의 [[Scope]]를 설정
+        ```
+        EC: {
+          LEC= { ER: {}, OLER: { base: 200 } }, VEC: { }, TBC: {}
+        }
+        ```
+
+      - 초기화 단계 1. 호출한 함수의 파라미터 값을 호출된 함수의 파라미터 이름에 매핑. 환경 레코드에 작성 (변수 선언 전 파라미터가 먼저 설정된다.)
+      - 초기화 단계 2. 함수 선언문을 function object로 생성
+      - 초기화 단계 3. 함수 표현식과 변수에 초기값 설정. 현재까지는 외부에 실행 상태를 제공하지 않는다.
+        ``` 
+        EC: {
+          LEC= { ER: {bonus: 70, point: undefined}, OLER: { base: 200 } }, VEC: { }, TBC: {}
+        }    
+        ```
+
+      - 실행 단계 1. 함수 안의 코드를 실행합니다. var point = 100;
+      - 실행 단계 2. EC 안에서 관련된 함수와 변수를 사용할 수 있습니다.
+    - 해당 과정은 메모리에서 진행한다.
 
 - Environment Record(환경 레코드)
   - 기록 대상에 따라 다르기 때문에 Environment Record를 구분한다.
@@ -235,20 +235,20 @@ console.log(getPoint(50)); // 350 출력
     - 글로벌 함수와 변수, with 문에서 사용
     - 정적이 아니라 동적이기 때문
 - Global Environment
-```
-EC:{
-    GE: {
-        ER: { OER: Global Object },
-        OLER: null
-    }
-}
-```
-  - Global Object에서 사용
-  - Lexical Environment Component와 형태가 같음
-  - 동적으로 함수와 변수 바인딩
-    - 함수에서 var 키워드를 사용하지 않고 변수를 선언하면 글로벌 오브젝트에 설정되기 때문
-    - 이런 이유로 오브젝트 환경 레코드 사용
-  - 외부 렉시컬 환경 참조 값은 null
+  ```
+  EC:{
+      GE: {
+          ER: { OER: Global Object },
+          OLER: null
+      }
+  }
+  ```
+    - Global Object에서 사용
+    - Lexical Environment Component와 형태가 같음
+    - 동적으로 함수와 변수 바인딩
+      - 함수에서 var 키워드를 사용하지 않고 변수를 선언하면 글로벌 오브젝트에 설정되기 때문
+      - 이런 이유로 오브젝트 환경 레코드 사용
+    - 외부 렉시컬 환경 참조 값은 null
 
 - This Binding Component
   - 목적
