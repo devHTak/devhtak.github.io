@@ -159,18 +159,18 @@ category: Javascript ES6+
       ```
       - 같은 메모리 주소를 사용
       
-  - has()
-    - 형태: Map.prototype.has()
-    - 파라미터: key 값
-    - 반환: key가 존재하면 true, 아니면 false
+- has()
+  - 형태: Map.prototype.has()
+  - 파라미터: key 값
+  - 반환: key가 존재하면 true, 아니면 false
     
-    - Map 인스턴스에서 key의 존재 여부를 반환
-      - key가 존재하면 true, 아니면 false
-        ```javascript
-        const obj = new Map([ ["one", 100] });
-        console.log(obj.has("one")); // true
-        console.log(obj.has("two")); // false
-        ```
+  - Map 인스턴스에서 key의 존재 여부를 반환
+    - key가 존재하면 true, 아니면 false
+      ```javascript
+      const obj = new Map([ ["one", 100] });
+      console.log(obj.has("one")); // true
+      console.log(obj.has("two")); // false
+      ```
         
 ### Map의 Iterator object
 
