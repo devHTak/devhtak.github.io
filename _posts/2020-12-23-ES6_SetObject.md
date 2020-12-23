@@ -259,6 +259,68 @@ category: Javascript ES6+
       console.log(iterObj.next()); // {value: ()=>{}, done: false}
       console.log(iterObj.next()); // {value: undefined, done: ture}
       ```
-  
 
+### WeakSet Object
+
+- Set Object와 차이
+  - 오브젝트만 value 값으로 사용할 수 있다.
+  - number 등의 프리미티브 타입 사용 불가
+- 개념은 WeakMap과 같다
+  - value만 작성하는 것이 다르고 value의 참조가 바뀌면 GC 대상
+
+- new WeakSet()
+  - 형태: new WeakSet()
+  - 파라미터: 오브젝트(option)
+  - 반환: 생성한 WeakSet 인스턴스
+  - WeakSet 인스턴스 생성, 반환
+  - 파라미터
+    - 대괄호[] 안에 오브젝트 작성
+      ```javascript
+      const empty = new WeakSet();
+      const sports = {};
+      const obj = new WeakSet([
+         sports
+      ]);
+      ```
+      
+- has()
+  - 형태: WeakSet.prototype.has()
+  - 파라미터: 오브젝트
+  - 반환: true(존재)/false(존재X)
+  - WeakSet 인스턴스에 value의 존재 여부 반환
+    ```javascript
+    const fn = () => {}
+    const obj = new WeakSet([
+        fn
+    ]);
+    console.log(obj.has(fn)); // true
+    ```
+  
+- add()
+  - 형태: WeakSet.prototype.add()
+  - 파라미터: value, object
+  - 반환: value가 설정된 인스턴스
+  - WeakSet 인스턴스에 value 설정
+    - 파라미터에 value로 설정될 오브젝트 작성
+      ```javascript
+      const obj = new WeakSet();
+      const fn = () => {};
+      obj.add(fn); 
+      console.log(obj.has(fn)); // true
+      ```
+      
+- delete()
+  - 형태: WeakSet.prototype.delete()
+  - 파라미터: key, object
+  - 반환: true(성공)/false(실패)
+  - WeakSet 인스턴스에서 value와 일치하는 엘리먼트삭제
+    ```javascript
+    const fn = () => {}
+    const obj = new WeakSet([
+        fn
+    ]);
+    console.log(obj.delete(fn)); // true
+    console.log(obj.has(fn)); // false
+    ```
+  
 ** 출처1. 인프런 강좌_자바스크립트 ES6+
