@@ -15,6 +15,7 @@ category: RESTful API
   - Level 1: Resources
   - Level 2: HTTP Verbs
   - Level 3: Hypermedia controls
+- 즉, User 정보를 조회하는 API에 User 삭제, User 수정 등에 대한 link를 추가하여 Client 측에서 해당 정보를 사용할 수 있도록 제공해주는 
 
 - 의존성 추가
   
