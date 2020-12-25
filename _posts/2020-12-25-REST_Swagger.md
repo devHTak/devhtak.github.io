@@ -56,6 +56,17 @@ category: RESTful API
           }
       }  
       ```
+    - HATEOAS와 같이 사용할 때 예외가 발생할 수 있다.
+      - 아래와 같이 configuration에 빈으로 등록하면 사용할 수 있다.
+        ```java
+        @Bean
+        public LinkDiscoverers discoverers() {
+            List<LinkDiscoverer> plugins = new ArrayList<>();
+            plugins.add(new CollectionJsonLinkDiscoverer());
+            return new LinkDiscoverers(SimplePluginRegistry.create(plugins));
+        }
+        ```
+        
   - model 파일
     - 사용되는 객체에 description등을 사용할 수 있다.
       ```java
