@@ -38,22 +38,47 @@ category: RESTful API
 - Customizing
   - config 파일 등록
     - api info, contact 정보, produce(accept), consume(content-type) 등을 지정한다.
-    - 
-    ```java
-    @Configuration
-    @EnableSwagger2
-    public class SwaggerConfig {
-        private static final Contact DEFAULT_CONTACT = new Contact("devhtak", "https://devhtak.github.io", "devhtak@gmail.com");
-        private static final ApiInfo DEFAULT_API_INFO = new ApiInfo("API Title", "My User management API service", "1.0", "urn:tos", 
-            DEFAULT_CONTACT, "Apache 2.0", "http://www.apache.org/license/LICENSE-2.0", new ArrayList<>());
-        private static final Set<String> DEFAULT_PRODUCES_AND_CONSUMES = new HashSet<>(Arrays.asList("application/json", "application/xml"));
+      ```java
+      @Configuration
+      @EnableSwagger2
+      public class SwaggerConfig {
+          private static final Contact DEFAULT_CONTACT = new Contact("devhtak", "https://devhtak.github.io", "devhtak@gmail.com");
+          private static final ApiInfo DEFAULT_API_INFO = new ApiInfo("API Title", "My User management API service", "1.0", "urn:tos", 
+              DEFAULT_CONTACT, "Apache 2.0", "http://www.apache.org/license/LICENSE-2.0", new ArrayList<>());
+          private static final Set<String> DEFAULT_PRODUCES_AND_CONSUMES = new HashSet<>(Arrays.asList("application/json", "application/xml"));
 
-        @Bean
-        public Docket api() {
-            return new Docket(DocumentationType.SWAGGER_2)
-                .apiInfo(DEFAULT_API_INFO)
-                .produces(DEFAULT_PRODUCES_AND_CONSUMES)
-                .consumes(DEFAULT_PRODUCES_AND_CONSUMES);
-        }
-    }  
-    ```
+          @Bean
+          public Docket api() {
+              return new Docket(DocumentationType.SWAGGER_2)
+                  .apiInfo(DEFAULT_API_INFO)
+                  .produces(DEFAULT_PRODUCES_AND_CONSUMES)
+                  .consumes(DEFAULT_PRODUCES_AND_CONSUMES);
+          }
+      }  
+      ```
+  - model 파일
+    - 사용되는 객체에 description등을 사용할 수 있다.
+      ```java
+      @Data
+      @NoArgsConstructor @AllArgsConstructor
+      @Getter @Setter
+      @ApiModel(description = "사용자 상세 정보를 위한 도메인 객체")
+      public class User {
+          private Integer id;
+          @Size(min = 2, message= "이름은 2글자 이상 입력해주세요.")
+          @ApiModelProperty(notes = "사용자 이름을 입력해 주세요.")
+          private String name;
+
+          @Past
+          @ApiModelProperty(notes = "사용자 등록일을 입력해 주세요.")
+          private LocalDateTime joinDate;
+
+          //@JsonIgnore
+          @ApiModelProperty(notes = "사용자 패스워드를 입력해 주세요.")
+          private String password;
+
+          //@JsonIgnore
+          @ApiModelProperty(notes = "사용자 주민번호를 입력해 주세요.")
+          private String ssn;
+      }
+      ```
