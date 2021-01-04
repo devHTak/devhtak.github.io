@@ -40,6 +40,7 @@ category: java
     
   - 규약
     - Object 명세에 나오는 규약
+    
     |규약|내용|
     |:---:|:---|
     |반사성(reflexivity)|null이 아닌 모든 참조 값 x에 대해, x.equals(x)는 true이다.|
