@@ -263,14 +263,18 @@ category: java
   
   - hashCode 함수 작성하는 간단 요쳥
     1. int 변수 result를 선언한 후 값 c로 초기화 한다. c는 해당 객체의 첫번째 핵심필드를 단계 2.a 방식으로 계산한 해시코드
-    2.a c의 값을 계산한다.
+    
+    2.1 c의 값을 계산한다.
       i. 기본 타입 필드라면, Type.hashCode(f)를 수행. Type은 기본타입에 박싱 클래스다.
-      ii. 참조 타입 필드면서 이 클래스의 equals 메서드가 이 플드의 equals를 재귀적으로 호출해 비교한다면, 이 필드의 hashCode를 재귀적으로 호출한다.
-      계산이 복잡해질 것 같으면, 이 필드의 표준형을 만들어 그 표준형의 hashCode를 호출한다. 필드의 값이 null이면 0을 사용
+      
+      ii. 참조 타입 필드면서 이 클래스의 equals 메서드가 이 플드의 equals를 재귀적으로 호출해 비교한다면, 이 필드의 hashCode를 재귀적으로 호출한다. 계산이 복잡해질 것 같으면, 이 필드의 표준형을 만들어 그 표준형의 hashCode를 호출한다. 필드의 값이 null이면 0을 사용
       iii. 필드가 배열이면, 핵심 원소 각각을 별도 필드처럼 다룬다. 이상의 규칙을 재귀적으로 적용하여 2.b의 방법으로 갱신한다. 
+      
       배열에 핵심 원소가 하나도 없다면 단순히 0을 사용하고, 모든 원소가 핵심 원소면, Arrays.hashCode를 사용
+      
     2.b 단계 2.a에서 계산한 해시코드 c로 result을 갱신하여 리턴한다.
-    result = 31 * result + c; return result;
+      result = 31 * result + c;
+      return result;
     
  ```java
  @Override
