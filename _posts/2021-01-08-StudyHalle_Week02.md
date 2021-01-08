@@ -1,13 +1,13 @@
 ---
 layout: post
-title: 스터디 할래 2. 자바 데이터 타입, 변수 그리고 배열
+title: 스터디 할래 2. 자바 데이터 타입, 변수
 summary: 백기선님과 스터디 할래
 author: devhtak
 date: '2021-01-08 23:41:00 +0900'
 category: Java Study
 ---
 
-### 자바 데이터 타입, 변수 그리고 배열
+### 자바 데이터 타입, 변수
 
 #### 목표
 
@@ -21,7 +21,6 @@ category: Java Study
 - 변수 선언 및 초기화하는 방법
 - 변수의 스코프와 라이프타임
 - 타입 변환, 캐스팅 그리고 타입 프로모션
-- 1차 및 2차 배열 선언하기
 - 타입 추론, var
 
 #### 프리미티브 타입 종류와 값의 범위 그리고 기본 값
@@ -86,11 +85,93 @@ category: Java Study
 - 문자열(String)
 
 #### 변수 선언 및 초기화하는 방법
+
+- 변수 선언
+  ```java
+  int a;
+  Student student;
+  ```
+  - 저장공간을 확보하겠다는 의미
+  - primitive type에 경우 초기값이 저장되고 reference type은 null값이 저장된다.
+  
+- 초기화
+  ```java
+  a = 10;
+  student = new Stuent();
+  ```
+  - 저장공간에 원하는 값을 의미한다.
+
 #### 변수의 스코프와 라이프타임
+
+- 스코프
+  - 해당 변수를 사용할 수 있는 영역 범위
+  - 스코프에 따라 instance, class, local 변수로 나눈다.
+  - instance variables
+    - 클래스 안에서 선언되고, 어떠한 method나 block안에 선언되지 않은 변수
+    - scope: static method를 제외한 클래스 전체
+    - lifetime: 클래스를 인스턴스화한 객체가 메모리에 사라질 때 까지
+  - class variables
+    - 클래스 안에서 선언되고, 어떠한 메서드나 블럭안에서 선언되지 않았으며, static 키워드가 포함되어 선언된 변수
+    - scope: 클래스 전체
+    - lifetime: 프로그램 종료시 까지
+  - local variables
+     - 인스턴스 변수, 클래스 변수가 아닌 모든 변수
+     - scope: 변수가 선언된 block 내부
+     - lifetime: control이 변수가 선언된 block 내부에 있는 동안
+    
+    ```java
+    public class VariableEx {
+        int num1, num2;     // instance variables
+        static int result;  // class variables
+        public int add(int a, int b) { // local variables
+            return a + b; 
+        }
+    }
+    ``` 
+  
+- 라이프 타입
+  - 해당 변수가 메모리에 언제까지 살아있는지를 의미
+
 #### 타입 변환, 캐스팅 그리고 타입 프로모션
-#### 1차 및 2차 배열 선언하기
+
+- type casting
+  - 더 큰 자료형을 크기가 더 작은 자료형에 대입
+  - 강제 형 변환을 해야하며(type), 데이터 크기가 작아지기 때문에 데이터 손실이나 변형이 올 수 있다.
+  - ex) long -> int
+    ```java
+    long a = 10L;
+    int b = (int)a;
+    ```
+    
+- type promotion
+  - 타입 캐스팅과는 밴대로 작은 자료형에서 큰 자료형으로 대입
+  - 자동으로 변환 가능하며 데이터 크기가 커지기 때문에 손실이나 변형이 발생하지 않는다.
+  - ex) int -> long
+    ```java
+    int a = 10;
+    long b = a;
+    ```
+- reference type에서의 type casting과 type promotion
+  - reference에서는 상속관계 가능하다.
+  - type casting: 부모 인스턴스를 자식 인스턴스의 대입
+    ```java
+    Person p = new Person();
+    Student s = (Student)p;
+    ```
+  - type promotion: 자식 인스턴스를 부모 인스턴스의 대입
+    ```java
+    Student s = new Student();
+    Person p = s;
+    ```
+
 #### 타입 추론, var    
 
+- 타입추론이란 데이터 타입을 소스코드에 명시하지 않고, 컴파일 단계에서 컴파일러가 타입을 유추하는 것
+- 5 버전 이후 Generic, 8 q버전 이후 lamda 에서 타입추론이 되며, 10 버전부터는 var라는 local variable type-inference가 추가되었다.
+  ```java
+  var str = "hello"; // String str = "hello";
+  var b = 10;       // int b = 10;
+  ```
     
   
 
