@@ -54,8 +54,8 @@ category: Java Study
 $ javac /src/.../file.java
 $ java file
 ```
-- javac : 컴파일러 실행
-- java: 클래스 파일 실행
+- javac : 컴파일러 실행, JDK 안에 존재
+- java: 클래스 파일 실행, JRE 안에 존재
 
 - 만약 JAVA 1.11 버전으로 컴파일 한 클래스 파일을 JAVA 1.8로 실행한다면 ? 실패... UnsupportedClassVersionError 발생
 - 만약 JAVA 1.8로 컴파일 한 클래스 파일을 1.11로 실행한다면 ? 가능!!
