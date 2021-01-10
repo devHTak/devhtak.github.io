@@ -134,14 +134,14 @@ $ java file
       - 클래스를 읽어오는 과정
       - 클래스 로더가 바이트코드를 읽고 그 내용에 따라 적절한 바이너리 데이터(기계어)를 만들어 Method영역(메모리)에 저장한다. 
       - Method영역에 저장되는 것
-        - Full Qualified Class Name
+        - Full Qualified Class Name (ex. org.springframework.boot.SpringApplication)
         - 클래스 | 인터페이스 | Enum
         - 메서드와 변수
       - 저장이 끝나면, 해당 Class의 Class 객체를 만들어 힙 영역에 저장한다.
     - 링크: Verify, Prepare, Resolve 세 단계로 나눠진다.
       - 레퍼런스를 연결하는 과정
-      - verify(검증): 클래스 파일 형식이 유효한지 체크
-      - prepare(준비): 클래스 변수와 기본값에 필요한 메모리
+      - verify(검증): 혹시 모를 수정에 대비하여 클래스 파일 형식이 유효한지 체크
+      - prepare(준비): 클래스 변수와 기본값에 필요한 메모리 준비
       - resolve(해결): symbolic memory reference를 메서드 영역에 있는 실제 레퍼런스로 교체
     - 초기화
       - static 값들 초기화 및 변수에 할당
@@ -151,6 +151,10 @@ $ java file
     - Bootstrap ClassLoader: JAVA_HOME\lib에 있는 코어 자바 API를 제공, 최상위 우선순위를 가진 클래스 로더, Native로 구현됨
     - Platform ClassLoader: JAVA_HOME\lib\ext 폴더 또는 java.ext.dirs 시스템 변수에 해당하는 위치에 있는 클래스를 읽는다.
     - Application ClassLoader: Application ClassPath, 즉, 애플리케이션 실행할 때 주는 -classpath 또는 java.class.path 환경 변수의 값에 해당하는 위치에서 클래스를 읽는다.
+    - 로딩 순서
+      - Bootstrap ClassLoader -> Platform ClassLoader -> Application ClassLoader 순서로 찾는다.
+      - 상위 ClassLoader에 없는 경우 하위 ClassLoader를 찾게 되며 보통 90% Application ClassLoader에 있다.
+      - 찾지 못하는 경우 ClassNotFoundException이 발생한다.
     
 - Execution Engine
   - Class Loader에 의해 Runtime Data Area에 적재된 클래스(바이트코드)들을 컴퓨터가 이해할 수 있는 기계어로 변경해 명령어 단위로 실행하는 역할
