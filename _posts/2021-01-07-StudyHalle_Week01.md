@@ -143,6 +143,7 @@ $ java file
       - verify(검증): 혹시 모를 수정에 대비하여 클래스 파일 형식이 유효한지 체크
       - prepare(준비): 클래스 변수와 기본값에 필요한 메모리 준비
       - resolve(해결): symbolic memory reference를 메서드 영역에 있는 실제 레퍼런스로 교체
+        - symbolic reference: 실제 레퍼런스를 가리키고 있지 않은 상태, 논리적인 레퍼런스이다.
     - 초기화
       - static 값들 초기화 및 변수에 할당
       - static 변수의 값을 할당, static 블럭은 이 때 실행된다.
