@@ -26,7 +26,7 @@ category: Java Study
 #### JVM이란 무엇인가
 
 - JAVA Virtual Machine의 약자로, 자바 바이트코드를 실행할 수 있는 주체
-- 자바 바이트 코드(.class) 파일을 OS에 특화된 코드로 변환(인터프리터와 JIT 컴파일러)하여 
+- 자바 바이트 코드(.class) 파일을 OS에 특화된 코드로 변환(인터프리터와 JIT 컴파일러)하여 실행
 
 - JVM 특성
   - JAVA와 OS 사이에서 중개자 역할
