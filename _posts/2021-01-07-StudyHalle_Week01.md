@@ -26,6 +26,7 @@ category: Java Study
 #### JVM이란 무엇인가
 
 - JAVA Virtual Machine의 약자로, 자바 바이트코드를 실행할 수 있는 주체
+- 자바 바이트 코드(.class) 파일을 OS에 특화된 코드로 변환(인터프리터와 JIT 컴파일러)하여 
 
 - JVM 특성
   - JAVA와 OS 사이에서 중개자 역할
@@ -45,8 +46,7 @@ category: Java Study
   - 이러한 실행 과정 속에서 JVM은 필요에 따라 Thread Synchonization과 GC같은 관리 작업 수행
 
 - 출처: 
-  - JVM: 위키백과, https://asfirstalways.tistory.com/158
-  - JVM 생성 시 메모리 구조: https://limkydev.tistory.com/51
+  - JVM: 위키백과, https://asfirstalways.tistory.com/158  
   
 #### 컴파일/실행 하는 방법
 
@@ -128,16 +128,24 @@ $ java file
 - Class Loader, Execution Engine, Runtime Data Area(memory), Native로 구성된다.
 
 - Class Loader
-  - 로딩, 링크, 초기화 순서로 진행된다.
+  - .class 에서 바이트코드를 읽고 메모리에 저장
+  - 로딩, 링크, 초기화 순서로 진행된다.    
     - 로딩
+      - 클래스를 읽어오는 과정
       - 클래스 로더가 바이트코드를 읽고 그 내용에 따라 적절한 바이너리 데이터(기계어)를 만들어 Method영역(메모리)에 저장한다. 
+      - Method영역에 저장되는 것
+        - Full Qualified Class Name
+        - 클래스 | 인터페이스 | Enum
+        - 메서드와 변수
       - 저장이 끝나면, 해당 Class의 Class 객체를 만들어 힙 영역에 저장한다.
-      - Method영역에는 Full Qualified Class Name, 클래스, 인터페이스, Enum, 메서드와 변수가 저장된다.
     - 링크: Verify, Prepare, Resolve 세 단계로 나눠진다.
-      - verify: 클래스 파일 형식이 유효한지 체크
-      - prepare: 클래스 변수와 기본값에 필요한 메모리
-      - resolve: symbolic memory reference를 메서드 영역에 있는 실제 레퍼런스로 교체
-    - 초기화: static 변수의 값을 할당, static 블럭은 이 때 실행된다.
+      - 레퍼런스를 연결하는 과정
+      - verify(검증): 클래스 파일 형식이 유효한지 체크
+      - prepare(준비): 클래스 변수와 기본값에 필요한 메모리
+      - resolve(해결): symbolic memory reference를 메서드 영역에 있는 실제 레퍼런스로 교체
+    - 초기화
+      - static 값들 초기화 및 변수에 할당
+      - static 변수의 값을 할당, static 블럭은 이 때 실행된다.
   - 클래스 파일을 적재하는 역할을 한다. 즉, 컴파일러로 바이트코드를 생성하면 해당 바이트코드를 클래스 로더가 메모리에 적재한다.
   - 기본적인 세가지 클래스 로더가 제공
     - Bootstrap ClassLoader: JAVA_HOME\lib에 있는 코어 자바 API를 제공, 최상위 우선순위를 가진 클래스 로더, Native로 구현됨
@@ -147,8 +155,14 @@ $ java file
 - Execution Engine
   - Class Loader에 의해 Runtime Data Area에 적재된 클래스(바이트코드)들을 컴퓨터가 이해할 수 있는 기계어로 변경해 명령어 단위로 실행하는 역할
   - JIT Compiler
-  
-- Runtime Data Area
+    - 인터프리터 효율을 높이기 위해, 인터프리터가 반복되는 코드를 발견하면 JIT 컴파일러로 반복되는 모두 네이티브 코드로 바꿔둔다.
+    - 그 다음부터 인터프리터는 네이티브 코드로 컴파일된 코드를 바로 사용한다.
+  - GC(Garbage Collector): 더 이상 참조하지 않는 객체를 모아서 정리
+    - 힙 영역에 생성된 객체들 중 참조되지 않는 객체들을 메모리에서 제거하는 역할
+    - GC가 사용되는 동안에는 GC에 스레드가 아닌 다른 모든 스레드는 일시정지된다.
+    
+- Runtime Data Area(메모리 영역)
+  - 메모리 영역에는 클래스 수준의 정보 (클래스 이름, 부모 클래스 이름, 메서드, 변수) 저장, 공유 자원이다.
   - Method(static) 영역
     - JVM에서 읽어들인 클래스와 인터페이스에 대한 런타임 상수 풀, 메서드와 필드, static 변수, 메서드 바이트 코드 등을 보관
   - Runtime Constant Pool 영역
@@ -171,18 +185,25 @@ $ java file
   - Native Method Stack Area
     - Native code를 위한 메모리(C/C++ 코드 수행)
     
-- Garbage Collector
-  - 힙 영역에 생성된 객체들 중 참조되지 않는 객체들을 메모리에서 제거하는 역할
-  - GC가 사용되는 동안에는 GC에 스레드가 아닌 다른 모든 스레드는 일시정지된다.
-
+- JNI(Java Native Interface)
+  - 자바 애플리케이션에서 C, C++, 어셈블리로 작성된 함수를 사용할 수 있는 방법 제공
+  - Native 키워드를 사용한 메서드 호출
+  
+- 네이티브 메소드 라이브러리
+  - C, C++로 작성된 
+  
 #### JDK와 JRE의 차이
 
 - JDK
-  - Java Development Kit로 JRE + Development Kit로 이루어져 있다.
+  - Java Development Kit로 JRE + Development Kit(개발에 필요한 툴)로 이루어져 있다.
+  - 소스 코드를 작성할 때 사용하는 자바 언어는 플랫폼에 독립적
+  - 오라클은 자바 11부터 JDK 만 제공하며 JRE를 따로 제공하고 있지 않다.
   
 - JRE
-  - Java Runtime Environment의 약자로 JVM + library로 이루어져 있다.
+  - Java Runtime Environment의 약자로 JVM + library로 이루어져 있다
   - 자바 애플리케이션을 실행할 수 있도록 구성한 배포판
-  - 11버전부터는 JRE를 제공하고 있지 않다.
-  
+  - JVM과 핵심 라이브러리 및 자바 런타임 환경에서 사용하는 프로퍼티 세팅이나 리소스 파일을 가지고 있다.
+  - 개발 관련 도구는 포함하지 않는다(JDK에서 제공)
+    
 - JVM, JRE, JDK 출처: https://medium.com/webeveloper/jvm-java-virtual-machine-architecture-94b914e93d86
+- 백기선님 인프런 강좌 \[더 자바, 코드를 조작하는 방법] 참고
