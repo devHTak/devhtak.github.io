@@ -218,7 +218,7 @@ category: javascript
       - 초기화 단계 3. 함수 표현식과 변수에 초기값 설정. 현재까지는 외부에 실행 상태를 제공하지 않는다.
         ``` 
         EC: {
-          LEC= { ER: {bonus: 70, point: undefined}, OLER: { base: 200 } }, VEC: { }, TBC: {}
+          LEC= { ER: {bonus: 50, point: undefined}, OLER: { base: 200 } }, VEC: { }, TBC: {}
         }    
         ```
 
