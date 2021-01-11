@@ -24,7 +24,7 @@ category: javascript
   function Book(point) {
       this.point = point;
   }
-  Book.prototype.getPoint() = function() {
+  Book.prototype.getPoint = function() {
       return this.point + 200; 
   }
   var book = new Book(100);
@@ -35,7 +35,7 @@ category: javascript
     - function Book(point) { ... }
       - Book Object를 생성
       - Book.prototype이 만들어진다.
-    - Book.prototype.getPoint() = function() { ... } 
+    - Book.prototype.getPoint = function() { ... } 
       - Book.prototype에 getPoint(프로퍼티)를 연결하고 function object 를 할당
       - Book.prototype이 오브젝트이므로 프로퍼티를 연결할 수 있다.
     - var book = new Book(100);
