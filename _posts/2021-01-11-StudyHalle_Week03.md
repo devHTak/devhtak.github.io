@@ -231,4 +231,60 @@ category: Java Study
 |15|=, *=, /=, %=, +=, -=, <<=, >>=, >>>=, &=, ^=, \|=|<-|대입 연산자|
 |16|->|->|람다 표현식|
 
-#### (optional) Java 13. switch 연산자 
+#### (optional) Java 13. switch 연산자
+
+- Java 13버전부터 switch문을 좀 더 간편하게 사용할 수 있게 되었다.
+- 기존 switch 문
+  ```java
+  int result;
+
+  switch (mode) {
+      case "a":
+          result = 1;
+          break;
+      case "b":
+          result = 2;
+          break;
+      case "c", "d", "e":
+          result = 3;
+      case "f", "g":
+          System.out.println("this is f or g");
+          result = 4;
+          break;
+      default:
+          result = -1;
+  }
+  ```
+  
+- yield 키워드를 사용하여 switch 문을 리턴할 수 있다.
+  ```java
+  int result = switch (mode) {
+      case "a":
+          yield 1;
+      case "b":
+          yield 2;
+      case "c", "d", "e":
+          yield 3;
+      case "f", "g":
+          System.out.println("this is f or g");
+          yield 4;
+      default:
+          yield -1;
+  };
+  ```
+  
+- (label rules) ->을 사용하여 case 구문 처리가 가능하다.
+  ```java
+  int result = switch (mode) {
+      case "a" -> 1;
+      case "b" -> 2;
+      case "c", "d", "e" -> 3;
+      case "f", "g" -> {
+          System.out.println("this is f or g");
+          yield 4;
+      }
+      default -> yield -1;
+  };
+  ```
+  
+- 출처: https://blog.baesangwoo.dev/posts/java-livestudy-3week/
