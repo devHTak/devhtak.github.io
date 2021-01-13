@@ -105,3 +105,46 @@ category: Java Study
         it.remove(); // 요소 삭제
     }
     ```
+    
+#### 과제 0. JUnit 5 학습하세요.
+
+- 2월 중 TDD 실전법과 도구, 백기선님 강좌로 학습 예정
+
+#### 과제 1. github whiteship/live-study 대시 보드를 만드는 코드를 작성하세요.
+
+```java
+@Component
+public class GithubIssueCommentDashboard {	
+    @Value("${id}") private String id;
+    @Value("${password}") private String password;
+    @Value("${repo}") private String repo;
+
+    public void show() throws IOException {
+        GitHub github = new GitHubBuilder().withPassword(id, password).build();
+        GHRepository repository = github.getRepository(repo);
+
+        List<GHIssue> issues = repository.getIssues(GHIssueState.ALL);
+        Map<String, Integer> dashboard = new HashMap<>();
+        int size = issues.size();
+
+        // 이슈에 대한 댓글 확인하여 계산
+        for(GHIssue issue: issues) {
+            System.out.println("A");
+            List<GHIssueComment> comments = issue.getComments();
+            for(GHIssueComment comment: comments) {
+                String githubId = comment.getUser().getLogin();
+                if(dashboard.containsKey(githubId)) {
+                    int count = dashboard.get(githubId) + 1;
+                    dashboard.put(githubId, count);
+                } else {
+                    dashboard.put(githubId, 1);
+                }
+            }
+        }
+        // 출력
+        for(String key: dashboard.keySet()) {
+            System.out.println("LoginId: " + key +", 완료율: " + String.format("%.2f", dashboard.get(key) / size));
+        }
+    }
+}
+```
