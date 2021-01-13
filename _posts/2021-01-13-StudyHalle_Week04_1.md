@@ -7,13 +7,7 @@ date: '2021-01-13 20:41:00 +0900'
 category: Java Study
 ---
 
-#### 과제 0. JUnit 5 학습하세요.
-
-- 2월 중 TDD 실전법과 도구, 백기선님 강좌로 학습 예정
-
-#### 과제 1. live-study 대시 보드를 만드는 코드를 작성하세요.
-
-#### 과제 2. LinkedList를 구현하세요.
+#### LinkedList를 구현하세요.
 
 - ListNode 구현
   ```java
@@ -144,7 +138,7 @@ category: Java Study
   }
   ```
 
-#### 과제 3, 4. Stack을 구현하세요.
+#### Stack을 구현하세요.
 
 - 배열로 구현한 ArrayStack
   
@@ -287,7 +281,7 @@ category: Java Study
   }
   ```
 
-#### 과제 5. Queue를 구현하세요.
+#### Queue를 구현하세요.
 
 - 배열로 구현한 ArrayQueue
 
