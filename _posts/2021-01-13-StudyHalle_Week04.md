@@ -129,7 +129,6 @@ public class GithubIssueCommentDashboard {
 
         // 이슈에 대한 댓글 확인하여 계산
         for(GHIssue issue: issues) {
-            System.out.println("A");
             List<GHIssueComment> comments = issue.getComments();
             for(GHIssueComment comment: comments) {
                 String githubId = comment.getUser().getLogin();
