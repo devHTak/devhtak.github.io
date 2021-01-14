@@ -163,10 +163,10 @@ category: Javascript ES6+
   - arguments object
     - 파라미터 작성에 관계없이 전체를 설정
     - Array-like 형태로 Array method를 사용할 수 없음
-    - __proto__ 가 Object
+    - \_\_proto\_\_ 가 Object
   - rest 파라미터
     - 매핑되지 않은 나머지 파라미터만 설정
     - Array Object 형태로 Array 메서드를 사용할 수 있음
-    - __proto__가 Array
+    - \_\_proto\_\_가 Array
     
 ** 출처 1. 인프런 강좌_자바스크립트 ES6+ 기본
