@@ -169,7 +169,7 @@ category: Javascript ES6+
             this.point + 20;
         };
         console.log(add());
-        [1. 2].forEach( (value) => {
+        [1, 2].forEach( (value) => {
             console.log(this.point + value);
         }
     };
