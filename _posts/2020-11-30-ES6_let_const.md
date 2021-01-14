@@ -26,7 +26,7 @@ category: Javascript ES6+
         }
         console.log(i); // 10
         ```
-        - i는 for문 block에 선언하여 있지만, 사용할 수 있다.
+          - i는 for문 block에 선언하여 있지만, 사용할 수 있다.
         ```javascript
         function count() {
             for(var i = 0; i < 10; i++) {
@@ -36,8 +36,14 @@ category: Javascript ES6+
         count(); // i: 0 ~ 9
         console.log(i); // i is not defined.
         ```
-        - count()에 선언되어 있는 i를 다시 사용할 수 없다.
+          - count()에 선언되어 있는 i를 다시 사용할 수 없다.
       - const, let 변수는 block scope
+        ```javascript
+        for(let i = 0; i < 10; i++) {
+            console.log('i :' + i); // i: 0 ~ 9
+        }
+        console.log(i); // i is not defined.
+        ```
   
 - 글로벌 변수 오해
   - 글로벌 변수
