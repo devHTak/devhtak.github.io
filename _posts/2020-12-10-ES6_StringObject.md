@@ -153,23 +153,23 @@ category: Javascript ES6+
   - 파라미터: 비교 문자열. 비교 시작 인덱스(option) 디폴트: 0
   - 반환: 시작하면 true, 아니면 false
 
-- 대상 문자열이 첫 번째 파라미터의 문자열로 시작하면 true, 아니면 false 반환
-  - 정규 표현식 사용 불가
-    ```javascript
-    const target = "ABC";
-    console.log(target.startsWith("AB")); // true
-    console.log(target.startsWith("BC")); // false
-    console.log(/^AB/.test(target)); // true
-    ```
-    - "AB" 로 시작하므로 true 반환 / "BC" 가 있지만 시작이 아니므로 false 반환
-    - 정규표현식의 ^ 과 같습니다.
-- 두 번째 파라미터
-  - 선택이며, 비교 시작 인덱스 작성
-    ```javascript
-    const target = "ABC";
-    console.log(target.startsWith("AB")); // true
-    console.log(target.startsWith("BC", 1)); // true
-    ```
+  - 대상 문자열이 첫 번째 파라미터의 문자열로 시작하면 true, 아니면 false 반환
+    - 정규 표현식 사용 불가
+      ```javascript
+      const target = "ABC";
+      console.log(target.startsWith("AB")); // true
+      console.log(target.startsWith("BC")); // false
+      console.log(/^AB/.test(target)); // true
+      ```
+      - "AB" 로 시작하므로 true 반환 / "BC" 가 있지만 시작이 아니므로 false 반환
+      - 정규표현식의 ^ 과 같습니다.
+  - 두 번째 파라미터
+    - 선택이며, 비교 시작 인덱스 작성
+      ```javascript
+      const target = "ABC";
+      console.log(target.startsWith("AB")); // true
+      console.log(target.startsWith("BC", 1)); // true
+      ```
     
 - endsWith
   - 형태: String.prototype.endsWith()
@@ -185,6 +185,7 @@ category: Javascript ES6+
     ```
     - "BC" 로 끝나므로 true 반환 / "AB" 가 있지만 끝이 아니므로 false 반환
     - 정규표현식의 $ 과 같습니다.
+    
   - 두 번째 파라미터 선택이며, 사용할 문자열 길이 지정
     ```javascript
     const target = "ABC";
@@ -311,12 +312,12 @@ category: Javascript ES6+
     
   - backtick 안에 표현식 작성
     - 표현식을 ${표현식} 형태로 작성
-    ```javascript
-    console.log(`ABC`); // ABC
-    const one = 1, two = 2;
-    const result = `${one} + ${two} 는 ${one + two}이 된다.`;
-    console.log(result); // 1 + 2 는 3이 된다.
-    ```
+      ```javascript
+      console.log(`ABC`); // ABC
+      const one = 1, two = 2;
+      const result = `${one} + ${two} 는 ${one + two}이 된다.`;
+      console.log(result); // 1 + 2 는 3이 된다.
+      ```
 
 - Tagged Template
   - 템플릿에 함수 이름을 작성한 형태
@@ -336,9 +337,9 @@ category: Javascript ES6+
     - 표현식은 평가 결과를 넘겨 준다.
     - console.log(text[1]); 
       - 호출하는 함수에서 넘겨 준 빈 문자열 text[1]이 없으면 undefined가 출력
+      
   - 호출되는 함수를 태그 함수(tag function)이라고 부른다.
-  - show 함수를 호출하면서 문자열을 배열로 파라미터로 넘기고 표현식 결과를 하나씩 파라미터로 넘긴다.
-  
+  - show 함수를 호출하면서 문자열을 배열로 파라미터로 넘기고 표현식 결과를 하나씩 파라미터로 넘긴다.  
   - 호출하는 곳에서 
     - 표현식을 평가한 값을 다수 넘겨 줄 때 사용
     - 태그 함수에 대응하는 파라미터 이름을 작성한 형태
@@ -351,7 +352,7 @@ category: Javascript ES6+
       };
       show `1 + 2 = ${one + two} 고 1 - 2 = ${one - two} 이다.`; // 1 + 2 = 3, 고 1 - 2 = -1, 이다.undefined
       ```
-  - 문자열을 분리하면 ["1 + 2 =", " 이고 1- 2=", " 이다."]
+  - 문자열을 분리하면 \["1 + 2 =", " 이고 1- 2=", " 이다."]
     - 3개의 배열 엘리먼트가 된다.
   - 표현식을 분리하면
     - ${one + two} 와 ${one - two}
@@ -367,7 +368,7 @@ category: Javascript ES6+
     ```
     
 - raw()
-  - 형태: String.raw `template string`
+  - 형태: String.raw \`template string`
   - 반환: 반환 형태 (option)
   
   - String.raw에
@@ -409,7 +410,7 @@ category: Javascript ES6+
       const rawValue = {raw: ["A", "B", "C"]};
       console.log(String.raw(rawValue, 1, 2, 3)); // A1B2C
       ```
-      - `A${1}B${2}C`
+      - \`A${1}B${2}C`
       - 마지막을 문자열로 생성해야 하기 때문에 3을 사용하지 않고 C에서 끝이 난다.
   - 첫 번째 파라미터는 {raw: 값} 형태
   - 두 번째 파라미터부터 조합할 값 작성
