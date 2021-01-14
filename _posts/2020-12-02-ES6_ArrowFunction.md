@@ -171,7 +171,7 @@ category: Javascript ES6+
         console.log(add());
         [1, 2].forEach( (value) => {
             console.log(this.point + value);
-        }
+        });
     };
     new Point().getPoint(); // 120, 101, 102
     ```
