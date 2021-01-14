@@ -18,12 +18,32 @@ category: Javascript ES6+
   - 로컬 변수의 기능과 목적
     - 빠르게 식별자를 해결하기 위해 가까운 스코프의 변수를 사용하려는 것
   - var 키워드의 문제
+    - var vs const, let
+      - var 변수는 scope 기준을 function scope
+        ```javascript
+        for(var i = 0; i < 10; i++) {
+            console.log('i :' + i); // i: 0 ~ 9
+        }
+        console.log(i); // 10
+        ```
+        - i는 for문 block에 선언하여 있지만, 사용할 수 있다.
+        ```javascript
+        function count() {
+            for(var i = 0; i < 10; i++) {
+                console.log('i :' + i); 
+            }
+        }
+        count(); // i: 0 ~ 9
+        console.log(i); // i is not defined.
+        ```
+        - count()에 선언되어 있는 i를 다시 사용할 수 없다.
+      - const, let 변수는 block scope
   
 - 글로벌 변수 오해
   - 글로벌 변수
     - 글로벌 오브젝트의 로컬 변수
-    - var value = 100 처럼 글로벌 변수도 var 키워드를 사용이 정상
-    - var 키워드를 작성하지 않으도 글로벌 변수로 간주한다.
+    - var value = 100 처럼 글로벌 변수도 var 키워드 사용이 정상
+    - var 키워드를 작성하지 않으면 글로벌 변수로 간주한다.
       ```javascript
       value = 100;
       function point() {
