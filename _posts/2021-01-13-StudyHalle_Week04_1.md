@@ -467,3 +467,290 @@ category: Java Study
       }
   }
   ```
+
+#### Binary Search Tree를 구현하시오.
+
+- Binary Tree
+  - 자식 노드가 최대 2개인 노드로 구성된 트리
+    
+- Binary Search Tree
+  - Binary Tree에 left child < root < right child 로 구성되어야 한다.
+  
+- tree 순회
+  - inorder : left -> root -> right 순으로 순회
+  - preorder : root -> left -> right 순으로 순회
+  - postorder : left -> right -> root 순으로 순회
+  - root위치에 따라 in/pre/post가 나뉜다.
+  
+- dfs와 bfs
+  - dfs: 깊이 우선 탐색으로 stack을 이용한다.
+  - bfs: 너비 우선 탐색으로 queue를 이용한다.
+  
+- Binary Search Tree 구현
+```java
+public class BinarySearchTree {	
+    private int index;
+    private Node root;
+    public BinarySearchTree() {
+        root = null;
+        index = 0;
+    }
+    public BinarySearchTree(int data) {
+        root = new Node(data);
+        index = 0;
+    }
+    public void insert(int data) {
+        if(this.root == null) {
+            this.root = new Node(data);
+            return;
+        }
+        Node node = root;
+        Node prev = new Node();
+        while(node != null) {
+            prev = node;
+            if(node.getValue() > data) {
+                node = node.getLeft();
+            } else {
+                node = node.getRight();
+            }
+        }
+        if(node == prev.getLeft()) {
+            prev.setLeft(new Node(data));
+        } else {
+            prev.setRight(new Node(data));
+        }
+    }
+
+    public void remove(int data) {
+        Node node = root;
+        Node prev = new Node();
+        while(node != null) {
+            if(node.getValue() == data) {
+                break;
+            } else if(node.getValue() < data) {
+                prev = node;
+                node = node.getRight();
+            } else {
+                prev = node;
+                node = node.getLeft();
+            }
+        }
+
+        if(node.getLeft() == null && node.getRight() == null) {
+            // 1. 지우고자 하는 노드에 자식이 없는 경우 -> 그냥 삭제
+            if(node == root) {
+                root = null;
+            } else if(node == prev.getLeft()) {
+                prev.setLeft(null);
+            } else {
+                prev.setRight(null);
+            }
+        } else if(node.getLeft() == null) { 
+            // 2. 지우고자 하는 노드에 자식이 오른쪽에만 있는 경우 -> 해당 자식과 교체
+            if(node == root) {
+                root = node.getRight();
+            } else if(node == prev.getLeft()) {
+                prev.setLeft(node.getRight());
+            } else {
+                prev.setRight(node.getRight());
+            }
+        } else if(node.getRight() == null) { 
+            // 2. 지우고자 하는 노드에 자식이 왼쪽에만 있는 경우 -> 해당 자식과 교체
+            if(node == root) {
+                root = node.getLeft();
+            } else if(node == prev.getLeft()) {
+                prev.setLeft(node.getLeft());
+            } else {
+                prev.setRight(node.getLeft());
+            }
+        } else { 
+            // 3. 지우고자 하는 노드에 자식이 2개인 경우 -> 오른쪽 자식에 가장 왼쪽 자식을 대체하자
+            // 오른쪽 자식에 가장 왼쪽 자식 찾기
+            Node next = node.getRight();
+            Node nextPrev = node;
+            while(next.getLeft() != null) {
+                nextPrev = next;
+                next = next.getLeft();
+            }
+            // 대체할 노드가 삭제할 노드의 바로 오른쪽 노드가 아닌 경우,
+            // 대체할 노드의 오른쪽 노드를 대체할 노드의 부모 왼쪽 노드로 대체하고, 대체할 노드의 오른쪽 자식을 삭제할 노드의 오른쪽 자식으로 세팅
+            if(next != node.getRight()) {
+                nextPrev.setLeft(next.getRight());
+                next.setRight(node.getRight());
+            }
+
+            // 삭제할 대상과 대체
+            if(node == root) {
+                root = next;
+            } else if(node == prev.getLeft()) {
+                prev.setLeft(next);
+            } else {
+                prev.setRight(next);
+            }
+            // 삭제할 노드의 왼쪽, 오른쪽 자식은 그대로 이어준다.
+            next.setLeft(node.getLeft());
+        }		
+    }
+
+    public void dfs(Node root) {
+        // inorder와 동일하기 때문에 구현하지 않음
+    }
+
+    public int[] bfs(int size) {
+        int[] traversal = new int[size];
+        this.index = 0;
+        List<Node> queue = new ArrayList<>(); 
+        queue.add(root);
+
+        while(!queue.isEmpty()) {
+            Node next = queue.get(0); queue.remove(0);			
+            traversal[index++] = next.getValue();
+
+            if(next.getLeft() != null) {
+                queue.add(next.getLeft());
+            }
+
+            if(next.getRight() != null) {
+                queue.add(next.getRight());
+            }			
+        }
+
+        return traversal;
+    }
+
+    public void inOrder(Node node, int[] traversal) {
+        // left -> root -> right;
+        if(node == null) {
+            return;
+        }
+
+        inOrder(node.getLeft(), traversal);
+        traversal[index++] = node.getValue(); 
+        inOrder(node.getRight(), traversal);
+    }
+
+    public void preOrder(Node node, int[] traversal) {
+        // root -> left -> right;
+        if(node == null)
+            return;
+
+        traversal[index++] = node.getValue();
+        preOrder(node.getLeft(), traversal);
+        preOrder(node.getRight(), traversal);
+    }
+
+    public void postOrder(Node node, int[] traversal) {
+        // left -> right -> root
+        if(node == null)
+            return;
+        postOrder(node.getLeft(), traversal);
+        postOrder(node.getRight(), traversal);
+        traversal[index++] = node.getValue();		
+    }
+
+    public int[] getInOrder(int size) {
+        this.index = 0;
+        int[] traversal = new int[size];
+        inOrder(root, traversal);
+
+        return traversal;
+    }
+
+    public int[] getPreOrder(int size) {
+        this.index = 0;
+        int[] traversal = new int[size];
+        preOrder(root, traversal);
+
+        return traversal;
+    }
+
+    public int[] getPostOrder(int size) {
+        this.index = 0;
+        int[] traversal = new int[size];
+        postOrder(root, traversal);
+
+        return traversal;
+    }
+}
+```
+
+- BinarySearchTree 테스트
+```java
+public class BinaryTreeTest {	
+    private BinarySearchTree binarySearchTree;
+    private int[] inorder = {1, 2, 3, 4, 5, 6, 7};
+    private int[] preorder = {4, 2, 1, 3, 6, 5, 7};
+    private int[] postorder = {1, 3, 2, 5, 7, 6, 4};	
+    private int[] bfs = {4, 2, 6, 1, 3, 5, 7};
+    private int[] bfsAfterRemove = {5, 3, 6, 7};
+
+    @BeforeEach
+    public void beforeEach() {
+        this.binarySearchTree = new BinarySearchTree();
+        this.binarySearchTree.insert(4);
+        this.binarySearchTree.insert(2);
+        this.binarySearchTree.insert(1);
+        this.binarySearchTree.insert(3);
+        this.binarySearchTree.insert(6);
+        this.binarySearchTree.insert(5);
+        this.binarySearchTree.insert(7);		
+    }
+
+    @Test
+    public void removeTest() {
+        // leaf node 삭제
+        binarySearchTree.remove(1);
+
+        // 자식이 1개인 node 삭제
+        binarySearchTree.remove(2);
+
+        // 자식이 2개인 node 삭제
+        binarySearchTree.remove(4);
+
+        int[] traversal = binarySearchTree.bfs(4);
+        for(int i = 0; i < traversal.length; i++) {
+            assertEquals(bfsAfterRemove[i], traversal[i]);
+        }
+    }
+
+    @Test
+    public void inOrderTest() {
+        int[] traversal = this.binarySearchTree.getInOrder(inorder.length);
+
+        for(int i = 0; i < traversal.length; i++) {
+            assertEquals(inorder[i], traversal[i]);
+        }
+    }
+
+    @Test
+    public void preOrderTest() {
+        int[] traversal = this.binarySearchTree.getPreOrder(preorder.length);
+
+        for(int i = 0; i < traversal.length; i++) {
+            assertEquals(preorder[i], traversal[i]);
+        }
+    }
+
+    @Test
+    public void postOrderTest() {
+        int[] traversal = this.binarySearchTree.getPostOrder(postorder.length);
+
+        for(int i = 0; i < traversal.length; i++) {
+            assertEquals(postorder[i], traversal[i]);
+        }
+    }
+
+    @Test
+    public void dfsTest() {
+        //inorder와 동일하기 때문에 구현하지 않음
+    }
+
+    @Test
+    public void bfsTest() {
+        int[] traversal = this.binarySearchTree.bfs(bfs.length);
+        for(int i = 0; i < traversal.length; i++) {
+            assertEquals(bfs[i], traversal[i]);
+        }
+    }
+}
+```
