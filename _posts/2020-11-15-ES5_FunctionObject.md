@@ -42,12 +42,12 @@ category: javascript
   - sports 오브젝트에 prototype오브젝트 첨부
   - prototype에 constructor 프로퍼티 첨부
     - property.constructor가 sports 오브젝트 참조
-  - prototype에 \__proto__ 오브젝트 첨부
+  - prototype에 \_\_proto\_\_ 오브젝트 첨부
     - ES5 스펙에 __proto__가 기술되어 있지 않으며 ES6스펙에 기술
     - 엔진이 사용한다는 뉘앙스로 정의
-  - 빌트인 Object.prototype의 메소드로 Object 인스턴스를 생성하여 prototype.\__proto__에 첨부
-  - sports Object에 \__proto__ 오브젝트 첨부. sports.\__proto__ 구조가 된다.
-  - 빌트인 Function.prototype의 메서드로 function 인스턴스를 생성하여 sports.\__proto__에 첨부
+  - 빌트인 Object.prototype의 메소드로 Object 인스턴스를 생성하여 prototype.\__proto\_\_에 첨부
+  - sports Object에 \_\_proto\_\_ 오브젝트 첨부. sports.\_\_proto\_\_ 구조가 된다.
+  - 빌트인 Function.prototype의 메서드로 function 인스턴스를 생성하여 sports.\_\_proto\_\_에 첨부
   - sports object property에 초기값 설정
     - arguments, caller, length, name 프로퍼티
   ```
