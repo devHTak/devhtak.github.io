@@ -67,7 +67,7 @@ category: Javascript ES6+
 
 - 화살표 함수 구조
   - 화살표 함수는 일반 함수와 구조가 다르다
-    - 일반함수는 prototype에 constructor와 __proto__ 이 설정된다.
+    - 일반함수는 prototype에 constructor와 \_\_proto\_\_ 이 설정된다.
     - Arrow Function은 prototype과 constructor가 없다. 
       - prototype에 메소드를 연결하여 확장할 수 없지만 prototype이 없기 때문에 가볍다.
       - constructor가 없기 때문에 new 연산자로 인스턴스를 생성할 수 없다.
