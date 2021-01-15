@@ -173,7 +173,7 @@ category: Javascript ES6+
             console.log(this.point + value);
         });
     };
-    new Point().getPoint(); // 120, 101, 102
+    new Point().getPoint(); // undefined, 101, 102
     ```
     - prototype 에 일반 함수를 연결하고 함수 안에 화살표 함수를 작성한 형태
     - getPoint()가 일반 함수이므로 this가 생성한 인스턴스를 참조
