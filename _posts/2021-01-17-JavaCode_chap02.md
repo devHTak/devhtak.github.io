@@ -34,7 +34,7 @@ category: Java
                   </goals>
               </execution>
           </executions>
-			</plugin>
+      </plugin>
       ```
     - 메이븐 빌드
       ```
