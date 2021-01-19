@@ -1,6 +1,6 @@
 ---
 layout: post
-title: [더 자바, 코드를 조작하는 다양한 방법] 바이트코드
+title: \[더 자바, 코드를 조작하는 다양한 방법\] 바이트코드
 summary: The Java
 author: devhtak
 date: '2021-01-17 21:41:00 +0900'
