@@ -182,8 +182,13 @@ category: Java Study
         }
     }
     ```
-      - 
-    
+    - 두번의 동적 메소드 디스패치가 일어난다.
+      - Post의 postOn 메소드에서 SNS 구현체(Facebook, Twitter)의 post() 메서드
+      - postOn 메소드 내의 SNS 구현체(Facebook, Twitter) 의 post 메서드에서, Post 구현체(Text, Picture)에 대한 오버로딩
+  
+  - 방문자 패턴(Vistor Pattern)
+    - 더블 디스패치를 사용하는 대표적인 패턴
+    - 객체 구조에서 데이터와 메소드를 구분하기 위해 사용한다
     
 #### 추상 클래스
 
