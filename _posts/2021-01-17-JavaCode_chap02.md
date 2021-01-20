@@ -9,6 +9,7 @@ category: Java
 
 #### 코드 커버리지는 어떻게 측정할까?
 
+- 바이트코드를 사용한 대표적인 예제
 - 코드 커버리지? 테스트 코드가 확인한 소스 코드를 %로 나타낸다.
   - JaCoCo 사용
   - (JaCoCo) https://www.eclemma.org/jacoco/trunk/doc/index.html
@@ -36,7 +37,7 @@ category: Java
           </executions>
       </plugin>
       ```
-    - 메이븐 빌드
+    - 메이븐 verify
       ```
       $ mvn clean verify
       ```
@@ -75,3 +76,46 @@ category: Java
   - ASM
   - Javassist
   - ByteBuddy
+
+- 예제: ByteBuddy 사용
+  - 아무것도 없는 Moja에서 "Rabbit"을 꺼내는 마술
+    ```java
+    public class Moja {
+        public String pullOut() {
+            return "";
+        }
+    }
+    ```
+    ```java
+    public class Magician {
+        public static void main(String[] args) {
+            System.out.println(new Moja().pullOut());
+        }
+    }
+    ```
+  - 바이트버디 사용
+    ```java
+    public class Magician {
+        public static void main(String[] args) {
+            try {
+                new ByteBuddy().redefine(Moja.class)
+                    .method(named("pullOut")).intercept(FixedValue.value("Rabbit"))
+                    .make().saveIn(new File("/Users/workspace/HalleHomework/target/classes/"));
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
+            
+            System.out.println(new Moja().pullOut()); // Rabbit 출력
+        }
+    }
+    ```
+    - Moja.java 파일안에 pullOut 메소드는 ""를 리턴한다.
+    - Moja.class 파일안에 pullOut 메소드는 "Rabbit"을 리턴한다.
+    - 수정하여 다시 컴파일 하기 전까지는 Moja.class 파일 안에 pullOut 메소드는 "Rabbit"을 리턴한다.
+
+- 예제) Javaagent
+
+
+
+
+
