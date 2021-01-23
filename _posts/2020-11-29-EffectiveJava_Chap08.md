@@ -4,7 +4,7 @@ title: Effective Java Ch08. 메서드
 summary: Effective Java 3판 공부
 author: devhtak
 date: '2020-11-29 15:41:00 +0900'
-category: java
+category: Effective Java
 ---
 
 ### ITEM 49. 매개변수가 유효한지 검사하라
