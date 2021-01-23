@@ -4,7 +4,7 @@ title: Effective Java Ch07. 람다와 스트림
 summary: Effective Java 3판 공부
 author: devhtak
 date: '2020-11-22 11:41:00 +0900'
-category: java
+category: Effective Java
 ---
 
 ### ITEM 42. 익명 클래스보다는 람다를 사용하라
