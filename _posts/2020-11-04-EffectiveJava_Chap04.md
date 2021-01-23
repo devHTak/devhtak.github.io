@@ -4,7 +4,7 @@ title: Effective Java Ch04. 클래스와 인터페이스
 summary: Effective Java 3판 공부
 author: devhtak
 date: '2020-11-10 09:41:00 +0900'
-category: java
+category: Effective Java
 ---
 
 ### Item 15. 클래스와 멤버의 접근 권한을 최소화하라
