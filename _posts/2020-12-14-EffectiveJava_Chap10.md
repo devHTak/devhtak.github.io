@@ -4,7 +4,7 @@ title: Effective Java Ch10. 예외
 summary: Effective Java 3판 공부
 author: devhtak
 date: '2020-12-14 22:41:00 +0900'
-category: java
+category: Effective Java
 ---
 
 ### ITEM 69. 예외는 진짜 예외 상황에만 사용하라
