@@ -4,7 +4,7 @@ title: Effective Java Ch03. 모든 객체의 공통 메서드
 summary: Effective Java 3판 공부
 author: devhtak
 date: '2020-11-03 09:41:00 +0900'
-category: java
+category: Effective Java
 ---
 
 ### 들어가기
