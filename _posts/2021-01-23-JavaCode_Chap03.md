@@ -1,10 +1,10 @@
 ---
 layout: post
-title: \[더 자바, 코드를 조작하는 다양한 방법\] 리프렉션
+title: 더 자바, 코드를 조작하는 다양한 방법_리프렉션
 summary: The Java
 author: devhtak
 date: '2021-01-23 14:41:00 +0900'
-category: Java
+category: The Java
 ---
 
 #### 클래스 정보 조회
