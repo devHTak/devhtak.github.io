@@ -4,7 +4,7 @@ title: Effective Java Ch02. 객체 생성과 파괴
 summary: Effective Java 3판 공부
 author: devhtak
 date: '2020-11-02 09:41:00 +0900'
-category: java
+category: Effective Java
 ---
 
 ### Item 00. 목적
