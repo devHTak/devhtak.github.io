@@ -4,7 +4,7 @@ title: Effective Java Ch06. 열거타입과 애너테이션
 summary: Effective Java 3판 공부
 author: devhtak
 date: '2020-11-17 19:41:00 +0900'
-category: java
+category: Effective Java
 ---
 
 ### ITEM 34. int 상수 대신 열거 타입을 사용하라
