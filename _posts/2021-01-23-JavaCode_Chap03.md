@@ -200,32 +200,30 @@ category: The Java
   - classType에 해당하는 타입의 객체를 만들어 준다.
   - 단, 해당 객체의 필드 중에 @Inject가 있다면, 해당 필드도 같이 만들어 제공한다.
     ```java
-    public class ContainerService {	
-        private static <T> T createInstance(Class<T>  classType) {
-            try {
-                return classType.getConstructor().newInstance();
-            } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-                | NoSuchMethodException | SecurityException e) {
+    private static <T> T createInstance(Class<T>  classType) {
+	try {
+		return classType.getConstructor().newInstance();
+	} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+		| NoSuchMethodException | SecurityException e) {
 		// TODO Auto-generated catch block
 		throw new RuntimeException(e);
-            }
-	}
-	public static <T> T getObject(Class<T> classType) {
-	    T instance = createInstance(classType);
-	    Arrays.stream(classType.getDeclaredFields()).forEach(field -> {
+    	}
+    }
+    public static <T> T getObject(Class<T> classType) {
+	T instance = createInstance(classType);
+	Arrays.stream(classType.getDeclaredFields()).forEach(field -> {
 		if(field.getAnnotation(Inject.class) != null) {
-		    Object fieldInstance = createInstance(field.getType());
-		    field.setAccessible(true);
-		    try {
-			field.set(instance, fieldInstance);
-		    } catch (IllegalArgumentException | IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			throw new RuntimeException();
-		    }
+			Object fieldInstance = createInstance(field.getType());
+			field.setAccessible(true);
+			try {
+				field.set(instance, fieldInstance);
+			} catch (IllegalArgumentException | IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				throw new RuntimeException();
+			}
 		}
-	    });
-	    return instance;
-        }
+    	});
+    	return instance;
     }
     ```
   - 테스트 코드
