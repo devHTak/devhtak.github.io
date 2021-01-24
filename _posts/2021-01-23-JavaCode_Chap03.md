@@ -209,11 +209,11 @@ category: The Java
 		// TODO Auto-generated catch block
 		throw new RuntimeException(e);
             }
-	}	
+	}
 	public static <T> T getObject(Class<T> classType) {
 	    T instance = createInstance(classType);
 	    Arrays.stream(classType.getDeclaredFields()).forEach(field -> {
-	        if(field.getAnnotation(Inject.class) != null) {
+		if(field.getAnnotation(Inject.class) != null) {
 		    Object fieldInstance = createInstance(field.getType());
 		    field.setAccessible(true);
 		    try {
