@@ -32,6 +32,7 @@ category: The Java
     
   - Class<T>를 통해 가져올 수 있는 것
     - 필드(목록) 가져오기
+	
       ```java
       // public 만 가져온다
       Arrays.stream(bookClass.getFields()).forEach(System.out::println); 
@@ -51,7 +52,9 @@ category: The Java
           }
       });
       ```
+      
     - 메소드(목록) 가져오기
+    
       ```java
       // 메소드
       Arrays.stream(MyBook.class.getMethods()).forEach(m -> {
@@ -59,25 +62,34 @@ category: The Java
           System.out.println(Modifier.isAbstract(modifier));
       });
       ```
+      
     - 상위 클래스 가져오기
+    
       ```java
       // 상위 클래스를 가져올 수 있다.
-		  System.out.println(MyBook.class.getSuperclass());
+      System.out.println(MyBook.class.getSuperclass());
       ```
+      
     - 인터페이스(목록) 가져오기
+    
       ```java
       // 인터페이스
-		  Arrays.stream(MyBook.class.getInterfaces()).forEach(System.out::println);
+      Arrays.stream(MyBook.class.getInterfaces()).forEach(System.out::println);
       ```
+      
     - 애노테이션 가져오기
+    
       ```java
       Arrays.stream(bookClass.getAnnotations()).forEach(System.out::println);
       ```
+      
     - 생성자 가져오기
+    
       ```java
       // 생성자 가져오기
-		  Arrays.stream(bookClass.getConstructors()).forEach(System.out::println);
+      Arrays.stream(bookClass.getConstructors()).forEach(System.out::println);
       ```
+      
     - 등등등
     
 #### Annotation과 Reflection
@@ -97,13 +109,16 @@ category: The Java
   
   - @Inherit: 해당 애노테이션을 하위 클래스까지 전달할 것인가
     - Book 클래스에 붙은 MyAnnotation이 하위 클래스인 MyBook까지 전달받는 것을 확인할 수 있다.
+    
       ```java
       @MyAnnotation
       public class Book {}
       ```
+      
       ```java
       public class MyBook extends Book {}
       ```
+      
       ```java
       public static void main(String[] args) {
           Arryas.stream(MyBook.class.getAnnotations()).forEach(System.out:println); // @com.study.MyAnnotation(max=20, value="HELLO")
@@ -116,6 +131,7 @@ category: The Java
 - Reflection
   - getAnnotation(): 상속받은 (@Inherit) 애노테이션까지 조회
     - 예제) fields에 붙은 Annotation이 MyAnnotation 타입인지 확인한 후 value와 number를 출력
+    
       ```java
       public static void main(String args) {
           Arrays.stream(Book.class.getDeclaredFields()).forEach(f -> {
@@ -149,6 +165,7 @@ category: The Java
   - Object Method.invoke(object, params)
 
 - 예제
+
   ```java
   Class<?> bookClass = Class.forName("com.study.Book");
   Constructor<?> constructor = bookClass.getConstructor(String.class);
@@ -178,6 +195,7 @@ category: The Java
       BookRepository bookRepository
   }
   ```
+  
 - ContainerService.java
   - classType에 해당하는 타입의 객체를 만들어 준다.
   - 단, 해당 객체의 필드 중에 @Inject가 있다면, 해당 필드도 같이 만들어 제공한다.
