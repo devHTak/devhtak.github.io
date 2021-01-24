@@ -199,7 +199,7 @@ category: The Java
 - ContainerService.java
   - classType에 해당하는 타입의 객체를 만들어 준다.
   - 단, 해당 객체의 필드 중에 @Inject가 있다면, 해당 필드도 같이 만들어 제공한다.
-    ```
+    ```java
     public class ContainerService {	
         private static <T> T createInstance(Class<T>  classType) {
 	    try {
@@ -226,5 +226,20 @@ category: The Java
 	    });
 	    return instance;
         }
+    }
+    ```
+  - 테스트 코드
+  
+    ```java
+    @Test
+    public void getObjectTest() {
+        BookRepository bookRepository = ContainerService.getObject(BookRepository.class);
+	assertNotNull(bookRepository);
+    }	
+    @Test
+    public void getObjectInjectionTest() {
+        BookService bookService = ContainerService.getObject(BookService.class);
+	BookRepository bookRepository = bookService.bookRepository;
+	assertNotNull(bookRepository);
     }
     ```
