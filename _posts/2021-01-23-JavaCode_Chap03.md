@@ -131,3 +131,82 @@ category: The Java
       ```
   - getDeclaredAnnotations(): 자기 자신에만 붙어있는 애노테이션 조회
   
+#### 클래스 정보 수정
+
+- Class 인스턴스 만들기
+  - Class.newInstance()는 deprecated 됐으며, 이제부터는 생성자를 통해서 만든다.
+  
+- 생성자로 인스턴스 만들기
+  - Constructor.newInstance(params)
+  
+- 필드 값 접근하기/설정하기
+  - 특정 인스턴스가 가지고 있는 값을 가져오는 것이기 때문에 인스턴스가 필요하다.
+  - Field.get(object)
+  - Field.set(object, value)
+  - static 필드를 가져올 때는 object가 없어도 되니까 null을 넘기면 된다.
+  
+- 메소드 실행하기
+  - Object Method.invoke(object, params)
+
+- 예제
+  ```java
+  Class<?> bookClass = Class.forName("com.study.Book");
+  Constructor<?> constructor = bookClass.getConstructor(String.class);
+  Book book = (Book)constructor.newInstance("myBook");
+  System.out.println(book);
+  
+  Field f = Book.class.getDeclaredField("B");
+  f.setAccessible(true);
+  System.out.println(f.get(book)); // myBook
+  
+  f.set(book, "myBook2");
+  System.out.println(f.get(book)); // myBook2
+  
+  Method method = Book.class.getDeclaredMethod("sum", int.class, int.class);
+  method.setAccessible(true);
+  int invoke = (int)method.invoke(book, 1, 2); // book의 C 메소드 실행, return 받을 수 있고, 캐스팅 가능
+  System.out.println(invoke); // 3
+  ```
+  
+#### 나만의 DI 프레임워크 만들어보기
+
+- @Inject라는 애노테이션을 만들어서 필드 주입해주는 컨테이너 서비스 만들기
+
+  ```java
+  public class BookService {
+      @Inject
+      BookRepository bookRepository
+  }
+  ```
+- ContainerService.java
+  - classType에 해당하는 타입의 객체를 만들어 준다.
+  - 단, 해당 객체의 필드 중에 @Inject가 있다면, 해당 필드도 같이 만들어 제공한다.
+    ```
+    public class ContainerService {	
+        private static <T> T createInstance(Class<T>  classType) {
+	    try {
+	        return classType.getConstructor().newInstance();
+            } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+	        | NoSuchMethodException | SecurityException e) {
+		// TODO Auto-generated catch block
+		throw new RuntimeException(e);
+	    }
+	}	
+	public static <T> T getObject(Class<T> classType) {
+	    T instance = createInstance(classType);
+	    Arrays.stream(classType.getDeclaredFields()).forEach(field -> {
+	    	if(field.getAnnotation(Inject.class) != null) {
+	            Object fieldInstance = createInstance(field.getType());
+		    field.setAccessible(true);
+		    try {
+		        field.set(instance, fieldInstance);
+	            } catch (IllegalArgumentException | IllegalAccessException e) {
+		        // TODO Auto-generated catch block
+		        throw new RuntimeException();
+		    }
+	        }
+	    });
+	    return instance;
+        }
+    }
+    ```
