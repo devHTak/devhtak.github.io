@@ -60,6 +60,7 @@ category: Java Study
 - 컴파일러가 컴파일하기 위해서 필요로 하는 참조할 클래스 파일들을 찾기 위해서 컴파일 시 파일 경로를 지정해주는 옵션
 ```
 javac <option> <source files>
+java <option> <source files>
 ```
 - 옵션에 -classpath 또는 -cp 를 주어 설정할 수 있다.
 
