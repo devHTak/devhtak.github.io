@@ -107,7 +107,7 @@ category: The Java
   - @Retention: 해당 애노테이션을 언제까지 유지할 것인가? 소스, 클래스, 런타임
     - RetentionPolicy.CLASS, RetentionPolicy.SOURCE, RetentionPolicy.RUNTIME
   
-  - @Inherit: 해당 애노테이션을 하위 클래스까지 전달할 것인가
+  - @Inherited: 해당 애노테이션을 하위 클래스까지 전달할 것인가
     - Book 클래스에 붙은 MyAnnotation이 하위 클래스인 MyBook까지 전달받는 것을 확인할 수 있다.
     
       ```java
