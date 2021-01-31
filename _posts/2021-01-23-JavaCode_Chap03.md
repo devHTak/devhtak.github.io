@@ -34,7 +34,9 @@ category: The Java
     
   - Class<T>를 통해 가져올 수 있는 것
     - 필드(목록) 가져오기
-	
+	- class.getFields() : public 메서드만 가져온다.
+	- class.getDeclaredFields(): 접근지시자에 상관없이 가져온다. (field에 setAccessible을 true로 주면 접근지시자에 접근을 가능하도록 한다.) 
+
       ```java
       // public 만 가져온다
       Arrays.stream(bookClass.getFields()).forEach(System.out::println); 
@@ -56,7 +58,9 @@ category: The Java
       ```
       
     - 메소드(목록) 가져오기
-    
+      - getMethods(): 부모 객체에서 선언한 method도 가져온다.
+      - getDeclaredMethods(): 해당 객체에 선언된 method만 가져온다.
+      
       ```java
       // 메소드
       Arrays.stream(MyBook.class.getMethods()).forEach(m -> {
