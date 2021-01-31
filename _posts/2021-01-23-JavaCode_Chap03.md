@@ -25,8 +25,10 @@ category: The Java
 
         Book book = new Book();
         Class<? extends Book> aClass = book.getClass();
-
+	// Class aClass = (Class<Book>)bok.getClass();
+	
         Class<?> bookClass2 = Class.forName("com.study.Book");
+	// Class<Book> bookClass2 = (Class<Book>)Class.forName("com.study.Book");
     } 
     ```
     
