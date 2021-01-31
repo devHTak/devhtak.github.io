@@ -129,7 +129,7 @@ category: The Java
     - ElementType.CONSTRUCTOR, ElementType.METHOD, ElementType.FIELD 등 Annotation을 사용할 수 있는 위치를 정하여 제한할 수 있다.
       
 - Reflection
-  - getAnnotation(): 상속받은 (@Inherit) 애노테이션까지 조회
+  - getAnnotation(): 상속받은 (@Inherited) 애노테이션까지 조회
     - 예제) fields에 붙은 Annotation이 MyAnnotation 타입인지 확인한 후 value와 number를 출력
     
       ```java
