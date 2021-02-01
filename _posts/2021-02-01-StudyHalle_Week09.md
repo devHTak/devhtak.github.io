@@ -38,11 +38,12 @@ category: Java Study
   ```java
   try {
       // 예외 발생 가능성이 있는 코드
-  } catch(Exception1 e1 | Exception2 e2) {
+  } catch(Exception1 | Exception2 e2) {
       // Exception1 또는 Exception2 발생했을 때, 처리하는 코드
   }
   - JDK 1.7부터 지원한다.
-  - OR 역할을 하여 관련된 예외를 잡는다.
+  - OR 역할을 하여 작성된 모든 예외를 잡는다.
+  - e.getClass() 로 발생한 예외 클래스를 알 수 있다.
   - Exception1과 Exception2가 상속관계인 경우 컴파일 오류가 발생한다. 
     - 자식클래스가 잡을 수 있는 예외는 부모클래스 또한 잡을 수 
     - 코드 중복이다.
