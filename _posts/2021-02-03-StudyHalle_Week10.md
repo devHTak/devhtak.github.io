@@ -33,7 +33,8 @@ category: Java Study
     - Thread Class 사용
     - Runnable Class 사용
     - Runnable 인터페이스는 run 메소드만 구현되어 있는 함수형 인터페이스
-    - Thread 클래스는 Runnable 인터페이스를 구현한 클래스이므로 어떤 것을 적용하느냐의 차이  
+    - Thread 클래스는 Runnable 인터페이스를 구현한 클래스이므로 어떤 것을 적용하느냐의 차이
+    - run만 오버라이딩할 계획이면 Runnable 인터페이스를 구현하면 된다. 다만, 다른 기능들을 사용하고자 한다면 Thread 클래스를 상속하여 
 
 - 예제
   - Thread 구현체
