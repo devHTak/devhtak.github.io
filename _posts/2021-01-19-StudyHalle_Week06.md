@@ -115,7 +115,7 @@ category: Java Study
     }
     ```
     ```java
-    public Class ClassExample {
+    public class ClassExample {
         private InterfaceExample interfaceExample;
         public ClassExample(InterfaceExample interfaceExample) {
             this.interfaceExample = interfaceExample;
@@ -126,14 +126,14 @@ category: Java Study
     }
     ```
     ```java
-    public Class InterfaceImplementOne implements InterfaceExample {
+    public class InterfaceImplementOne implements InterfaceExample {
         public void print() {
             System.out.print("ONE");
         }
     }
     ```
     ```java
-    public Class InterfaceImplementTwo implements InterfaceExample {
+    public class InterfaceImplementTwo implements InterfaceExample {
         public void print() {
             System.out.print("TWO");
         }
