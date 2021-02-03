@@ -230,7 +230,48 @@ category: Java Study
 - ReentrantLock
   - ReentrantLock은 가장 일반적인 lock이다.
   - ‘reentrant(재진입할 수 있는)’이라는 단어가 앞에 붙은 이유는 wait() & notify()처럼, 특정 조건에서 lock을 풀고 나중에 다시 lock을 얻어 이후의 작업을 수행할 수 있기 때문이다.
+  - 생성자
+    ```java
+    public ReentrantLock() {
+        sync = new NonfairSync();
+    }
+    public ReentrantLock(boolean fair) {
+        sync = fair ? new FairSync() : new NonfairSync();
+    }
+    ```
+    - fair는 공정하게 처리한다는 의미로, 가장 오래된 쓰레드를 찾는 과정이 추가된다.
+    - 성능 이슈가 떨어지므로 공정함보다는 성능을 선택한다.
+  - lock 관련 메서드
+    ```java
+    void lock() // lock을 잠근다.
+    void unlock() // lock을 해제한다.
+    boolean isLocked() // lock이 잠겼는지 확인한다.
+    ```
+    - synchronized와 달리 해당 메서드로 수동으로 lock을 잠그고 
+    ```java
+    if(!lock.isLocked())
+    	lock.lock();
+    try {
+    	// 임계영역
+    } finally {
+    	lock.unlock();
+    }
+    ```
+    - 위 소스와 같이 임계영역 내에서 예외가 발생하거나 return문으로 빠져나올 경우 unlock되도록 finally구문에 작성한다.
+    ```java
+    boolean tryLock()
+    boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException
+    ```
+    - tryLock은 다른 쓰레드에 의해 lock이 걸려 있으면 lock을 얻으려고 기다리지 않거나 지정된 시간만큼 기다린다.
+    - lock을 얻으면 true, 얻지못하면 false를 반환한다.
+    - lock()은 lock을 얻을 때까지 쓰레드를 블락시키므로 쓰레드의 응답성이 나빠질 수 있다. 응답성이 중요할 경우 tryLock을 이용하여 lock에 대한 결과를 사용자가 결정할 수 있게 한다.
+    - InterruptedException이 발생할 수 있는 데, 지정된 시간동안 lock을 얻으려고 기다리는 중에 interrupt()에 의해 작업이 취소될 수 있도록 코드를 작성할 수 있다는 뜻이다.
+  - ReentrantLock과 Condition
+    - Condition은 wait() & notify()에서 쓰레드를 구분해서 연락하지 못한다는 단점을 해결하기 위한 것이다.
+    - wait() & notify()로 쓰레드의 종류를 구분하지 않고, 공유 객체의 waiting pool에 같이 몰아넣은 대신, 각각의 쓰레드의 Condition을 만들어서 각각의 waiting pool에서 기다리도록 하면 문제는 해결된다.
+    - Condition은 이미 생성된 lock으로부터 new Condition()을 호출해서 생성한다.
 
+  
 - ReentrantReadWriteLock
   - ReentrantReadWriteLock은 읽기를 위한 lock과 쓰기를 위한 lock을 제공한다. 
   - ReentrantLock은 배타적인 lock이라서 무조건 lock이 있어야만 임계 영역의 코드를 수행할 수 있지만, ReentrantReadWriteLock은 읽기 lock이 걸려있으면, 다른 쓰레드가 읽기 lock을 중복해서 걸고 읽기를 수행할 수 있다. 
