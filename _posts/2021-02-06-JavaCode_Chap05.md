@@ -202,6 +202,26 @@ category: The Java
         return true;
     }
     ```
+    - ClassName
+      - Element를 TypeElement로 변환한뒤, JavaPoet을 사용하여 ClassName 타입의 객체로 변환한다.
+      - 이 타입의 객체는 클래스 정보들을 참조할 수 있다.
+    - MethodSpec
+      - 우리가 생성할 클래스의 메소드 스팩을 구현한다.
+      - methodBuilder(메소드명): 구현할 메소드의 이름을 정의한다.
+      - addModifireds(접근지시자를): 메소드의 접근 지시자를 정의한다.
+      - returns: 해당 메소드에서 리턴하는 타입을 정의한다.
+      - addStatement: 메소드 내부의 스테이트먼트를 정의한다.
+    - TypeSpec
+      - 우리가 생성한 클래스의 스팩을 구현한다.
+      - classBuilder(클래스명): 구현할 클래스 명을 정의한다. (이때 풀패키지 경로가아닌 심플 네임만 지정해준다.)
+      - addSuperInterface(인터페이스): 우리가 생성할 클래스가 구현할 인터페이스에 대한 정보를 정의한다.
+      - addModifiers(접근지시자를): 클래스의 접근 지시자를 정의한다.
+      - addMethod(메소드스팩): 클래스에 추가할 메소드 스팩을 정의한다. (위에서 정의한 pullOut 메소드를 추가한다.)
+      - build 를 통해 클래스 스팩 구현을 마친다.
+    - Filer
+      - 소스코드, 클래스 코드 및 리소스를 생성할 수 있는 인터페이스이다.
+      - JavaPoet를 사용한다면 보다 쉽게 생성이 가능하다.
+      
   - Main 함수
     ```java
     Moja moja = new MagjcMoja();
