@@ -79,6 +79,17 @@ category: The Java
 
 - 예제: ByteBuddy 사용
   - 아무것도 없는 Moja에서 "Rabbit"을 꺼내는 마술
+  - ByteBuddy 의존성 추가
+  
+    ```xml
+    <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy</artifactId>
+        <version>1.10.8</version>
+    </dependency>
+    ```
+  
+  - 빈 Moja.java 파일  
     ```java
     public class Moja {
         public String pullOut() {
