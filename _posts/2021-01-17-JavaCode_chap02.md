@@ -37,7 +37,7 @@ category: The Java
           </executions>
       </plugin>
       ```
-    - 메이븐 verify
+    - 메이븐 verify (validation -> compile -> test -> package -> verify)
       ```
       $ mvn clean verify
       ```
