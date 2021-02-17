@@ -139,7 +139,7 @@ category: javascript
        |파라미터|Any|파라미터 리스트 opt|
        |함수 블록|Object|실행 가능 코드 opt|
        |반환| Funcion|생성한 Function Object|
-       - 엔진이 function 키워드를 만나면 function object를 생성하고, 함수 이름을 functino object 이름으로 사용
+       - 엔진이 function 키워드를 만나면 function object를 생성하고, 함수 이름을 function object 이름으로 사용
        ```javascript
        function book(value1, value2) {
          return value1 + ", " + value2;
