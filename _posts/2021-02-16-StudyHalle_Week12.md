@@ -10,9 +10,9 @@ category: Java Study
 #### 학습할 것
 
 - 애노테이션 정의하는 방법
-- @retention
-- @target
-- @documented
+- @Retention
+- @Target
+- @Documented
 - 애노테이션 프로세서
 
 #### 애노테이션 정의하는 방법
@@ -74,7 +74,7 @@ category: Java Study
   
 
 #### Meta Annotation
-- @retention
+- @Retention
   - 어노테이션이 유지되는 기간(Life Time)을 설정하는 어노테이션
   - 설정 값
     - SOURCE : 소스파일에만 존재하고, 클래스파일에는 존재x, 컴파일러에 의해 버려진다. 바이트코드에 남아있지 않다.
@@ -83,7 +83,7 @@ category: Java Study
     - RUNTIME : 클래스파일에도 존재하고 런타임 때 VM에 의해 유지되어 리플랙션을 통해 클래스 파일의 정보를 읽어 처리 가능하다.
       - 리플렉션을 사용하기 위해서는 메모리까지 올라와야 사용할 수 있다
 
-- @target
+- @Target
   - 어노테이션이 적용가능한 대상(동작 대상)을 지정한다.
   - 만약 다른 타입이 온다면 컴파일 에러를 띄운다.
   - 아래와 같은 ElmentType이라는 enum을 통해 지정한다. ( @Target(ElemntType.~)와 같이 사용 )
@@ -100,7 +100,7 @@ category: Java Study
     - TYPE_USE : 타입 사용 (1.9이후)
     - MODULE : 모듈(1.8이후)
     
-- @documented
+- @Documented
   - 어노테이션의 정보가 javadoc의 문서에 포함되도록 하는 어노테이션
 
 - @Inherited
