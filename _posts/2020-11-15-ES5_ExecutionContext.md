@@ -25,7 +25,7 @@ category: javascript
         - OER(Object Environment Record): 전역 코드에 대한 LE는 OER에 포함된다. 
       - Reference to the outer environment: 외부 lexical 환경으로 접근할 수있다는 의미이다. (OLER)
     - VEC(Variable Environment Component): LEC와 function, 변수 식별자가 binding 되는 점을 포함해 동일하다.
-    - TBC(This Environment Component): Thid binding, this의 값이 여기서 결정된다.
+    - TBC(This Binding Component): Thid binding, this의 값이 여기서 결정된다.
       
       ```javascript
       /*
