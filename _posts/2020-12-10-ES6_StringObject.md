@@ -196,7 +196,7 @@ category: Javascript ES6+
 
 - repeat()
   - 형태: String.prototype.repeat()
-  - 파라미터: 복제살 수(option) 디폴트 : 0
+  - 파라미터: 복제(반복)할 수(option) 디폴트 : 0
   - 반환: 복제하여 만든 문자열
   
   - 대상 문자열을 파라미터에 작성한 수 만큼 복제, 연결하여 반환
