@@ -84,6 +84,14 @@ category: Javascript ES6+
   point(10, 20); // arguments 사용 불가
   ```
   - arguments 대신 rest 파라미터 사용
+    ```javascript
+    const getPoint = (...points) => {
+        for(let i in points) {
+            console.log(points[i]);
+        }
+    }
+    getPoint(1, 2, 3); // 1, 2, 3 
+    ```
 
 ### Arrow Function과 this
 
