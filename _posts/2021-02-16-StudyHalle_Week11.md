@@ -47,6 +47,28 @@ category: Java Study
     - Type Safety를 위해 사용한다.
       - 오타, 상수 값에 대한 비교 하는 경우를 예방할 수 있다.
 
+- enum 활용
+  - 상수 뿐만 아닌 값들을 지정하여 활용할 수 있다.
+  ```java
+  public enum Fruit {
+      APPLE(1000), BANANA(2000), PINEAPPLE(3000);
+    	private int price;
+	
+	    Fruit(int price) {
+		      this.price = price;
+	    }	
+	    public int getPrice() {
+		      return this.price;
+	    }
+  }  
+  ```
+  ```java
+  public static void main(String[] args) {
+		  Fruit apple = Fruit.APPLE;
+		  System.out.println(apple.name() + "의 가격은 " + apple.getPrice());
+	}
+  ```
+
 #### enum이 제공하는 메소드 (values()와 valueOf())
 
 |메서드|설명|
