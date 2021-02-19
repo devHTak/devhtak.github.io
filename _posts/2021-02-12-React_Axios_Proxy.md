@@ -1,6 +1,6 @@
 ---
 layout: post
-title: React - Back과 Front 구성, 
+title: React - Back과 Front 구성(Axios와 Proxy)
 summary: React
 author: devhtak
 date: '2021-02-12 10:41:00 +0900'
