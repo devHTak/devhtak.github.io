@@ -1,3 +1,12 @@
+---
+layout: post
+title: React - Router
+summary: React
+author: devhtak
+date: '2021-02-19 11:41:00 +0900'
+category: Frontend
+---
+
 #### React Router
 
 - 페이지 이동을 할 때 React Router DOM을 사용한다.
@@ -66,3 +75,4 @@
   export default App;
   ```
   
+- 참고: John Ann님의 React 기본 강의
