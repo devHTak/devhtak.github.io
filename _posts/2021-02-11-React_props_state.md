@@ -152,3 +152,5 @@ export default Counter;
           this.handlerDecrease = this.hanlderDecrease.bind(this);
       }
       ```
+
+- 출처: Velopert 님의 강의
