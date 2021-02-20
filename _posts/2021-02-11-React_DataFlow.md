@@ -377,4 +377,165 @@ category: Frontend
         )
     }
     ```
+    
+#### shouldComponentUpdate를 통한 컴포넌트 최적화
+
+- 현재 PhoneInfoList.js 설계 문제점
+  - 현재 설계 구조에서는 새롭게 데이터를 넣어주면 PhoneInfoList.js에서 새롭게 렌더링이 된다.
+  - PhoneInfoList.js에서는 모든 information props를 가져와서 PhoneInfo.js를 새롭게 렌더링한다.
+  - 그런 이유로 새롭게 information에 추가해도 새롭게 추가되는 데이터만 렌더링 되는 것이 아닌, 모든 리스트가 다시 렌더링 된다.
+
+- shouldComponentUpdate를 통해 최적화를 할 수 있다.
+  - reactjs code snippet 확장팩을 설치하면 scu로 바로 생성할 수 있다.
+  - PhoneInfo.js에 shouldComponentUpdate(nextProps, nextState)를 생성하자
+    ```javascript
+    shouldComponentUpdate(nextProps, nextState) {
+        // return true; // 기본적으로 생성
+        if(this.state !== nextState)
+            return true;
+        
+        return this.props.info !== nextProps.info;
+    }
+    ```
+    - 먼저, 내부 state에 변경이 생기면 true를 리턴한다.
+    - props.info에 변화가 생기는 경우만 true를 리턴하여 렌더링되도록 한다.
+  - 이렇게 하면, 생성, 수정 당시에는 해당 데이터만 렌더링 되고, 삭제시에는 기존 데이터의 변경은 없기 때문에 PhoneInfo.js가 새롭게 렌더링 되지 않는다.
+  
+#### 배열 또는 객체 변경 시에 불변성 유지 이유 (setState...)
+
+- 만약 setState가 아닌 방법으로 데이터 변경을 한다면,,
+  ```javascript
+  handleChange = (data)=> {
+    const {information} = this.state;
+    information.push({id: this.id++, ...data});
+  }
+  ```
+  - react에서는 state의 변화는 setState를 통해서 인식하고 변경에 대한 리렌더링하기 때문에 동작 조차 되지 않는다
+
+- 불변성을 유지하지 않는 경우
+  - 얕은 복사
+    ```javascript
+    const array = [0, 1, 2];
+    const anotherArray = array;
+    array.push(3); 
+    console.log(array); // [0, 1, 2, 3]
+    console.log(anotherArray); // [0, 1, 2, 3]
+    console.log(array ==== anotherArray); // true
+    ```
+  - 깊은 복사
+    ```javascript
+    const array = [0, 1, 2];
+    const anotherArray1 = [...array, 3];
+    const anoterhArray2 = array.concat(3);
+    console.log(array); // [0, 1, 2];
+    console.log(anotherArray1); // [0, 1, 2, 3];
+    console.log(anotherArray2); // [0, 1, 2, 3];    
+    console.log(array != anotherArray); // false
+    ```
+  - 불변성을 유지하지 않으면, 해당 객체의 변화를 인식하기 어렵기 때문에 react에서는 불변성을 유지하도록 한다.
+
+- 복잡한 객체를 유지하기 위한 라이브러리
+
+#### 이름으로 전화번호 찾기
+
+```javascript
+state={
+  information: [
+    {id: 0, name: '설계자', phone: '010-1111-1111'},
+    {id: 1, name: '개발자', phone: '010-2222-2222'},
+    {id: 2, name: '디자이너', phone: '010-3333-3333'},
+  ],
+  keyword: '',
+}
+handleChange = (e) => {
+  this.setState({
+    keyword: e.target.value
+  })
+}
+
+render() {
+  return (
+    <div className="App">
+      <PhoneRegister onChange={this.handleChangeInfo}/>
+      <input 
+        value={this.state.keyword}
+        onChange={this.handleChange}
+        placeholder="검색"
+      />
+      <PhoneInfoList 
+        information={this.state.information.filter(
+          info => info.name.indexOf(this.state.keyword) > -1
+        )}
+        onCancel={this.handleCancel}
+        onUpdate={this.handleUpdate} />
+    </div>
+  );
+}  
+```
+  - state에 keyword를 설정하고, input 태그에 입력받도록 한다.
+  - PhoneInfoList에서 keyword값이 존재하는지 filter로 확인하여 검색기능을 활용한다.
+  
+#### Ref - DOM에 접근
+
+- 현재 이름을 입력하고 전화번호를 입력한 후에 엔터를 누르면
+  - 전화번호부가 입력되고 전화번호 input태그에 focus가 되어 있다.
+  - 만약 이름에 focus를 하고 싶다면? DOM에 접근하는 Ref를 사용하자
+
+- Ref 활용
+  - DOM에 접속하여, 스크롤 위치를 가져온다거나, 크기, focus 등을 활용하기 위해 사용한다.
+  - 외부 라이브러리(chat 등)을 활용할 때 사용한다.
+
+```javascript
+class PhoneRegister extends Component {
+    // ....
+    //input = null;
+    input = React.createRef();
+    
+    handleSubmit = (e) => {
+        e.preventDefault();
+        const {onChange} = this.props;
+        onChange(this.state);
+        this.setState({
+            name: '',
+            phone: ''
+        })
+        // this.input.focus();
+        this.input.current.focus();
+    }
+    render() {
+        return (
+            <form onSubmit={this.handleSubmit}>
+                <div>
+                    <label>Name: </label>
+                    <input type="text"
+                        name="name"
+                        value={this.state.name}
+                        onChange={this.handleChange}
+                        // ref={ref => this.input = ref}                
+                        ref= {this.input}
+                    />
+                </div>
+                <div>
+                    <label>Phone: </label>
+                    <input type="text"
+                        name="phone"
+                        value={this.state.phone}
+                        onChange={this.handleChange}
+                    />
+                </div>
+                <button type="submit">submit</button>
+            </form>
+        )
+    }
+}
+```
+  - 16.3 버전 이전
+    - input 변수를 null로 생성한다.
+    - submit할 때(handleSubmit 함수) 해당 input 태그가 focus되도록 this.input.focus()를 해준다.
+    - input변수가 어떤 값인지 확인할 수 있도록 name의 input태그에 ref = {ref => this.input=ref}를 설정한다.
+  - 16.3 버전 이후
+    - input 변수에 React.createRef()로 변수를 생성한다.
+    - submit할 때(handleSubmit 함수) 해당 input 태그가 focus되도록 this.input.current.focus()를 해준다.
+    - input변수가 어떤 값인지 확인할 수 있도록 name의 input태그에 ref = {this.input}를 설정한다.
+    
 - 출처: velopert님의 누구든지 하는 리액트: 초심자를 위한 react 핵심 강좌
