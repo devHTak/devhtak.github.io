@@ -555,10 +555,10 @@ void create_instance() {
 
 - JUnit 설정 파일로, 클래스패스 루트(src/test/resources/)에 넣어두면 적용된다.
   - eclipse에서 등록하기
-  - src/test 밑에 java폴더만 있기 때문에 resources 폴더를 추가한다.
-  - 프로젝트 우클릭 -> properties -> Java Build Path로 이동하여 Add Folder로 resources 폴더를 선택한다.
-  - 클릭하여 폴더 하단에 Output 폴더와 Contains test sources를 YES로 바꿔준다.
-  - junit-platform.proerties 파일을 만들어 설정 값을 작성한다.
+    - src/test 밑에 java폴더만 있기 때문에 resources 폴더를 추가한다.
+    - 프로젝트 우클릭 -> properties -> Java Build Path로 이동하여 Add Folder로 resources 폴더를 선택한다.
+    - 클릭하여 폴더 하단에 Output 폴더와 Contains test sources를 YES로 바꿔준다.
+    - junit-platform.proerties 파일을 만들어 설정 값을 작성한다.
   
 - 테스트 인스턴스 라이프사이클 설정
   ```
