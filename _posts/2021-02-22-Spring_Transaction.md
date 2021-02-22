@@ -58,7 +58,8 @@ category: Test
             return new DataSourceTransactionManager(dataSource()); 
         }
     }
-    - DataSourceTransactoinManager
+    ```
+    - DataSourceTransactionManager
       - 단일 DataSource에 대한 PlatformTransactionManager 구현체로 설정된 DataSource당 하나의 스레드 바인딩을 허용한다.
 
 - Spring Boot에서는 별도의 설정이 필요 없으며, 클래스 또는 메소드에 @Transactional을 선언할 수 있다.
