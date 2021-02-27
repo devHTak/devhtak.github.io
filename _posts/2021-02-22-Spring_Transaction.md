@@ -4,7 +4,7 @@ title: \[Spring Boot] @Transactional
 summary: 선언적 트랜잭션 @Transactional
 author: devhtak
 date: '2021-02-21 22:41:00 +0900'
-category: Test
+category: Spring
 ---
 
 #### Transaction
