@@ -111,7 +111,7 @@ category: Spring
         public void addInterceptors(InterceptorRegistry registry) {
             // TODO Auto-generated method stub
             registry.addInterceptor(authInterceptor)
-                .addPathPatterns("/api/v2/coffess/**")
+                .addPathPatterns("/api/v1/coffees/**")
                 .excludePathPatterns("/api/vi/login/**");
         }
     }
@@ -172,5 +172,37 @@ category: Spring
     }
     ```
 - TODO. Test Code 작성
+  - LoginControllerTest.class
+    
+    ```java
+    @SpringBootTest(webEnvironment = WebEnvironment.MOCK)
+    @AutoConfigureMockMvc
+    public class LoginControllerTest {
+	@Autowired MockMvc mockMvc;
+	@Autowired MockHttpSession session;
+	@Autowired ObjectMapper objectMapper;
+	
+	@Test
+	void loginTest() throws Exception {
+	    LoginRequestDTO loginRequestDTO = LoginRequestDTO.builder()
+		.email("test@test.com").password("test1234").build();
+		
+	    MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.post("/api/v1/login")
+		.contentType(MediaType.APPLICATION_JSON_VALUE)
+		.content(objectMapper.writeValueAsString(loginRequestDTO))
+		.session(session);
+		
+	    mockMvc.perform(builder)
+		.andDo(print())
+		.andExpect(status().isOk());
+		
+	    assertEquals(session.getAttribute("email"), "test@test.com");
+	}
+
+    }
+    ```
+    
+    - MockHttpSession: JUnit 환경에서 HttpSession을 Mock 객체로 만들어 사용할 수 있다.
+    - MockServletRequestBuilder: 요청 헤더 객체를 만드는 데, MockHttpSession을 세션에 담겨서 보낼 수 있다. 요청에 대한 세션 유지를 위해 사용했다.
 
 - 출처: https://brunch.co.kr/@springboot/491
