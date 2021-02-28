@@ -1,6 +1,6 @@
 ---
 layout: post
-title: JWT 사용 이전에 Spring Session
+title: Spring Session을 사용한 인증
 summary: JWT 인증
 author: devhtak
 date: '2021-02-23 21:41:00 +0900'
