@@ -92,7 +92,76 @@ category: Test
     - assertEquals로 바로 비교 가능하다.
   - 일반 객체가 컬렉션에 들어 있는 경우
     - equals()를 오버라이딩하여 구현하거나 toString()을 오버라이딩하여 구현한다.
+
+#### MVC 아키텍처
+
+- 뷰 TDD
+  - HttpUnit
+    - HttpUnit은 웹 페이지의 요소들을 테스트하기 위해 사용하는 프레임워크
+    - 일반적인 텍스트, 폼이나 링크, 프레임 등에 접근해서 상태를 값으로 불러올 수 있게 한다.
+    - 예제
+      - 연결 및 확인
+      ```java
+      @Test
+      public void connectTest() throws Exception {
+          WebConversion wc = new WebConversion();
+          WebResponse response = wc.getResponse("http://www.google.com");
+          assertNotNull(response);
+          assertEquals("content-type", "text/html", response.getContentType());
+          assertThat("메시지 출력 확인", response.getText(), containsString("google"));
+      }
+      ```
+      - 페이지 내의 특정 테이블 확인
+      ```java
+      WebTable table = response.getTables()[0];
+      assertEquals("rows", 4, table.getRowCount());
+      assertEquals("columns", 3, table.getColumnCount());
+      assertEquals("links", 1, table.getTableCell(0, 2).getLinks().length);
+      ```
+  - Selenium, CubicTest 등이 있다.
+  
+- Controller TDD
+  - 뷰로부터 넘어오는 요청을 가상으로 만들어주고, 그 결과에 해당하는 응답이 일치하는지 판단하는 것이 가장 간단한 방법이다.
+  - MockMvc 사용 이전 test 코드
+    ```java
+    @Test
+    public void testSearchByEmpid() throws Exception {
+        MockHttpServletRequest requset = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        
+        request.addParameter("empid", "5874");
+        EmployeeSearchServlet searchServlet = new EmployeeSearchServlet();
+        searchServlet.service(request, response);
+        
+        Employee employee = (Employee)request.getAttribute("employee");
+        assertEqluals("박성철", employee.getName());
+    }
+    ```
+  - MockMvc, Mockito 사용
+    ```java
+    @Autowired MockMvc mockMvc;
+    @Autowired SearchService searchService;
     
+    @Test
+    public void testSearchByEmpidUsingMockMvc() throws Exception {
+        Employee expectedEmployee = Employee.builder().name("박상철").id("5874").build();
+        when(searchService.findById("5874")).thenReturn(expectedEmployee);
+        
+        mockMvc.perform(get("/employee/{empId}", expectedEmployee.getId())
+            .andDo(print())
+            .andExpect(status().isOk());
+          
+        Employee employee = searchService.findById(expectedEmployee.getId());
+        assertEqluals(expectedEmployee.getName(), employee.getName());
+    }
+    ```
+- 모델 TDD
+  - 도메인 모델에 대한 TDD
+    - 도메인 모델에 경우 단순하기 때문에 작성 필요성이 없을 수 있지만, 테스트 커버리지를 높일 필요가 있는경우 간단하게 작성할 필요도 있다.
+    - 만약 상태 변화 등 내부 로직 확인이 필요한 경우 해당 테스트 로직은 작성하자.
+  - 서비스 모델에 대한 TDD
+    - Web Application에서 가장 중요한 부분을 차지하기 때문에 테스트 커버리지를 높일 필요성이 있다.
+
 #### Anti-Pattern
 
 - 기본적으로 좋은 테스트 케이스는 아래 규칙을 따른다.
