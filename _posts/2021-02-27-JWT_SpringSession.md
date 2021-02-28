@@ -81,6 +81,8 @@ category: Spring
 
 #### Spring Session 인증 & 인가 인터셉터 구현
 
+- 소스 저장소: https://github.com/devHTak/SpringAuth/tree/main/UsingSession
+
 - Interceptor 등록
   - AuthInterceptor.class
     ```java
