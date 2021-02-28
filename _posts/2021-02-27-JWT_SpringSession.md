@@ -180,31 +180,34 @@ category: Spring
     @SpringBootTest(webEnvironment = WebEnvironment.MOCK)
     @AutoConfigureMockMvc
     public class LoginControllerTest {
-	@Autowired MockMvc mockMvc;
-	@Autowired MockHttpSession session;
-	@Autowired ObjectMapper objectMapper;
-	
-	@Test
-	void loginTest() throws Exception {
-	    LoginRequestDTO loginRequestDTO = LoginRequestDTO.builder()
-		.email("test@test.com").password("test1234").build();
-		
-	    MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.post("/api/v1/login")
-		.contentType(MediaType.APPLICATION_JSON_VALUE)
-		.content(objectMapper.writeValueAsString(loginRequestDTO))
-		.session(session);
-		
-	    mockMvc.perform(builder)
-		.andDo(print())
-		.andExpect(status().isOk());
-		
-	    assertEquals(session.getAttribute("email"), "test@test.com");
-	}
+		@Autowired MockMvc mockMvc;
+		@Autowired MockHttpSession session;
+		@Autowired ObjectMapper objectMapper;
 
+		@Test
+		void loginTest() throws Exception {
+		    LoginRequestDTO loginRequestDTO = LoginRequestDTO.builder()
+			.email("test@test.com").password("test1234").build();
+
+		    MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.post("/api/v1/login")
+			.contentType(MediaType.APPLICATION_JSON_VALUE)
+			.content(objectMapper.writeValueAsString(loginRequestDTO))
+			.session(session);
+
+		    mockMvc.perform(builder)
+			.andDo(print())
+			.andExpect(status().isOk());
+
+		    assertEquals(session.getAttribute("email"), "test@test.com");
+		}
     }
     ```
     
     - MockHttpSession: JUnit 환경에서 HttpSession을 Mock 객체로 만들어 사용할 수 있다.
     - MockServletRequestBuilder: 요청 헤더 객체를 만드는 데, MockHttpSession을 세션에 담겨서 보낼 수 있다. 요청에 대한 세션 유지를 위해 사용했다.
 
+- 세션 저장소 단점
+  - 세션 저장소를 요청이 있을 때마다 조회해야 한다는 단점이 있다.
+  - 사용자의 리소스 조회 요청이 있을 때마다 권한이 있는지 검증을 하기 위해서, 매번 세션 저장소에 세션 데이터를 조회해야 한다.
+   
 - 출처: https://brunch.co.kr/@springboot/491
