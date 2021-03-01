@@ -173,7 +173,7 @@ category: Spring
         }
     }
     ```
-- TODO. Test Code 작성
+- Test Code 작성
   - LoginControllerTest.class
     
     ```java
