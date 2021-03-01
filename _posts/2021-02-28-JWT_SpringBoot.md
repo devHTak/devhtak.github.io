@@ -68,7 +68,7 @@ category: Spring
 
 #### Spring Boot에서 JWT 사용하기
 
-- 소스 저장소 위치: https://github.com/devHTak/SpringAuth/tree/main/UsingSession
+- 소스 저장소 위치: https://github.com/devHTak/SpringAuth/tree/main/UsingJwtSpring
 
 - 의존성 추가
   - jjwt-api
@@ -260,7 +260,7 @@ category: Spring
     - JwtAuthToken 사이의 provider 객체로 token을 넘겨주고 JwtAuthToken을 가져오는 중간 역할을 한다.
 
 - 테스트
-  - LoginController.java
+  - LoginControllerTest.java
     ```java
     @SpringBootTest(webEnvironment = WebEnvironment.MOCK)
     @AutoConfigureMockMvc
