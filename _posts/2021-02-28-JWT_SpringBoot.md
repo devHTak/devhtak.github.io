@@ -68,10 +68,12 @@ category: Spring
 
 #### Spring Boot에서 JWT 사용하기
 
-- 소스 저장소 위치: 
+- 소스 저장소 위치: https://github.com/devHTak/SpringAuth/tree/main/UsingSession
 
 - 의존성 추가
-  - jjwt-api, jjwt-impl, jjwt-jackson
+  - jjwt-api
+  - jjwt-impl
+  - jjwt-jackson
   ```
   <!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api -->
   <dependency>
@@ -95,3 +97,221 @@ category: Spring
   </dependency>
   ```
 
+- 인증&인가를 위한 Interceptor
+  - AuthInterceptor.java
+    ```java
+    @Slf4j
+    @Component
+    @RequiredArgsConstructor
+    public class AuthInterceptor implements HandlerInterceptor {
+        private final JwtAuthTokenProvider jwtAuthTokenProvider;
+        private static final String AUTHORIZATION_HEADER = "x-auth-token";
+
+        @Override
+        public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)throws Exception {
+            // TODO Auto-generated method stub
+
+            log.info("AuthInterceptor preHandle");
+
+            String token = resolveToken(request).orElseThrow(CustomAuthenticationException::new);
+            JwtAuthToken jwtAuthToken = jwtAuthTokenProvider.convertAuthToken(token);
+            if(jwtAuthToken.validate() && Role.USER.getCode().equals(jwtAuthToken.getData().get("role"))) {
+                return true;
+            }
+
+            throw new CustomAuthenticationException();
+        }
+
+        private Optional<String> resolveToken(HttpServletRequest request) {
+            String authToken = request.getHeader(AUTHORIZATION_HEADER);
+            if(StringUtils.hasText(authToken)) {
+                return Optional.of(authToken);
+            }
+
+            return Optional.empty();
+        }
+    }
+    ```
+    - 요청이 올 때 Request 헤더에 담겨 있는 x-auth-token 값을 가지고 온다.
+    - JwtAuthToken은 인증을 진행하며, JwtAuthTokenProvider는 header에 담겨있는 값을 Token 객체로 변경하는 역할을 한다.
+    - 유효 여부(토큰 값이 있고, role 확인) true를 리턴하여 요청을 진행시키고, 아닌 경우 CustomAuthenticationException을 발생시킨다.
+      - 유효한 사용자인지(유효한 토큰인지) -> 인증
+      - 리소스에 대한 권한이 있는지 검증 -> 인가
+
+  - WebMvcConfig.java
+    ```java
+    @Configuration
+    @RequiredArgsConstructor
+    public class WebMvcConfig implements WebMvcConfigurer{
+        private final AuthInterceptor authInterceptor;
+        @Override
+        public void addInterceptors(InterceptorRegistry registry) {
+          // TODO Auto-generated method stub
+            registry.addInterceptor(authInterceptor)
+                .addPathPatterns("/api/v1/coffees/**")
+                .excludePathPatterns("/api/vi/login/**");
+        }
+    }
+    ```
+    - AuthInterceptor를 등록시킨다.
+    - Interceptor 예외 경로 등을 지정한다.
+
+- 인증 & 인가 객체
+  - JwtAuthToken.java
+    ```java
+    @Slf4j
+    @Getter
+    public class JwtAuthToken implements AuthToken<Claims>{
+        private final String token;
+        private final Key key;
+        private static final String AUTHORITIES_KEY = "role";
+
+        public JwtAuthToken(String token, Key key) {
+            this.token = token;
+            this.key = key;
+        }
+
+        public JwtAuthToken(String id, String role, Date expiredDate, Key key) {
+            this.key = key;
+            this.token = createJwtAuthToken(id, role, expiredDate).get();
+        }
+
+        @Override
+        public boolean validate() {
+            // TODO Auto-generated method stub
+            return getData() != null;
+        }
+
+        @Override
+        public Claims getData() {
+            // TODO Auto-generated method stub
+            try {
+                return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+            } catch(SecurityException e) {
+                log.info("Invalid JWT signature");
+                throw new CustomJwtRuntimeException();
+            } catch(MalformedJwtException e) {
+                log.info("Invalid JWT token");
+                throw new CustomJwtRuntimeException();
+            } catch(ExpiredJwtException e) {
+                log.info("Expired JWT token");
+                throw new CustomJwtRuntimeException();
+            } catch(UnsupportedJwtException e) {
+                log.info("Unsupported JWT token");
+                throw new CustomJwtRuntimeException();
+            } catch(IllegalArgumentException e) {
+                log.info("Jwt token compact of handler are invalid.");
+                throw new CustomJwtRuntimeException();
+            }
+        }
+
+        private Optional<String> createJwtAuthToken(String id, String role, Date expiredDate) {
+            String token = Jwts.builder()
+                .setSubject(id)
+                .claim(AUTHORITIES_KEY, role)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .setExpiration(expiredDate)
+                .compact();
+
+            return Optional.of(token);
+        }
+    }
+    ```
+    - JwtAuthToken 객체는 id, role, expiredDate를 가지고 token 생성
+    - 인증, 인가 메서드를 제공
+  - JwtConfiguration.java
+    ```java
+    @Configuration
+    public class JwtConfiguration {
+        @Value("${jwt.secret}")
+        private String secret;
+
+        @Bean
+        public JwtAuthTokenProvider jwtProvider() {
+            return new JwtAuthTokenProvider(secret);
+        }
+    }
+    ```
+    - JwtAuthTokenProvider 빈등록
+    
+  - JwtAuthTokenProvider.java
+    ```java
+    @Slf4j
+    public class JwtAuthTokenProvider implements AuthTokenProvider<JwtAuthToken> {
+      private final Key key;
+
+      public JwtAuthTokenProvider(String secret) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+      }
+
+      @Override
+      public JwtAuthToken createAuthToken(String id, String role, Date expiredDate) {
+        // TODO Auto-generated method stub
+        return new JwtAuthToken(id, role, expiredDate, this.key);
+      }
+
+      @Override
+      public JwtAuthToken convertAuthToken(String token) {
+        // TODO Auto-generated method stub
+        return new JwtAuthToken(token, this.key);
+      }
+    }
+    ```
+    - JwtAuthToken 사이의 provider 객체로 token을 넘겨주고 JwtAuthToken을 가져오는 중간 역할을 한다.
+
+- 테스트
+  - LoginController.java
+    ```java
+    @SpringBootTest(webEnvironment = WebEnvironment.MOCK)
+    @AutoConfigureMockMvc
+    public class LoginControllerTest {
+        @Autowired MockMvc mockMvc;
+        @Autowired ObjectMapper objectMapper;
+
+        @Test
+        void loginTest() throws Exception {
+            LoginRequestDTO login = LoginRequestDTO.builder()
+                .email("test@test.com")
+                .password("test1234")
+                .build();
+
+            mockMvc.perform(post("/api/v1/login")
+                  .contentType(MediaType.APPLICATION_JSON_VALUE)
+                  .content(objectMapper.writeValueAsString(login)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE));
+        }
+    }
+    ```
+  - CoffeeControllerTest.java
+    ```java
+    @SpringBootTest(webEnvironment = WebEnvironment.MOCK)
+    @AutoConfigureMockMvc
+    public class CoffeeControllerTest {
+        @Autowired MockMvc mockMvc;
+        @Autowired LoginService loginService;
+
+        private static final String AUTHORIZATION_HEADER = "x-auth-token";
+        private String loginToken;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            MemberDTO member = loginService.login("test@test.com", "test1234")
+                .orElseThrow(LoginFailedException::new);
+            JwtAuthToken token = (JwtAuthToken)loginService.createAuthToken(member);
+            this.loginToken = token.getToken();
+        }
+
+        @Test
+        void coffeeTest() throws Exception {
+            mockMvc.perform(get("/api/v1/coffees")
+                .header(AUTHORIZATION_HEADER, loginToken))
+              .andDo(print())
+              .andExpect(status().isOk());
+        }
+    }
+    ```
+    - interceptor에서 확인하는 token을 만들기 위해 BeforeEach에서 구현
+
+- 출처: https://brunch.co.kr/@springboot/491
