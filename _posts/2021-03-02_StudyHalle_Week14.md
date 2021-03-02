@@ -57,6 +57,18 @@ class SampleGeneric<T> {
     |V|값|
     |T|타입|
     |S,U,V|두, 세, 네번째에 선언된 타입|
+    
+  - 주의점
+    - static 멤버에 타입변수 T를 사용할 수 없다.
+      - T는 인스턴스 변수로 간주되기 때문이다.
+      - static 멤버는 인스턴스 변수를 참조할 수 없다.
+    - 제네릭 타입의 배열을 생성하는 것도 허용되지 않는다.
+      - 제네릭 배열 타입의 참조변수를 선언하는 것은 가능하다.
+      - new T[10]과 같은 방법으로 배열을 생성하는 것은 안된다.
+        - new 연산자 떄문
+      - 해결책
+        - 꼭! T[]을 만들어야 한다면,
+        - Arrays.newInstance(); 메소드나 Object[] 배열을 생성하여 clone()하는 방법을 사용할 수 있다.
 
 #### 제네릭 주요 개념 (바운디드 타입, 와일드 카드)
 
@@ -100,5 +112,29 @@ class SampleGeneric<T> {
 
 #### 제네릭 메소드 만들기
 
-
+- 메서드 선언분에 제네릭 타입이 선언된 메서드를 제네릭 메서드라 한다.
+- 대표 예제
+  - Collections.sort()
+  ```java
+  static <T> void sort(List<T> list, Comparator<? super T> c)
+  ```
+- 제네릭 클래스에 정의된 타입 매개변수와 제네릭 메소드에 정의된 타입 매개변수는 전혀 별개의 것이다.
+  - 같은 타입 문자 T를 사용해도 같지 않다.
+- 제네릭 메소드는 매개변수의 타입이 복잡할 때 유용하게 사용할 수 있다.  
+  - 기존
+  ```java
+  public static void printAll(List<? extends Product> list) {
+      for(Product p : list) {
+          System.out.println(p.getName());
+      }
+  }
+  ```
+  - 제네릭 메소드로 변경
+  ```java
+  public static <T extends Product>void printAll(List<T> list) {
+      for(Product p : list) {
+          System.out.println(p.getName());
+      } 
+  }
+  ```
 #### Erasure
