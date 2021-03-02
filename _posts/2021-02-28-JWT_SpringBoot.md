@@ -156,7 +156,11 @@ category: Spring
     - AuthInterceptor를 등록시킨다.
     - Interceptor 예외 경로 등을 지정한다.
 
-- 인증 & 인가 객체
+- 인증 & 인가 를 위한 JWT 구현
+  - 사용자가 로그인을 성공하면 서버는 JWT 토큰을 생성한 후 생성된 토큰을 프론트엔드에 전달한다.
+  - Front에서는 로그인이 성공한 후 받는 JWT 토큰을 잘 저장하여 필요한 리소스를 요청할 때 백엔드 API를 호출하면서 JWT 토큰을 HTTP 헤더에 함께 전송해야 한다.
+  - 그러면 등록해 놓은 인터셉터가 해당 HTTP 헤더에 저장되어 있는 JWT 토큰을 가져와 확인한다.
+  
   - JwtAuthToken.java
     ```java
     @Slf4j
@@ -218,6 +222,9 @@ category: Spring
     }
     ```
     - JwtAuthToken 객체는 id, role, expiredDate를 가지고 token 생성
+      - setExpiration을 통해 토큰 만료시간을 지정해야 한다.
+      - Secret Sign Key는 반드시 설정해야 하며, 해당 Key를 3자에게 절대 노출하면 안된다.
+      
     - 인증, 인가 메서드를 제공
   - JwtConfiguration.java
     ```java
@@ -313,5 +320,12 @@ category: Spring
     }
     ```
     - interceptor에서 확인하는 token을 만들기 위해 BeforeEach에서 구현
+
+#### JWT 장점
+
+- Session ID의 한계 해결
+  - 여러 서버를 운영한다 하더라도 같은 Key값을 사용하고 있기 때문에 확인하는 토큰 값은 일정하게 유지된다.
+  - 하지만 Secret Key의 노출이 문제가 될 수 있다.
+  - 그래서, JWT Token expire 기간을 짧게 주는 것이 좋다.
 
 - 출처: https://brunch.co.kr/@springboot/491
