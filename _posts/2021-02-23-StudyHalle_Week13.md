@@ -203,3 +203,41 @@ category: Java Study
   }
   ```
   
+#### 직렬화
+
+- 객체를 데이터 스트림으로 만드는 것
+- 객체에 저장된 데이터를 스트림에 쓰기위해 연속적인(serial) 데이터로 변환
+- 반대로 스트림으로부터 데이터를 읽어서 객체를 만드는 것은 역직렬화(deserialization)이라고 한다.
+- 직렬화 시 생성자 및 메소드는 직렬화에 포함되지 않고 필드만 변환된다.
+  - static, transient가 붙은 필드는 직렬화되지 않는다.
+
+- Serializable과 Transient
+  - 직렬화가 가능한 클래스를 만드는 방법은 Serializable 인터페이스를 구현하는 것
+    ```java
+    public class TestInfo implements Serializable { ... }
+    ```
+  - Serializable을 구현한 클래스에 상속을 받는 자식 객체는 직렬화 대상이 된다.
+  - Serializable을 구현한 클래스에 부모 클래스의 필드는 직렬화 대상애서 제외된다.
+  - transient가 붙은 변수는 직렬화 대상에서 제외되며 인스턴스 변수의 값은 그 타입의 기본값으로 직렬화된다.
+  - 
+
+- ObjectInputStream과 ObjectOutputStream
+  - 보조 스트림으로 입출력(직렬화/역직렬화) 스트림을 지정해야 한다.
+    ```java
+    ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("serializableTest.ser"));
+    
+    oos.writer(new TestInfo());
+    ```
+  - 파일에 객체를 저장(직렬화)하는 예제로 serializableTest에 TestInfo 객체를 직렬화하여 저장한다.
+    ```java
+    ObjectInputStream ois = new ObjectInputStream(new FileInputStream("serializableTest.ser"));
+    
+    TestIno testInfo = (TestInfo)ois.readObject();
+    ```
+  - 파일에 저장한 객체를 가져와 읽어(역직렬화)한다.
+    
+- 직렬화 가능한 클래스의 버전 관리
+  - 직렬화된 객체를 역직렬화할 때에는 직렬화했을 때와 같은 클래스를 사용해야 한다.
+  - 클래스 이름이 같아도 클래스의 내용이 변경됐다면 역직렬화는 실패하고 에러가 발생한다.
+  - 역직렬화할 때 serialVersionUID란 객체를 비교하여 버전 일치하는지 비교하는 데 작성하지 않으면 자동 생성된다.
+  - 임의로 serialVersionUID를 생성하면 직렬화 -> 인스턴스 변수 추가 -> 역직렬화하더라도 에러없이 동작한다.
