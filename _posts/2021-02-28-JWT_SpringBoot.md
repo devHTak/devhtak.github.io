@@ -156,6 +156,64 @@ category: Spring
     - AuthInterceptor를 등록시킨다.
     - Interceptor 예외 경로 등을 지정한다.
 
+- 로그인 구현
+  - 로그인 확인한 후에 token을 생성하여 response로 보내준다.
+  - LoginController.java
+    ```java
+    @RestController
+    @RequiredArgsConstructor
+    public class LoginController {
+
+        private final LoginService loginService;
+
+        @PostMapping("/api/v1/login")
+        public CommonResponse login(@RequestBody LoginRequestDTO loginRequestDTO) {
+
+            MemberDTO optionalMemberDTO = loginService.login(loginRequestDTO.getEmail(), loginRequestDTO.getPassword())
+                .orElseThrow(LoginFailedException::new);
+
+            JwtAuthToken jwtAuthToken = (JwtAuthToken) loginService.createAuthToken(optionalMemberDTO);
+
+            return CommonResponse.builder()
+                    .code("LOGIN_SUCCESS")
+                    .status(200)
+                    .message(jwtAuthToken.getToken())
+                    .build();
+        }
+    }
+    ```
+  - LoginService.java
+    ```java
+    @Service
+    @RequiredArgsConstructor
+    public class LoginService implements LoginUseCase {
+        private final JwtAuthTokenProvider provider;
+        private final static Long LOGIN_RETENTION_MINUTES = 30L;
+        
+        @Override
+        public Optional<MemberDTO> login(String email, String password) {
+            // TODO Auto-generated method stub		
+            // TODO Login 연동		
+            MemberDTO member = MemberDTO.builder()
+                .username("test")
+                .email(email)
+                .role(Role.USER)
+                .build();
+
+            return Optional.of(member);
+        }
+
+        @Override
+        public AuthToken createAuthToken(MemberDTO member) {
+            // TODO Auto-generated method stub
+            ZonedDateTime datePlusMinutes = LocalDateTime.now().plusMinutes(LOGIN_RETENTION_MINUTES).atZone(ZoneId.systemDefault());
+            Date expiredDate = Date.from(datePlusMinutes.toInstant());
+
+            return provider.createAuthToken(member.getId(), member.getRole().getCode(), expiredDate);
+        }
+    }
+    ```
+
 - 인증 & 인가 를 위한 JWT 구현
   - 사용자가 로그인을 성공하면 서버는 JWT 토큰을 생성한 후 생성된 토큰을 프론트엔드에 전달한다.
   - Front에서는 로그인이 성공한 후 받는 JWT 토큰을 잘 저장하여 필요한 리소스를 요청할 때 백엔드 API를 호출하면서 JWT 토큰을 HTTP 헤더에 함께 전송해야 한다.
