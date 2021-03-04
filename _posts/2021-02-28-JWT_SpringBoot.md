@@ -282,6 +282,14 @@ category: Spring
     - JwtAuthToken 객체는 id, role, expiredDate를 가지고 token 생성
       - setExpiration을 통해 토큰 만료시간을 지정해야 한다.
       - Secret Sign Key는 반드시 설정해야 하며, 해당 Key를 3자에게 절대 노출하면 안된다.
+    - 예외
+      
+      |Exception|Description|
+      |---|---|
+      |SecurityException|Security Manager가 Security 위반을 알리기 위해 사용한다.|
+      |MalformedJwtException|JWT가 완벽하게 구성되지 않았거나 거절될 경우 해당 예외가 발생한다.|
+      |ExpiredJwtException|기간 만료 이후거나 거절된 JWT를 사용하는 경우 해당 예외가 발생한다.|
+      |UnsupportedJwtException|설정한 형태와 맞지않은 형태 또는 설정일 경우 발생한다.|
       
     - 인증, 인가 메서드를 제공
   - JwtConfiguration.java
