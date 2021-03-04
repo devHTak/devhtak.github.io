@@ -144,6 +144,118 @@ class SampleGeneric<T> {
 - 이유
   - 제네릭이 도입되기 이전의 소스코드와의 호환성을 유지하기 위해서이다.
 
-
-
-
+- 예제
+  - 각기 다른 제네릭을 컴파일해 보자
+    - java 파일
+    ```java
+    public class Test {
+        public static void main(String[] args) { 
+            List<String> strings = new ArrayList<>();
+            List<Integer> integers = new ArrayList<>();
+            List list = new ArrayList();        
+        }
+    }   
+    ```
+    - class 파일
+    ```java
+    public class Test {
+        public Ori() {}
+        public static void main(String[] args) { 
+            new ArrayList();
+            new ArrayList();
+            new ArrayList();        
+        }
+    }   
+    ```
+  - 제네릭 타입 제거 - unbounded
+    ```java
+    public class Node<T> {
+        private T data;
+        private Node<T> next;
+        
+        public Node(T data, Node<T> next) {
+            this.data = data;
+            this.next = next;
+        }
+        
+        public T getData() {
+            return data;
+        }
+    }
+    ```
+    - class 파일
+    ```java
+    public class Node {
+        private Object data;
+        private Node next;
+        
+        public Node(Object data, Node next) {
+            this.data = data;
+            this.next = next;
+        }
+        
+        public Object getData() {
+            return data;
+        }
+    }
+    ```
+    - 일반적인 Object로 대체 사용되는 것을 알 수 있다.
+    
+  - 제네릭 타입 제거 - bounded 사용
+    ```java
+    public class Node<T extends Number> {
+        private T data;
+        private Node<T> next;
+        
+        public Node(T data, Node<T> next) {
+            this.data = data;
+            this.next = next;
+        }
+        
+        public T getData() {
+            return data;
+        }
+    }
+    ```
+    
+    - class 파일
+    ```java
+    public class Node {
+        private Number data;
+        private Node<Number> next;
+        
+        public Node(Number data, Node<Number> next) {
+            this.data = data;
+            this.next = next;
+        }
+        
+        public Number getData() {
+            return data;
+        }
+    }
+    ```
+    - extends 되어 있는 변수로 대체되어 사용되는 것을 알 수 있다.
+     
+  - 메소드 제네릭 타입 제거
+    ```java
+    public static <T> int count(T[] anArray, T element) {
+        int cnt = 0;
+        for(T e: anArray) {
+            if(e.equals(element)
+                cnt+=1;
+        }
+        return cnt;
+    }
+    ```
+    - class 파일
+      ```java
+      public static int count(Object[] anArray, Object element) {
+          int cnt = 0;
+          for(Object e: anArray) {
+              if(e.equals(element)
+                cnt += 1;
+          }
+          return cnt;
+      }
+      ```
+      - T가 Object로 대체된다.
