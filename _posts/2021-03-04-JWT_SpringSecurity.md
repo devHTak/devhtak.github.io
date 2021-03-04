@@ -191,6 +191,11 @@ category: Spring
         - 인증 없이 /api/v1/login으로 접근 가능하다.
       - antMatchers("/api/v1/coffess").hasAnyAuthority(Role.USER.getCode())
         - Role.USER 권한이 있는 경우 api/v1/coffess 접근이 가능하다.
+      - headers().frameOptions().sameOrigin()
+        - HTTP 응답 헤더 중 X-Frame-Options가 있다. frame 또는 iframe 태그로 접근할 수 있는 설정
+        - deny: 어떤 사이트에서도 frame 상에서 보여질 수 없다.
+        - sameOrigin: 동일한 사이트의 frame만 보여진다.
+        - allow-from uri: 지정된 특정 URI의 frame만 보여진다.
 
 - 로그인 구현 및 인증 통과
 
