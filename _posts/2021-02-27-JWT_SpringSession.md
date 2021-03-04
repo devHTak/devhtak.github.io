@@ -124,7 +124,7 @@ category: Spring
         }
     }
     ```
-    - 인증이 필요없는 path를 excludePathPatterns에 설정하고, 인증이 필요(session확인)한 path는 addPathPatterns에 설정했다.
+    - WebMvcConfigurer에 addInterceptors에서 생성한 인터셉터를 추가하며, 해당 인터셉터가 동작할 요청의 PATH를 지정한다.
 
 - 인증 실패: Exception
   - CustomAuthenticationException.class
@@ -157,6 +157,7 @@ category: Spring
     }
     ```
     - Interceptor에서 인증에 실패한 경우 CustomAuthenticationException가 발생하고, GlobalExceptionHandler에 handleCustomAuthenticationException 핸들러가 실행한다.
+    - 인증에 대한 예외 발생 시, CommonResponse로 리턴하여 준다.
 
 - 인증 설정 - 로그인
   - LoginController.class
@@ -179,6 +180,8 @@ category: Spring
         }
     }
     ```
+    - 로그인에 성공하면, 세션에 필요한 정보를 저장한다.
+    
 - Test Code 작성
   - LoginControllerTest.class
     
