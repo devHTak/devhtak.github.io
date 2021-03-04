@@ -75,14 +75,15 @@ category: Spring
   - 다만, 사용자의 세션이 한 서버에 의존하고 있기 때문에 트래픽을 적절히 분산시킬 수 없다.
   
 - 해결책2. Tomcat에서 지원하는 Session Clustering
- - Session Clustering이란, 여러 대의 WAS가 동일한 세션으로 세션을 관리하여 여러대의 서버가 하나의 서버처럼 연결되어 동작하는 방식이다.
- - 단점은 새로운 서버를 추가할 떄마다 기존에 존재하던 WAS에 새로운 서버의 IP, Port 등을 매번 설정해서 클러스터링 해줘야 한다.
+  - Session Clustering이란, 여러 대의 WAS가 동일한 세션으로 세션을 관리하여 여러대의 서버가 하나의 서버처럼 연결되어 동작하는 방식이다.
+  - 단점은 새로운 서버를 추가할 떄마다 기존에 존재하던 WAS에 새로운 서버의 IP, Port 등을 매번 설정해서 클러스터링 해줘야 한다.
  
 - 해결책3. Redis로 세션 서버를 따로 구축
   - Redis와 같은 것을 활용하여 세션 저장소 구축
     - Redis는 Remote Dictionary Server의 약자로서, "키-값" 구조의 비정형 데이터를 저장하고 관리하기 위한 오픈 소스 기반의 비관계형 데이터베이스 관리 시스템(DBMS)이다. 
     - 모든 데이터를 메모리로 불러와서 처리하는 메모리 기반 DBMS이다. 
   - 새로운 서버를 추가하더라도 Redis Session Server에 연결만 해주면 되기 때문에 WAS 서버의 수정이 필요없다는 장점이 있다.
+  - Spring Boot + Redis: https://docs.spring.io/spring-session/docs/current/reference/html5/guides/boot-redis.html
 
 #### Spring Session 인증 & 인가 인터셉터 구현
 
