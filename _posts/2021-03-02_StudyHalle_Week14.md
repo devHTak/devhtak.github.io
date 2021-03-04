@@ -248,14 +248,14 @@ class SampleGeneric<T> {
     }
     ```
     - class 파일
-      ```java
-      public static int count(Object[] anArray, Object element) {
-          int cnt = 0;
-          for(Object e: anArray) {
-              if(e.equals(element)
-                cnt += 1;
-          }
-          return cnt;
-      }
-      ```
-      - T가 Object로 대체된다.
+    ```java
+    public static int count(Object[] anArray, Object element) {
+        int cnt = 0;
+        for(Object e: anArray) {
+            if(e.equals(element)
+              cnt += 1;
+        }
+        return cnt;
+    }
+    ```
+    - T가 Object로 대체된다.
