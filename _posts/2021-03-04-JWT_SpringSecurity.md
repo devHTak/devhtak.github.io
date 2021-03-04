@@ -389,3 +389,5 @@ category: Spring
           return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
       }
       ```
+
+- 출처: https://brunch.co.kr/@springboot/491
