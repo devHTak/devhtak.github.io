@@ -365,3 +365,19 @@ class SampleGeneric<T> {
       }
   }
   ```
+  ```java
+  public class AppleRepository extends Repository<Apple, Long> {}
+  ```
+  ```java
+  public class BananaRepository extends Repository<Banana, Long> {}
+  ```
+  
+  - Generic을 활용해서 추상화하였기 때문에 Repository에 Element, Key를 넘겨줌으로써 중복 코드를 없앨 수 있다.
+  - 그렇다면 현재 코드에서 AppleRepository와 BananRepository를 만들 필요가 있을까?
+    ```java
+    Repository<Banana, Long> bananaRepository = new Repository<>();
+    Repository<Apple, Long> appleRepository = new Repository<>();
+    ```
+    - 이렇게 Generic한 Repository로도 충분히 중복된 메소드를 사용하여 객체별 처리를 할 수 있다.
+    - 그렇다면 왜?! AppleRepository와 BananaRepository를 만들었을까?
+      - 단순 CRUD 말고도 Apple, Banana 특성에 맞는 메소드가 필요할수있기 때문이다.
