@@ -259,3 +259,109 @@ class SampleGeneric<T> {
     }
     ```
     - T가 Object로 대체된다.
+
+#### Generic 예제
+
+- 백기선님 스터디에서 언급된 Generic을 활용하여 Repository를 만드는 예제를 따라했습니다.
+
+- Bananna 객체와 Apple 객체를 저장하는 Repository 생성
+  - Banana.class
+  ```java
+  @Getter @Setter
+  public class Banana {	
+      private Long id;
+      private String name;
+  }
+  ```
+  
+  - Apple.class
+  ```java
+  @Getter @Setter
+  public class Apple {	
+      private Long id;
+      private String name;
+  }
+  ```
+
+- 제네릭 사용하기 이전 Respository
+  - 객체마다 Repository를 만들어야 한다.
+  - 단순 CRUD에 경우 코드가 중복된다.
+  - BananaRepository.java
+  ```java
+  public class BananaRepository {	
+      private static Map<Long, Banana> store = new HashMap<>();
+      public void save(Banana banana) {
+          store.put(banana.getId(), banana);
+      }
+      public void findById(Long id) {
+          store.get(id);
+      }
+  }
+  ```
+  - AppleRepository.java
+  ```java
+  public class AppleRepository {	
+      private static Map<Long, Apple> store = new HashMap<>();
+      public void save(Apple apple) {
+          store.put(apple.getId(), apple);
+      }
+      public void findById(Long id) {
+          store.get(id);
+      }
+  }
+  ```
+- 제네릭을 사용하여 Repository의 중복코드를 삭제하자.
+  - Repository.java
+  ```java
+  public class Repository<E, K> {
+      private Map<K, E> store = new HashMap<>();
+      public void store(E element) {
+          store.put(element.getId(), element);
+      }
+      public E findById(K id) {
+          return store.get(id);
+      }
+  }
+  ```
+  - 하지만 value.getId()에서 오류가 발생한다.
+  - 이유는, V 타입에 getId() 메소드가 있는지 모르기 때문이다.
+  - 해결책: Apple, Banana 객체를 추상화하여 bounded generic으로 수정
+  
+  ```java
+  public interface Entity<K> {
+      public K getId();
+  }
+  ```
+  ```java
+  public class Banana extends Entity<Long> {
+      private Long id;
+      private String name;
+      
+      public Long getId() {
+          return this.id;
+      }
+  }
+  ```
+  ```java
+  public class Apple implements Entity<Long> {
+      private Long id;
+      private String name;
+      
+      public Long getId() {
+          return this.id;
+      }
+  }
+  ```
+  
+  - 오류를 수정한 Repository
+  ```java
+  public class Repository<E extends Entity<K>, K> {	
+      private Map<K, E> store = new HashMap<>();
+      public void store(E element) {
+          store.put(element.getId(), element);
+      }
+      public E findById(K id) {
+          return store.get(id);
+      }
+  }
+  ```
