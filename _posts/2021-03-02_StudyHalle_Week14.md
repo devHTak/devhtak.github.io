@@ -324,7 +324,7 @@ class SampleGeneric<T> {
   }
   ```
   - 하지만 value.getId()에서 오류가 발생한다.
-  - 이유는, V 타입에 getId() 메소드가 있는지 모르기 때문이다.
+  - 이유는, V 타입에 getId() 메소드가 모른다, 이것을 해결해도 리턴하는 K타입이 무엇인지 모를 수 있다.
   - 해결책: Apple, Banana 객체를 추상화하여 bounded generic으로 수정
   
   ```java
