@@ -366,7 +366,10 @@ category: Spring
   - AppConfig는 생성한 객체 인스턴스의 참조를 생성자를 통해서 주입(연결)해준다.
     - MemberServiceImpl -> MemoryMemberRepository
     - OrderServiceImpl -> MemoryMemberRepository, FixedDiscountPolixy
-
+    
+  - 생성자를 메소드로 분리하였다.(memberRepository(), discountPolicy())
+    - 이후 발생할 코드 중복 제거 및 역할에 따른 구현이 확실하게 보이도록 하였다.
+    
   ```java
   public class AppConfig {
       // 생성자 주입
