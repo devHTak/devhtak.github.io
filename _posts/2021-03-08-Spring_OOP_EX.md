@@ -401,7 +401,7 @@ category: Spring
   }
   ```
   
-  ```javaa
+  ```java
   public class OrderServiceImpl implements OrderService {
       private final MemberService memberService;
       private final DiscountPolicy discountPolicy;
