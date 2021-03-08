@@ -70,20 +70,20 @@ category: Spring
 - Grade.java
   ```java
   public enum Grade {
-	    BASIC, VIP;  
+      BASIC, VIP;  
   }
   ```
 - MemberService.java
   ```java
   public interface MemberService {
-	    void join(Member member);
+      void join(Member member);
       Member findByMember(Long memberId);
   }
   ```
 - MemberServiceImpl.java
   ```java
   public class MemberServiceImpl implements MemberService {	
-      private MemberRepository memberRepository = new InMemoryMemberRepository();
+      private final MemberRepository memberRepository = new InMemoryMemberRepository();
 
       @Override
       public void join(Member member) {
@@ -224,8 +224,8 @@ category: Spring
 - OrderServiceImpl.java
   ```java
   public class OrderServiceImpl implements OrderService {	
-      private MemberService memberService = new MemberServiceImpl();
-      private DiscountPolicy discountPolicy = new FixedDiscountPolicy();
+      private final MemberService memberService = new MemberServiceImpl();
+      private final DiscountPolicy discountPolicy = new FixedDiscountPolicy();
 
       @Override
       public Order createOrder(Long memberId, String itemName, int itemPrice) {
@@ -273,9 +273,144 @@ category: Spring
   }
   ```
   
-#### 회원 도매인 설계및 개발의 문제점
+#### 테스트
+
+- OrderServiceTest.java
+  ```java
+  public class OrderServiceTest {
+      private MemberService memberService = new MemberServiceImpl();
+      private OrderService orderService = new OrderServiceImpl();
+	
+      @Test
+      void createOrderByVIP() {
+          Member member1 = new Member(1L, "testA", Grade.VIP);
+          memberService.join(member1);
+          Order newOrder = orderService.createOrder(1L, "testProduct", 5000);
+		
+          assertEquals(5000, newOrder.getItemPrice());
+          assertEquals(4000, newOrder.calculatedPrice());
+      }
+	
+      @Test
+      void createOrderBASIC() {
+          Member member2 = new Member(2L, "testB", Grade.BASIC);
+	  memberService.join(member2);
+	  Order newOrder = orderService.createOrder(2L, "testProduct", 5000);
+		
+          assertEquals(5000, newOrder.getItemPrice());
+          assertEquals(5000, newOrder.calculatedPrice());
+      }
+  }
+  ```
+
+- RateDiscountPolicyTest.java
+  ```java
+  public class RateDiscountPolicyTest {
+      DiscountPolicy discountPolicy = new RateDiscountPolicy();
+	
+      @Test
+      @DisplayName("VIP 10% 할인 적용 확인")
+      void discountTestVIP() {
+          // GIVEN
+          Member member = new Member(1L, "test", Grade.VIP);
+          // WHEN
+          int discount = discountPolicy.discount(member, 90001);
+	  //THEN
+	  assertEquals(9000, discount);
+      }
+      @Test
+      @DisplayName("BASIC은 0 할인 적용 확인")
+      void discountTestBasic() {
+          // GIVEN
+	  Member member = new Member(1L, "test", Grade.BASIC);	
+	  // WHEN
+	  int discount = discountPolicy.discount(member, 10000);	
+	  // THEN
+	  assertEquals(0, discount);
+      }
+  }
+  ```
+
+#### 도매인 설계및 개발의 문제점
 
 - 이 코드의 설계상 문제점은 무엇일까?
 - 다른 저장소로 변경할 때 OCP 원칙을 잘 준수할까?
 - DIP를 잘 지키고 있을까?
 - 의존관계가 인터페이스뿐만 아닌 구현까지 모두 의존하는 문제점이 있다.
+
+- 즉, DiscountPolicy를 FixedDiscountPolicy에서 RateDiscountPolicy로 변경하고자 한다.
+  ```java
+  // private final DiscountPolicy discountPolicy = new FixedDiscountPolicy();
+  private final DiscountPolicy discountPolicy = new RateDiscountPolicy();
+  ```
+  - 이처럼 OrderService에서 소스 변경이 필요하다.
+  - 즉, 클래스 다이어그램으로 보면 OrderService가 DiscountPolicy 인터페이스만 의존하는 것이 아닌, 구현체(클래스)도 의존하는 것 -> DIP 위반! 
+  - 소스 변경을 한다. -> OCP 위반!
+
+#### DIP, OCP 해결 방안 -> 누군가가 클라이언트인 OrderServiceImpl에 DiscountPolicy의 구현 객체를 대신 생성하고 주입해주어야 한다.
+
+#### 관심사의 분리
+
+- 애플리케이션을 하나의 공연이라고 생각해보자.
+  - 각각의 인터페이스를 배역이고, 구현체를 배우라고 생각해보자.
+  - 배역에 맞는 배우를 선택하는 기획자의 책임은 다른 역할이다.
+  - 여기서 관심사를 분리하자는 것은 기획자의 책임을 확실히 분리하는 것이다.
+
+- AppConfig의 등장
+  - 애플리케이션의 전체 동작 방식을 구성(config)하기 위해, 구현 객체를 생성하고, 연결하는 책임을 가지는 별도의 설정 클래스를 만들자.
+  - AppConfig는 애플리케이션의 실제 동작에 필요한 구현 객체를 생성한다.
+    - MemberServiceImpl
+    - MemoryMemberRepository
+    - OrderServiceImpl
+    - FixedDiscountPolicy
+  - AppConfig는 생성한 객체 인스턴스의 참조를 생성자를 통해서 주입(연결)해준다.
+    - MemberServiceImpl -> MemoryMemberRepository
+    - OrderServiceImpl -> MemoryMemberRepository, FixedDiscountPolixy
+
+  ```java
+  public class AppConfig {
+      // 생성자 주입
+      public MemberService memberService() {
+          return new MemberServiceImpl(memberRepository());
+      }
+      public OrderService orderService() {
+          return new OrderServiceImpl(this.memberService(), discountPolicy());
+      }
+      private MemberRepository memberRepository() {
+          return new InMemoryMemberRepository();
+      }	
+      private DiscountPolicy discountPolicy() {
+	  return new FixedDiscountPolicy();
+      }
+  }
+  ```
+
+- MemberServiceImpl과 OrderServiceImpl
+  - 단지 인터페이스만 의존한다.
+  - 생성자를 통해 어떤 구현 객체가 주입되는지는 알 수 없고, AppConfig에서 결정된다.
+  - 의존 관계에 대한 고민은 외부에 맡기고 실행에만 집중하면 된다.
+  
+  ```java
+  public class MemberServiceImpl implements MemberService {
+      private final MemberRepository memberRepository;
+      public MemberServiceImpl(MemberRepository memberRepository) {
+          super();
+	  this.memberRepository = memberRepository;
+      }
+      // ...
+  }
+  ```
+  
+  ```javaa
+  public class OrderServiceImpl implements OrderService {
+      private final MemberService memberService;
+      private final DiscountPolicy discountPolicy;
+      public OrderServiceImpl(MemberService memberService, DiscountPolicy discountPolicy) {
+          super();
+	  this.memberService = memberService;
+	  this.discountPolicy = discountPolicy;
+      }
+      
+      // ...
+  }
+  ```
