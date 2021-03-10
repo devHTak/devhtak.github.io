@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Docker 기본
+title: Docker 개념과 라이프사이클
 summary: Docker
 author: devhtak
 date: '2021-03-10 21:41:00 +0900'
@@ -46,3 +46,39 @@ category: Container
   - 서비스가 커질수록 관리해야 하는 컨테이너의 양이 급격히 증가하여 관리하기 쉽지 않다.
   - 배포 및 컨테이너 배치 전략
   - Scale in, Scale out이 어렵다.
+
+#### 도커 설치
+
+- 환경: Ubuntu: 18.0.4.2, linux
+  ```
+  root@server1-VirtualBox:~# cat /etc/lsb-release
+  DISTRIB_ID=Ubuntu
+  DISTRIB_RELEASE=18.04
+  DISTRIB_CODENAME=bionic
+  DISTRIB_DESCRIPTION="Ubuntu 18.04.2 LTS"
+  ```
+  
+- 도커 설치
+  ```
+  $ apt install docker.io
+  ```
+  
+- 도커 설치 확인
+  ```
+  $ docker -v
+  ```
+  - 버전을 확인하여 도커 설치 여부를 알 수 있다.
+
+- 도커 이미지 다운로드 후 이미지 생성
+  - 도커 이미지 찾기
+    ```
+    $ docker search tomcat
+    ```
+  - 이미지 실행
+    ```
+    $ docker run -d -p 8080:8080 --name console/tomcat-7.0
+    ```
+    - -d: 백그라운드 실행
+    - -p: inbound port : outbound port
+    - --name: 이름을 설정할 수 있다.
+  - 설치 후 127.0.0.1:8080을 접속하면 tomcat 시작되는 것을 확인할 수 있다.
