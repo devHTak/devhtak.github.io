@@ -16,6 +16,7 @@ category: Container
   - Namespace
     - 한덩어리의 데이터에 이름을 붙여 충돌 가능성을 줄이고, 쉽게 참조할 수 있게하는 개념
     - Linux 커널의 Namespace 기능은, Linux 오브젝트에 이름을 붙임으로써 6개의 독립된 환경을 구축했다.
+    - 
     |환경|Description|
     |---|---|
     |PID namespace|PID를 통해 프로세스를 격리시키며, namespace가 다른 프로세스는 서로 액세스할 수 없다.|
@@ -28,5 +29,5 @@ category: Container
   - CGROUP
     - control group의 약자로, 사용자에게 CPU 시간, 시스템 메모리, 네트워크 대역폭과 같은 자원이나 이런 자원의 조합을 시스템에서 실행중인 프로세스간에 할당한다.
     
-![ex_screenshot](./img/screenshot.png)
+![ex_screenshot](../images/docker/VmVsDocker.PNG)
     
