@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Docker 개념
+title: Docker 개념과 
 summary: Docker
 author: devhtak
 date: '2021-03-10 21:41:00 +0900'
@@ -82,3 +82,105 @@ category: Container
     - -p: inbound port : outbound port
     - --name: 이름을 설정할 수 있다.
   - 설치 후 127.0.0.1:8080을 접속하면 tomcat 시작되는 것을 확인할 수 있다.
+
+#### 도커 레지스트리(hub)
+
+- 도커 레지스르리에는 사용자가 사용할 수 있도록 데이터베이스를 통해 image를 제공하고 있다.
+- 누구나 이미지를 만들어 푸시할 수 있으며 푸시된 이미지는 다른 사람들에게 공유 가능하다.
+
+- 이미지 찾기
+  - 명령어로 CLI 형태로 찾을 수 있다.
+    ```
+    $ sudo docker search tomcat
+    ```
+  - docker hub 사용하기
+    - https://hub.docker.com/
+    - 보통 이름/이미지이름 으로 되어 있다.
+    
+- hub에서 다운로드
+  - 이미지 다운로드
+    ```
+    $ docker pull mysql
+    ```
+  - 이미지 다운로드 + 실행
+    ```
+    $ docker run -d -p 8080:8080 --name console/tomcat-7.0
+    ```
+  - 이미지 확인
+    ```
+    $ docker images
+    ```
+
+#### 도커 라이프사이클
+
+- 라이프 사이클 이해
+  ![docker lifecycle](../images/docker/lifecycle.png)
+
+  |command|description|
+  |---|---|
+  |pull|registry에서 image를 다운받는다.|
+  |push|image를 registry에 저장한다.|
+  |rmi|image를 삭제한다.|
+  |create|image를 container로 생성한다.|
+  |commit|container를 새로운 image로 다시 만든다.|
+  |rm|container를 삭제한다.
+  |start|container를 실행한다.(메모리에 올린 후 동작)|
+  |stop|memory에 올려둔 container를 중단한다.|
+  |run|pull + create + start로 이미지를 다운 받고, 컨테이너로 만들고 실행한다.|
+
+  - push에는 권한이 필요하다.
+  - run을 할 때 이미지가 이미 존재한다면 pull을 하지는 않는다.
+  - 컨테이너는 create, run할 때마다 다른 컨테이너로 생성된다. 이미 사용하는 컨테이너가 있는 경우 start를 하는 것이 좋다.
+  - 만약, window 컨테이너에 여러 어플리케이션을 다운받은 후 commit하면 해당 어플리케이션까지 포함된 새로운 이미지를 만들 수 있다. 
+
+- 명령어
+  - registry로부터 이미지 다운받기
+    ```
+    $ sudo docker pull nginx
+    ```
+  - 이미지 확인하기
+    ```
+    $ sudo docker images
+    ```
+  - 이미지 삭제하기
+    ```
+    $ sudo docker rmi tomcat
+    ```
+  - 이미지 컨테이너로 만들기
+    ```
+    $ sudo docker create -p 80:80 --name nx nginx
+    ```
+    - 80번 포트로, nx라는 이름으로 컨테이너 생성
+  - 컨테이너 실행하기
+    ```
+    $ sudo docker start {container_id | container_name}
+    ```
+  - run nginx 컨테이너: pull + create + start
+    ```
+    $ sudo docker run -d -p 81:80 --name nx2 nginx
+    ```
+    - container 이름이나 포트번호 등이 같으면 실행 오류 발생
+    - container 이름과 포트를 같게 하면 새로운 컨테이너가 생성되고 실행된다.
+  - 실행중인 컨테이너 확인
+    ```
+    $ sudo docker ps
+    ```
+  - 모든 컨테이너 확인
+    ```
+    $ sudo docker ps -a    
+    ```
+  - 컨테이너 중지
+    ```
+    $ sudo docker stop {container_id | container_name}
+    ```
+  - 컨테이너 삭제
+    - 컨테이너가 중지되어야 삭제가 가능하다.
+    ```
+    $ sudo docker rm {container_id | container_name}
+    ```
+  - 컨테이너 재시작
+    ```
+    $ sudo docker restart {container_id | container_name}
+    ```
+    
+    
