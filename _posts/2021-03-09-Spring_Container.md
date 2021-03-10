@@ -293,8 +293,7 @@ void findAllBeanByObjectType() {
   - 빈을 관리하고 검색하는 기능을 BeanFactory가 제공하고, 애플리케이션을 개발할 때 필요하는 수 많은 부가기능을 제공한다.
   
   ```java
-  public interface ApplicationContext extends EnvironmentCapable, ListableBeanFactory, HierarchicalBeanFactory,
-		MessageSource, ApplicationEventPublisher, ResourcePatternResolver
+  public interface ApplicationContext extends EnvironmentCapable, ListableBeanFactory, HierarchicalBeanFactory,MessageSource, ApplicationEventPublisher, ResourcePatternResolver
   ```
   - MessageSource : 국제화 기능
     - 국가별 언어를 제공하는 기능
