@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Docker 개념과 
+title: Docker 개념과 Docker registry(hub)
 summary: Docker
 author: devhtak
 date: '2021-03-10 21:41:00 +0900'
