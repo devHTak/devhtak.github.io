@@ -33,7 +33,7 @@ category: Container
   - 오른쪽: 이미 존재하는 레이어 A,B는 새로 다운로드 받을 필요가 없다.
   
   - 도커 이미지 정보 확인
-    ```
+    ```Bash
     $ docker inspect nginx // 이미지 정보 확인
     ```
     - id: docker image에 대한 id, sha256 알고리즘이 사용
@@ -41,11 +41,11 @@ category: Container
     - RootFS -> FileSystem에 대한 정의
     
   - 도커 이미지 저장소 위치 확인
-    ```
+    ```Bash
     $ docker info
     ```
     - 결과
-      ```
+      ```Bash
       Client:
        Debug Mode: false
 
@@ -96,12 +96,12 @@ category: Container
       ```
     - 레이어 저장소 확인
       - 도커 설치 디렉토리 이동
-        ```
+        ```Bash
         $ cd /var/lib/docker
         ```
       - 파일 확인
         
-        ```
+        ```Bash
         builder   containers  network   plugins   swarm  trust 
         buildkit  image       overlay2  runtimes  tmp    volumes
         ```
@@ -113,7 +113,7 @@ category: Container
         - image/overlay2/layerdb에는 overlay2에 대한 정보를 가지고 있다.
       
       - overlay2
-        ```
+        ```Bash
         root@server1-VirtualBox:/var/lib/docker/overlay2# ls
         1b5bbf96c8c8fd658eb619f8eb044739c6ce1487d2e96e91241e82289d1f4457 # 레이어 변경 사항 저장
         356f4333d1a5ab8a97f7715b86cdaf566523d271605cfff48648d85524e12609 # 레이어 변경 사항 저장
@@ -128,11 +128,11 @@ category: Container
         - 실제로 container, image는 미미하고 overlay2에 정보가 저장되기 때문에 많은 용량을 차지한다.
         
   - 도커 히스토리 확인
-    ```
+    ```Bash
     $ docker history nginx
     ```
     - 결과 
-      ```
+      ```Bash
       IMAGE               CREATED             CREATED BY                                      SIZE                COMMENT
       35c43ace9216        3 weeks ago         /bin/sh -c #(nop)  CMD ["nginx" "-g" "daemon…   0B                  
       <missing>           3 weeks ago         /bin/sh -c #(nop)  STOPSIGNAL SIGQUIT           0B                  
@@ -140,7 +140,7 @@ category: Container
       ```
       
   - 도커 용량 확인하기        
-    ```
+    ```Bash
     $ du -sh /var/lib/docker/ # 도커가 설치된 환경 용량 확인
     2.0GB /var/lib/docker/
     
@@ -157,38 +157,101 @@ category: Container
 #### 컨테이너 활용을 위한 명령어
 
 - 포트 포워딩으로 톰캣 실행하기
-  ```
+  ```Bash
   $ docker run -d --name tc -p 80:8080 tomcat
   firefox 127.0.0.1:80
   ```
+  - -d: 백그라운드 실행
+  - --name: 컨테이너 이름 설정
+  - -p: 포트 포워딩 out:in 형태
 
 - 컨테이너 내부 셸 실행
-  ```
+  ```Bash
   $ docker exec -it tc /bin/bash
   
   ```
+  - 컨테이너 안으로 들어가서 확인할 수 있다.
+  - -it: input terminal로 terminal을 열어달라는 의미
+  - 결과
+    ```Bash
+    root@server1-VirtualBox:~# docker exec -it nx /bin/bash
+    root@eb6bf9e2a68a:/# ls
+    bin   docker-entrypoint.d   home   media  proc	sbin  tmp boot  docker-entrypoint.sh  lib    mnt	  root	     srv   usr  dev   etc
+    ```
+    - host명이 container id로 변경되었다.
 
 - 컨테이너 로그 확인
-  ```
+  ```Bash
   $ docker logs tc #stdout, stderr
   ```
+  - stdout, stderr가 logs로 출력된다.
 
 - 호스트 및 컨테이너 간 파일 복사
-  ```
+  ```Bash
   $ docker cp <path> <to container>:<path>
   $ docker cp <from container>:<path> <path>
   $ docker cp <from container>:<path> <to container>:<path>
   ```
+  - 도커 컨테이너 내부에 경우 <container>:<path>를 사용해야 하고, local인 경우 <path>로 사용할 수 있다.
+  - 예제
+  
+    ```Bash
+    root@server1-VirtualBox:~# echo test1234 > test.txt # test.txt 생성
+    root@server1-VirtualBox:~# cat test.txt # 생성된 파일 확인
+    test1234
+    root@server1-VirtualBox:~# docker cp test.txt nx:/ # 파일을 nx 컨테이너의 루트로 이동
+    root@server1-VirtualBox:~# docker exec -it nx cat /test.txt # nx 내에 test.txt 확인
+    test1234
+    root@server1-VirtualBox:~# docker cp nx:/test.txt ./test2.txt # nx 컨테이너에 있는 파일을 로컬로 이동
+    root@server1-VirtualBox:~# cat test2.txt # 확인
+    test1234
+    ```
 
 - 도커 컨테이너 모두 삭제
-  ```
-  $ docker stop `sudo docker ps -a -q`
-  $ docker rm `sudo docker ps -a -q`
+  ```Bash
+  $ docker stop `docker ps -a -q` # docker ps -a로 조회된 컨테이너가 모두 중지한다.
+  $ docker rm `docker ps -a -q` # docker ps -a로 조회된 컨테이너를 모두 삭제한다.
   ```
 
 - 임시 컨테이너 생성
-  ```
+  ```Bash
   $ docker run -d -p 80:8080 --rm --name tc tomcat 
   ```
+
+#### 도커 컨테이너 실행 연습문제
+
+- 기존에 설치된 모든 컨테이너와 이미지 정지 및 삭제
+  ```Bash
+  $ docker stop `docker ps -a -q`
+  $ docker rm `docker ps -a -q`
+  $ docker rmi `docker images -q`
+  
+  # 확인
+  $ docker ps -a
+  $ docker images
+  ```
+  
+- 도커 기능을 사용해 Jenkins 검색
+  ```Bash
+  $ docker search jenkins
+  ```
+
+- Jenkins를 사용하여 설치
+  ```Bash
+  $ docker pull jenkins/jenkins
+  $ docker images # 설치 확인
+  ```
+
+- Jenkins 포트로 접속하여 웹서비스 열기
+  ```Bash
+  $ docker create --name jk -p 8080:8080 jenkins/jenkins
+  $ docker ps -a # 컨테이너 생성 확인
+  $ docker start jk
+  # firefox 127.0.0.1:8080 접속 확인
+  ```
+
+- Jenkins의 초기 패스워드 찾아서 로그인하기
+
+
 
 - 출처: 데브옵스를 위한 쿠버네틱스 강의
