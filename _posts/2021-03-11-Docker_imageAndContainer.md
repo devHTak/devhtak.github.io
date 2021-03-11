@@ -244,14 +244,32 @@ category: Container
 
 - Jenkins 포트로 접속하여 웹서비스 열기
   ```Bash
+  $ docker inspect jenkins/jenkins # 이미지 정보 확인
   $ docker create --name jk -p 8080:8080 jenkins/jenkins
   $ docker ps -a # 컨테이너 생성 확인
   $ docker start jk
   # firefox 127.0.0.1:8080 접속 확인
   ```
+  - docker inspect jenkins/jenkins 결과
+    ```
+    "Config": {
+        "Hostname": "",
+        "Domainname": "",
+        "User": "jenkins",
+        "AttachStdin": false,
+        "AttachStdout": false,
+        "AttachStderr": false,
+        "ExposedPorts": {
+            "50000/tcp": {},
+            "8080/tcp": {}
+    },
+    ```      
 
 - Jenkins의 초기 패스워드 찾아서 로그인하기
-
+  ```
+  $ docker exec -it jk cat /var/jenkins_home/secrets/initialAdminPassword
+  $ docker logs jk
+  ```
 
 
 - 출처: 데브옵스를 위한 쿠버네틱스 강의
