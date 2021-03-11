@@ -138,8 +138,57 @@ category: Container
       <missing>           3 weeks ago         /bin/sh -c #(nop)  STOPSIGNAL SIGQUIT           0B                  
       <missing>           3 weeks ago         /bin/sh -c #(nop)  EXPOSE 80   
       ```
-        
       
+  - 도커 용량 확인하기        
+    ```
+    $ du -sh /var/lib/docker/ # 도커가 설치된 환경 용량 확인
+    2.0GB /var/lib/docker/
+    
+    $ du -sh /var/lib/docker/image/ # 도커가 이미지에 대한 정보 저장 디렉토리
+    2.7M /var/lib/docker/image/
+    
+    $ du -sh /var/lib/docker/overlay2 # 도커 이미지의 파일 시스템이 사용되는 실제 디렉토리
+    2.0G /var/lib/docker/overlay2
+    
+    $ du -sh /var/lib/docker/containers # 도커 컨테이너 정보 저장 디렉토리
+    136K /var/lib/docker/containers
+    ```
+
+#### 컨테이너 활용을 위한 명령어
+
+- 포트 포워딩으로 톰캣 실행하기
+  ```
+  $ docker run -d --name tc -p 80:8080 tomcat
+  firefox 127.0.0.1:80
+  ```
+
+- 컨테이너 내부 셸 실행
+  ```
+  $ docker exec -it tc /bin/bash
   
+  ```
+
+- 컨테이너 로그 확인
+  ```
+  $ docker logs tc #stdout, stderr
+  ```
+
+- 호스트 및 컨테이너 간 파일 복사
+  ```
+  $ docker cp <path> <to container>:<path>
+  $ docker cp <from container>:<path> <path>
+  $ docker cp <from container>:<path> <to container>:<path>
+  ```
+
+- 도커 컨테이너 모두 삭제
+  ```
+  $ docker stop `sudo docker ps -a -q`
+  $ docker rm `sudo docker ps -a -q`
+  ```
+
+- 임시 컨테이너 생성
+  ```
+  $ docker run -d -p 80:8080 --rm --name tc tomcat 
+  ```
 
 - 출처: 데브옵스를 위한 쿠버네틱스 강의
