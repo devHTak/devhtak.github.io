@@ -135,7 +135,7 @@ $ java file
       - 클래스 로더가 바이트코드를 읽고 그 내용에 따라 적절한 바이너리 데이터(기계어)를 만들어 Method영역(메모리)에 저장한다. 
       - Method영역에 저장되는 것
         - Full Qualified Class Name (ex. org.springframework.boot.SpringApplication)
-        - 클래스 | 인터페이스 | Enum
+        - 클래스, 인터페이스, Enum
         - 메서드와 변수
       - 저장이 끝나면, 해당 Class의 Class 객체를 만들어 힙 영역에 저장한다.
     - 링크: Verify, Prepare, Resolve 세 단계로 나눠진다.
