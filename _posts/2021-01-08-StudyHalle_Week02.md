@@ -56,7 +56,7 @@ category: Java Study
     |배열(Array)|Null|4 byte(객체의 주소값)|
     |열거(Enumeration)|Null|4 byte(객체의 주소값)|
     |클래스(Class)|Null|4 byte(객체의 주소값)|
-    |인터페이스(Interface)||Null|4 byte(객체의 주소값)|
+    |인터페이스(Interface)|Null|4 byte(객체의 주소값)|
 
 - Primitive Type 과 Reference Type 출처: https://gbsb.tistory.com/6
 
