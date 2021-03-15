@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Docker Image와 Container
+title: Docker Image
 summary: Docker
 author: devhtak
 date: '2021-03-11 21:41:00 +0900'
@@ -153,6 +153,35 @@ category: Container
     $ du -sh /var/lib/docker/containers # 도커 컨테이너 정보 저장 디렉토리
     136K /var/lib/docker/containers
     ```
+#### 도커 레지스트리(hub)
+
+- 도커 레지스르리에는 사용자가 사용할 수 있도록 데이터베이스를 통해 image를 제공하고 있다.
+- 누구나 이미지를 만들어 푸시할 수 있으며 푸시된 이미지는 다른 사람들에게 공유 가능하다.
+
+- 이미지 찾기
+  - 명령어로 CLI 형태로 찾을 수 있다.
+    ```
+    $ sudo docker search tomcat
+    ```
+  - docker hub 사용하기
+    - https://hub.docker.com/
+    - 보통 이름/이미지이름 으로 되어 있다.
+    
+- hub에서 다운로드
+  - 이미지 다운로드
+    ```
+    $ docker pull mysql
+    ```
+  - 이미지 다운로드 + 실행
+    ```
+    $ docker run -d -p 8080:8080 --name console/tomcat-7.0
+    ```
+  - 이미지 확인
+    ```
+    $ docker images
+    ```
+
+
 
 #### 컨테이너 활용을 위한 명령어
 
@@ -271,5 +300,5 @@ category: Container
   $ docker logs jk
   ```
 
-
+- 출처: 용찬호 님 저자의 시작하세요! 도커/쿠버네티스
 - 출처: 데브옵스를 위한 쿠버네틱스 강의
