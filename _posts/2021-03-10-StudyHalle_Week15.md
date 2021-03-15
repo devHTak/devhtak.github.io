@@ -120,6 +120,10 @@ category: Java Study
       
     - Java 8 이전 원래 abstract 메소드의 선언만 갖을 수 있었다. 하지만 Java 8 이후 부터 default 접근제한자와 함께 메소드 구현도 갖을 수 있다.
     - Comparator는 @FunctionalInterface로 선언되어 있고, 여러 메소드 구현을 갖고 있다.
+
+- @FunctionalInterface 를 사용하는 이유
+  - @FunctionalInterface를 붙이면 추상메소드가 한 개뿐이라는 의미이다.
+  - 해당 애노테이션이 있으면, 다른 개발자가 해당 인터페이스에 추상메소드를 추가하여 발생하는 오류를 예방할 수 있다.
     
 - (바이트코드) INVOKEDYNAMIC CALL
 
@@ -260,5 +264,75 @@ category: Java Study
 
 #### Variable Capture
 
+- 람다식의 실행 코드 블록내에서 클래스의 멤버 필드와 멤버 메소드, 그리고 지역변수를 사용할 수 있다.
+- 클래스의 멤버 필드와 멤버 메소드를 사용하는 데에는 제약이 없으나 지역변수를 사용할 때에는 제약이 있다.
+  - 클래스의 멤버 메소드의 매개변수와 메소드 블록 내부의 지역변수는 JVM의 런타임 스택 영역(stack)에 생성되고 메소드의 실행이 끝나면 stack에서 사라진다.
+  - new 연산자를 사용하여 생성한 객체는 JVM의 동적 메모리 할당 영역(heap)에 객체가 생성되고 GC에 의해 관리되며 더 이상 사용하지 않는 객체에 경우 메모리에서 삭제한다.
+  - heap에 생성된 객체가 stack의 변수를 사용하려고 할 때, 사용하려는 시점에 stack에 더 이상 해당 변수가 없을 수 있다. stack에서 메소드 실행이 끝나면 매개변수나 지역변수에 대해 제거하기 때문이다.
+  
+- 자바는 이런 문제를 해결하기 위해 Variable Capture를 사용한다.
+  - 컴파일 시점에 멤버 메소드의 매개변수나 지역변수를 멤버 메소드 내부에서 생성한 객체가 사용할 경우 객체 내부로 값을 복사해서 사용한다.
+  - 하지만, 모든 값을 복사해서 사용할 수 는 없다. final 키워드로 작성되었거나, final 성격을 가져야 한다. (값이 한번말 할당되어야 한다.)
+
+- 예제
+  ```java
+  public class HelloPrint {
+      private String hello = "Hello Lambda";
+      public void printHello() {
+          String reHello = "Hello";
+	  hello = "Hi";
+	  PrintInterface printInterface = () -> {
+	      System.out.println(hello);
+	  };
+          printInterface.print();
+		
+          // reHello = ""
+          PrintInterface printInterface2 = () -> {
+              System.out.println(reHello);
+          };
+          printInterface2.print();
+      }	
+  }
+  ```
+  - 클래스 변수로 선언한 hello 변수에 경우 값을 다시 할당하여 사용할 수 있다
+  - 지역변수인 reHello에 경우 값을 수정할 경우 람다 실행 블록에서 오류가 발생한다. reHello를 final로 선언하라는 메시지가 발생한다.
 
 #### 메소드, 생성자 레퍼런스
+
+- 메소드, 생성자 레퍼런스는 람다식을 좀 더 간략하게 표현할 수 있게 한다.
+- 콜론 2개(::)를 사용하며, 크데 다음과 같이 구분할 수 있다.
+  - static method 참조
+    - 클래스이름::메소드이름
+  - 인스턴스 메소드 참조
+    - 인스턴스변수::메소드이름
+  - 람다식의 매개변수로 접근 가능한 메소드 참조
+    - 매개변수의 타입 클래스 이름::메소드이름
+  - 생성자 참조
+    - 클래스이름::new
+
+  ```java
+  // static method 참조
+  BinaryOperator<Integer> op = (num1, num2) -> Operator.staticSum(num1, num2);		
+  System.out.println(op.apply(10, 20));
+  		
+  op = Operator::staticSum;
+  System.out.println(op.apply(10, 20));
+  		
+  BinaryOperator<Integer> op2 = (num1, num2) -> {
+      Operator operator = new Operator();
+      return operator.instanceSum(num1, num2);
+  };
+		
+  Operator operator = new Operator();
+  op2 = operator::instanceSum;
+	
+  System.out.println(op2.apply(20, 30));
+  
+  // 람다식의 매개변수로 접근 가능한 메소드 참조
+  // ToIntFunction<? super Fruit> map;
+  Integer sum = Arrays.asList(fruits).stream().mapToInt(Fruit::getPrice).sum();
+  
+  // 생성자 참조
+  Student student = studentService.findById(1L).orElseThrow(IllegalArgumentsException::new);
+  ```
+
