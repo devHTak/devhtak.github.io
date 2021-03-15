@@ -280,10 +280,10 @@ category: Java Study
       private String hello = "Hello Lambda";
       public void printHello() {
           String reHello = "Hello";
-	  hello = "Hi";
-	  PrintInterface printInterface = () -> {
-	      System.out.println(hello);
-	  };
+          hello = "Hi";
+          PrintInterface printInterface = () -> {
+              System.out.println(hello);
+          };
           printInterface.print();
 		
           // reHello = ""
