@@ -268,4 +268,4 @@ category: Java Study
   |void wait(long timeout)|timeout 시간만큼 스레드를 일시적으로 중지할 때 호출|
   |void wait(long timeout, int nanos)|timeout 시간만큼 스레드를 일시적으로 중지할 때 호출|
 
-[출처] 온라인 자바 스터디#6 - 자바 상속(메소드 오버라이딩, 추상클래스, 다이나믹 메소드 디스패치)|작성자 슝스
+\[출처] 온라인 자바 스터디#6 - 자바 상속(메소드 오버라이딩, 추상클래스, 다이나믹 메소드 디스패치)
