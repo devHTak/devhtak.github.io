@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Docker 개념과 Docker registry(hub)
+title: Docker 개념과 lifecycle
 summary: Docker
 author: devhtak
 date: '2021-03-10 21:41:00 +0900'
@@ -96,34 +96,6 @@ category: Container
     - 호스트 자체에 가상화 기술을 적용
     - 이는 외부에서 접근하는 방법의 차이가 있다.
     - 도커에서 컨테이너를 생성할 때는 포트 포워딩을 설정하는 것만으로 외부에서 컨테이너에 접근할 수 있다.
-
-#### 도커 레지스트리(hub)
-
-- 도커 레지스르리에는 사용자가 사용할 수 있도록 데이터베이스를 통해 image를 제공하고 있다.
-- 누구나 이미지를 만들어 푸시할 수 있으며 푸시된 이미지는 다른 사람들에게 공유 가능하다.
-
-- 이미지 찾기
-  - 명령어로 CLI 형태로 찾을 수 있다.
-    ```
-    $ sudo docker search tomcat
-    ```
-  - docker hub 사용하기
-    - https://hub.docker.com/
-    - 보통 이름/이미지이름 으로 되어 있다.
-    
-- hub에서 다운로드
-  - 이미지 다운로드
-    ```
-    $ docker pull mysql
-    ```
-  - 이미지 다운로드 + 실행
-    ```
-    $ docker run -d -p 8080:8080 --name console/tomcat-7.0
-    ```
-  - 이미지 확인
-    ```
-    $ docker images
-    ```
 
 #### 도커 라이프사이클
 
