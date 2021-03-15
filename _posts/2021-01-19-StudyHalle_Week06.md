@@ -23,13 +23,14 @@ category: Java Study
   - 부모클래스의 변수와 메소드를 물려받는 것을 말한다.
   - extends 키워드를 통해 상속을 받는다.
     ```java
-    class child extends parent {
+    class Child extends Parent {
         // ...
     }
     ```
     
 - 상속 대상
   - 접근 지정자에 따라 상속하여도 사용할 수 없는 변수 및 메소드들이 있다.
+  - 
     |접근 지정자|같은 클래스|같은 패키지의 멤버|자식 클래스의 멤버|그 외의 영역|
     |---|---|---|---|---|
     |public|O|O|O|O|
