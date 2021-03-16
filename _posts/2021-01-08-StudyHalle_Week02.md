@@ -156,10 +156,16 @@ category: Java Study
 - reference type에서의 type casting과 type promotion
   - reference에서는 상속관계 가능하다.
   - type casting: 부모 인스턴스를 자식 인스턴스의 대입
-    ```java
-    Person p = new Person();
-    Student s = (Student)p;
-    ```
+    - 부모 클래스로 생성한 객체를 자식 객체에 강제 형변환하는 경우 오류 발생한다.
+      ```java
+      Person p = new Person();
+      Student s = (Student)p; // java.lang.ClassCastException 오류 발생
+      ```
+    - 부모 클래스지만, 자식 클래스로 변환하여 생성한 객체는 자식 객체로 강제 형변환이 가능하다.
+      ```
+      Person p = new Student();
+      Student s = (Student)p;
+      ```
   - type promotion: 자식 인스턴스를 부모 인스턴스의 대입
     ```java
     Student s = new Student();
