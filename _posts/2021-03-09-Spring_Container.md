@@ -280,7 +280,7 @@ void findAllBeanByObjectType() {
 #### BeanFactory와 ApplicationContext
 
 - BeanFactory와 ApplicationContext 상속 구조
-  - <<interface>> BeanFactory <- <<interface>> ApplicationContext <- AnnotationConfigApplicationContext
+  - < <interface> > BeanFactory <- < <interface> > ApplicationContext <- AnnotationConfigApplicationContext
 
 - BeanFactory
   - 스프링 컨테이너의 최상위 인터페이스
@@ -308,7 +308,7 @@ void findAllBeanByObjectType() {
 
 - 스프링 컨테이너는 다양한 형식의 설정 정보를 받아드릴 수 있게 유연하게 설계되어 있다.
 - 상속 구조
-  - <<interface>> BeanFactory <- <<interface>> ApplicationContext <- AnnotationConfigApplicationContext(AppConfig.class), GenericXmlApplicationContext(appConfig.xml), XxxApplicationContext(appConfig.xxx)
+  - < <interface> > BeanFactory <- < <interface> > ApplicationContext <- AnnotationConfigApplicationContext(AppConfig.class), GenericXmlApplicationContext(appConfig.xml), XxxApplicationContext(appConfig.xxx)
 
 - Annotation 기반 자바 코드 설정 사용
   - 예제에서 계속 사용
