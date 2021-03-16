@@ -18,6 +18,7 @@ category: Java Study
 #### 자바에서 예외 처리 방법 (try, catch, throw, throws, finally)
 
 - try catch finally 문
+
   ```java
   try {
       // 예외가 발생할 가능성이 있는 코드
@@ -35,6 +36,7 @@ category: Java Study
   - 여러개의 catch 블록은 위에서 아래로 해당 exception에 포함되는 지 확인하여 실행된다. 즉, 첫번째 catch문에 최상위 Exception을 사용하면 하위 catch문을 거치는 예외는 없다.
   
 - multi-check catch
+
   ```java
   try {
       // 예외 발생 가능성이 있는 코드
@@ -49,6 +51,7 @@ category: Java Study
     - 코드 중복이다.
     
 - throw
+
   ```java
   public int divide(int num1, int num2) {
       if(num2 == 0)
@@ -61,6 +64,7 @@ category: Java Study
   - throw문이 있는 메소드를 사용하면, try-catch문으로 처리하거나 throws로 다음 호출 메서드에게 넘길 수 있다.
 
 - throws
+
   ```java
   void mehtod() throws Exception1, Exception2, ..., Exception3 {
       // 본문
@@ -75,6 +79,7 @@ category: Java Study
   - 만약 try, catch 문 안에 return문이 있어 종료되어도 finally문은 실행한다.
 
 - try-with-resource
+
   ```java
   try(FileOutputStream out = new FileOutputStream("thewing.txt")) { 
       // 본문
@@ -85,6 +90,7 @@ category: Java Study
   - Exception이 발생하는 경우 resource를 자동으로 close를 해준다.
     - finally에서 close해줄 필요가 없다.
   - 사용 로직을 작성할 때 객체는 AutoCloseable 인터페이스를 구연한 객체여야 한다.
+  - try () 괄호 안에 ';'으로 여러 라인을 입력할 수 있다.
   - JDK 1.7부터 추가되었다.
 
 #### 자바가 제공하는 예외 계층 구조
@@ -181,6 +187,7 @@ public class MyException extends Exception{
     - 이렇게 되면 해당 예외를 던지는(throw하는) 메소드를 사용하더라도 try-catch 로 묶지 않아도 컴파일시에 예외가 발생하지 않는다. 
     - 하지만, 이 경우에는 예외가 발생할 경우 해당 클래스를 호출하는 다른 클래스에서 예외를 처리하도록 구조적인 안전장치가 되어있어야만 한다. 
     - 여기서 안전 장치라고 하는 것은 try-catch 로 묶지 않은 메소드를 호출하는 메소드에서 예외를 처리하는 try-catch 가 되어 있는 것을 이야기한다
+    
     ```java
     public void methodCaller() {
         try {
