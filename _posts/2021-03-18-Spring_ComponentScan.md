@@ -26,6 +26,7 @@ category: Spring
 
   }
   ```
+  
   ```
   참고, 컴포넌트 스캔을 사용하면 @Configuration 이 붙은 설정 정보도 자동으로 등록하기 때문에, AppConfig, TestConfig 등 앞에서 만들었던 설정 정보도 함께 등록되고 실해된다.
   그래서 excludedFilters를 사용하여 설정정보는 컴포넌트 스캔 대상에서 제외했다. 보통 설정 정보를 컴포넌트 스캔 제외하지 않지만, 
@@ -109,7 +110,7 @@ category: Spring
 
 ```java
 @ComponentScan(
-		basePackages = "com.example.member",
+	basePackages = "com.example.member",
 )
 ```
 - 탐색할 패키지의 시작 위치 지정
@@ -218,6 +219,7 @@ category: Spring
   - FilterType은 5가지 옵션이 있다.
   
   |Annotation|Description|예제|
+  |---|---|---|
   |ANNOTATION|디폴트, 애노테이션을 인식해서 동작|org.example.SomeAnnotation|
   |ASSIGNABLE_TYPE|지정한 타입과 자식 타입을 인식해서 동작|org.example.SomeClass|
   |ASPECTJ|AspectJ 패턴 사용|org.example..\*Service+|
