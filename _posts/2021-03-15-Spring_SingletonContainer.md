@@ -142,7 +142,7 @@ void singletonServiceTest() {
   ```java
   public class StatefulService {
       private int price; //상태를 유지하는 필드
-          public void order(String name, int price) {
+      public void order(String name, int price) {
           System.out.println("name = " + name + " price = " + price);
           this.price = price; //여기가 문제!
       }
@@ -156,9 +156,8 @@ void singletonServiceTest() {
       @Test
       void statefulServiceSingleton() {
           ApplicationContext ac = new AnnotationConfigApplicationContext(TestConfig.class);
-          StatefulService statefulService1 = ac.getBean("statefulService",
-          StatefulService.class); StatefulService statefulService2 = ac.getBean("statefulService",
-          StatefulService.class);
+          StatefulService statefulService1 = ac.getBean("statefulService", StatefulService.class); 
+          StatefulService statefulService2 = ac.getBean("statefulService", StatefulService.class);
    
           //ThreadA: A사용자 10000원 주문
           statefulService1.order("userA", 10000);
