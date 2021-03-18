@@ -80,59 +80,6 @@ category: Container
   $ docker run -d -p 80:8080 --rm --name tc tomcat 
   ```
 
-#### 도커 컨테이너 실행 연습문제
-
-- 기존에 설치된 모든 컨테이너와 이미지 정지 및 삭제
-  ```Bash
-  $ docker stop `docker ps -a -q`
-  $ docker rm `docker ps -a -q`
-  $ docker rmi `docker images -q`
-  
-  # 확인
-  $ docker ps -a
-  $ docker images
-  ```
-  
-- 도커 기능을 사용해 Jenkins 검색
-  ```Bash
-  $ docker search jenkins
-  ```
-
-- Jenkins를 사용하여 설치
-  ```Bash
-  $ docker pull jenkins/jenkins
-  $ docker images # 설치 확인
-  ```
-
-- Jenkins 포트로 접속하여 웹서비스 열기
-  ```Bash
-  $ docker inspect jenkins/jenkins # 이미지 정보 확인
-  $ docker create --name jk -p 8080:8080 jenkins/jenkins
-  $ docker ps -a # 컨테이너 생성 확인
-  $ docker start jk
-  # firefox 127.0.0.1:8080 접속 확인
-  ```
-  - docker inspect jenkins/jenkins 결과
-    ```
-    "Config": {
-        "Hostname": "",
-        "Domainname": "",
-        "User": "jenkins",
-        "AttachStdin": false,
-        "AttachStdout": false,
-        "AttachStderr": false,
-        "ExposedPorts": {
-            "50000/tcp": {},
-            "8080/tcp": {}
-    },
-    ```      
-
-- Jenkins의 초기 패스워드 찾아서 로그인하기
-  ```
-  $ docker exec -it jk cat /var/jenkins_home/secrets/initialAdminPassword
-  $ docker logs jk
-  ```
-  
 #### 포트 포워딩(포트 매핑)
 
 ```
