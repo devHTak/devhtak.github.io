@@ -217,4 +217,10 @@ category: Container
     $ docker run -t -p 8080:8080 --name sd --rm docker_id/spring-docker:v1.0
     ```
 
+- 도커 이미지 히스토리 확인
+  - 도커 이미지가 어떤 히스토리를 가졌는지 확인할 수 있다.
+    ```
+    $ docker history docker_id/spring-docker
+    ```
+
 ** 참고: 인프런 강의 중 데브옵스를 위한 도커/쿠버네티스 강연
