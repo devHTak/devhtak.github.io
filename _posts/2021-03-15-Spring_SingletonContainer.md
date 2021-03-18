@@ -318,6 +318,7 @@ void configurationDeep() {
       - 스프링이 CGLIB이라는 바이트코드 조작 라이브러리를 사용하여 AppConfig 클래스를 상속받은 임의의 다른 클래스를 만들고, 그 다른 클래스를 스프링 빈으로 등록한 것
 
 - AppConfig@CGLIB 예상 코드
+  - 실제로는 CGLIB의 내부 기술을 사용하는 데 매우 복잡하다.
 
   ```java
   @Bean
@@ -339,7 +340,8 @@ void configurationDeep() {
   - memberRepository()는 다음과 같이 총 3번 호출된다.
 
 - 정리
-  - @Bean만 사용해도 스프링 빈으로 등록되지만, 싱글톤을 보장하지 않는다.
+  - @Configuration 없이 @Bean만 사용해도 스프링 빈으로 등록되지만, 싱글톤을 보장하지 않는다.
+    - @Configuration이 없으면, AppConfig@CGLIB이 생성되지 않는다.
   - memberRepository() 처럼 의존관계 주입이 필요해서 메서드를 직접 호출할 때 싱글톤을 보장하지 않는다.
   - 크게 고민할 것이 없다. 스프링 설정 정보는 항상 @Configuration 을 사용하자.
   
