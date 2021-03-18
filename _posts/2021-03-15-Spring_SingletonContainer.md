@@ -186,6 +186,42 @@ void singletonServiceTest() {
   - 실무에서 이런 경우를 종종 보는데, 이로인해 정말 해결하기 어려운 큰 문제들이 터진다.(몇년에 한번씩 꼭 만난다.)
   - 진짜 공유필드는 조심해야 한다! 스프링 빈은 항상 무상태(stateless)로 설계하자.
 
+- 예제 해결
+```java
+public class StatefulService {
+    // private int price; //상태를 유지하는 필드
+    public void order(String name, int price) {
+        System.out.println("name = " + name + " price = " + price);
+        // this.price = price; //여기가 문제!
+        return price;
+    }
+}
+```
+```java
+public class StatefulServiceTest {
+    @Test
+    void statefulServiceSingleton() {
+        ApplicationContext ac = new AnnotationConfigApplicationContext(TestConfig.class);
+        StatefulService statefulService1 = ac.getBean("statefulService", StatefulService.class); 
+        StatefulService statefulService2 = ac.getBean("statefulService", StatefulService.class);
+   
+        //ThreadA: A사용자 10000원 주문
+        int userAPrice = statefulService1.order("userA", 10000);
+        //ThreadB: B사용자 20000원 주문
+        int userBPrice = statefulService2.order("userB", 20000);
+        
+        assertEquals(10000, userAPrice);
+        assertEquals(20000, userBPrice);
+    }
+    static class TestConfig {
+       @Bean
+       public StatefulService statefulService() {
+            return new StatefulService();
+       }
+    }
+}
+```
+
 #### @Configuration과 싱글톤
 
 ```java
