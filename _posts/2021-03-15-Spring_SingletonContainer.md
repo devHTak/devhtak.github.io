@@ -253,6 +253,8 @@ public class AppConfig {
 }
 ```
 - AppConfig.class에서 등록한 빈은 항상 객체가 생성되도록 하였다.
+    - @Bean memberService()를 호출하면 memberRepository()가 호출되고, new MemoryMemberRepository()가 호출된다.
+    - @Bean orderService()를 호출하면 memberRepository()가 호출되고, new MemoryMemberRepository()가 호출된다.
 - 결과적으로 싱글톤이 깨진 것처럼 보이는데, 스프링 컨테이너는 해당 문제를 어떻게 해결할까?
 
 - 테스트 코드
