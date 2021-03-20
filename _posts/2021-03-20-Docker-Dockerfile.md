@@ -92,6 +92,143 @@ category: Container
   - 이미지 빌드를 시작하면, 도커는 가장 먼저 빌드 컨텍스트를 읽어들인다.
     - 빌드 컨텍스트란, Dockerfile이 위치한 디렉터리
     - 빌드 컨텍스트는 이미지를 생성하는 데 필요한 각종 파일, 소스코드, 메타데이터 등을 담고 있는 디렉터리를 의미한다.
+    - 빌드 컨텍스트 하위 폴더도 포함되기 때문에 불필요한 파일이 있으면 성능이 떨어진다.
+  - .dockerignore 파일을 작성하면 빌드 시 명시된 이름의 파일을 컨텍스트에서 제외한다.
+    ```
+    $ vi .dockerignore
+    test2.html
+    *.html
+    */*.html
+    !test.html?
+    ```
+    - *: 모든 파일을 뜻한다.
+    - ?: 임의의 1자리 문자가 들어가는 파일
+    - !: 해당 파일은 제외에서 제외한다.
+
+- Dockerfile을 이용한 컨테이너 생성과 커밋
+  - Dockerfile에서 명령어 한 줄이 실행될 때마다 이전 Step에서 생성된 이미지에 의해 새로운 컨테이너가 생성되며, Dockerfile에 적힌 명령어를 수행하고 다시 새로운 이미지 레이어로 저장된다.
+  - 따라서, 이미지가 생성되면 Dockerfile에 명령어 줄 수만큼 레이어가 존재하게 되며, 중간에 컨테이너도 같은 수만큼 생성되고 삭제된다.
+
+- 캐시를 이용한 이미지 빌드
+  - 한번 이미지 빌드를 마치고 난 뒤 다시 같은 빌드를 진행하면 이전의 이미지 빌드에서 사용했던 캐시를 사용한다.
+    ```
+    $ cp Dockerfile Dockerfile2
+    $ docker build -f Dockerfile2 -t mycache:0.0 ./
+      # step 별로 Using Cache 내용을 확인할 수 있다.
+    ```
+  - 하지만 캐시가 불필요한 경우가 있다.
+    - git에서 clone해 오는 경우, 캐시에 남아있는 소스를 그대로 사용하면 안된다.
+    - --no-cache옵션을 추가하면 된다.
+      ```
+      $ docker build --no-cache -t mybuild:0.1
+      ```
+  - 캐시를 사용할 이미지를 직접 지정할 수도 있다.
+    ```
+    $ docker build --cache-from nginx -t my_extend_nginx:0.0
+    ```
+
+- 멀티 스테이지를 이용한 Dockerfile 빌드하기
+  - 개발한 어플리케이션을 사용하기 위해서는 해당 언어에 맞는 의존성 패키지와 라이브러리가 필요하다.
+  - 17.0.5 버전 이상을  사용하는 도커 엔진이라면, 이미지의 크기를 줄이기 위한 멀티 스테이지 빌드 방법을 사용할 수 있다.
+  - 멀티 스테이지 빌드는 하나의 Dockerfile 안에 여러개의 FROM 이미지를 정의함으로써 빌드 완료 시 최종적으로 생성될 이미지의 크기를 줄이는 역할을 한다.
+  - 멀티 스테이지 빌드는 반드시 필요한 실행 파일만 최종 이미지 결과물에 포함시킴으로써 이미지를 크게 줄일 때 유용하게 사용할 수 있다.
+    ```
+    FROM golang
+    ADD main.go /root
+    WORKDIR /root
+    RUN go build -o /root/mainApp /root/main.go
+    
+    FROM alpine:latest
+    WORKDIR /root
+    COPY --from=0 /root/mainApp .
+    CMD ["./mainApp"]
+    ```
+    - 2개의 FROM을 통해 2개의 이미지가 명시되었다.
+    - 첫 번째 FROM을 통해 명시된 golang 이미지는 이전과 동일하게 main.go 파일을 /root/mainApp으로 빌드하였다.
+    - 두 번째 FROM 아래에서 사용된 COPY 명령어는 첫 번째 FROM에서 사용된 이미지의 최종 상태에 존재하는 /root/mainApp 파일을 두 번째 이미지인 alpine에 복사한다.
+      - alpine 이미지는 매우 작지만 프로그램 실행에 필요한 런타임 요소가 포함되어 있는 리눅스 배포판 이미지이다.
+    - 이 때, --from=0은 첫 번째 FROM에서 빌드된 이미지의 최종 상태를 의미한다.
+    - 즉, 첫 번째 FROM 이미지에서 빌드한 /root/mainApp 파일을 두번째의 FROM 절에 명시된 이미지를 alpine:latest 이미지에 복사하는 것
+    ```
+    $ docker build . -t go_helloworld:multi-stage
+    $ docker images    
+    ```
+    - 이미지의 크기가 줄어든 것을 확인할 수 있다.
+
+#### 기타 Dockerfile 명령어
+
+- ENV
+  - Dockerfile에 사용될 환경변수를 지정한다.
+  - ${ENV_NAME}, $ENV_NAME 형태로 사용할 수 있다.
+  ```
+  ENV test /home
+  ```
+    - test라는 변수에 /home이라는 값을 설정하였다.
+  - run 명령어에서 -e 옵션을 사용해 같은 이름의 환경변수를 사용하면 기존 값은 덮어진다.
+
+- VOLUME
+  - 빌드된 이미지로 컨테이너를 생성했을 때 호스트와 공유할 컨테이너 내부의 디렉터리를 설정한다.
+  - JSON 형식으로 여러개를 사용하거나 나열하여 사용할 수 있다.
+    - VOLUME ["/home/dir", "/home/dir2"]
+    - VOLUME /home/dir /home/dir2
+  - 컨테이너를 생성하고 볼륨의 목록을 확인해 보면 볼륨이 생성된 것을 알 수 있다.
+
+- ARG
+  - build 명령어를 실행할 때 추가로 입력을 받아 Dockerfile 내에서 사용될 변수의 값을 설정한다.
+  - 기본값을 지정할 수도 있다.
+    ```
+    FROM ubuntu:14.04
+    ARG my_arg
+    ARG my_arg2=value2
+    RUN touch ${my_arg2}/mytouch
+    ```
+  - 빌드할 때 --build-arg 옵션을 사용하여 key=value 형태로 입력할 수 있다.
+    ```
+    $ docker build --build-arg my_arg=/home -t my_arg:0.0 .
+    ```
+  - ARG, ENV의 값을 사용하는 방법은 ${}으로 같으므로 Dockerfile에서 ARG로 설정한 변수를 ENV에서 같은 이름으로 다시 정의하면 --build-arg 옵션에서 설정하는 값은 ENV에 의해 덮어진다.
+    
+- USER
+  - USER 컨테이너 내에서 사용될 사용자 계정의 이름이나 UID를 설정하면 그 아래의 명령어는 해당 사용자 권한으로 실행된다.
+  - 기본적으로 root 권한으로 실행되는 데 필요 없는 경우 사용할 수 있다.
+    ```
+    //...
+    RUN groupadd -r author && useradd -r -g author devhtak
+    USER devhtak
+    //...
+    ```
+  
+- OnBuild
+  - 빌드된 이미지를 기반으로 하는 다른 이미지가 Dockerfile로 생성될 때 실행할 명령어를 추가한다.
+    ```
+    FROM ubuntu:14.04
+    RUN echo "this is onbuild test!"
+    ONBUILD RUN echo "onbuild!" >> /oubuild_file
+    ```
+    - 처음으로 빌드를 할 때에는 해당 명령어로 이뤄진 레이어는 생기지만 onbuild_file이 생성되지는 않는다.
+      ```
+      $ docker build -t onbulid_test:0.0 .
+      ```
+    - 해당 이미지를 기반으로 빌드를 하면 onbuild_file이 생성되는 것을 확인할 수 있다.
+      ```
+      FROM onbuild_test:0.0
+      RUN echo "this is child image!"
+      ```
+      ```
+      $ docker build -t onbuild_test:0.1 .
+      $ docker run -it --rm onbuild_test0.1 ls /onbuild_file
+      onbuild_file
+      ```
+      
+- Stopsignal
+  - 컨테이너가 정지될 때 사용될 시스템 콜의 종류를 지정한다.
+  - 아무것도 설정하지 않으면 기본적으로 SIGTERM으로 설정되지망 Dockerfile에 STOPSIGNAL을 정의해 컨테이너가 종료되는 사용될 신호를 선택할 수 있다.
+  - Dockerfile의 STOPSIGNAL은 docker run 명령어에서 --stop-signal 옵션으로 개별적으로 설정할 수 있다.
+
+- HealthCheck
+
+- Shell
+
 
 ** 참고: 용찬호 님의 시작하세요! 도커/쿠버네티스
 
