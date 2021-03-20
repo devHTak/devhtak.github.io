@@ -236,4 +236,114 @@ category: Spring
   ```
   - @RequiredArgsConstructor 기능을 사용하면 final이 붙은 필드를 모아서 생성자를 자동으로 만들어준다.
 
+#### 조회 빈이 2개 이상일 때 해결 방법
+
+- 문제 발생
+  - @Autowired는 타입(Type)으로 조회한다.
+
+    ```java
+    @Autowired
+    private DiscountPolicy discountPolicy;
+    ```
+
+  - 타입으로 조회하기 때문에 마치 다음 코드와 유사하게 동작한다.
+    - 실제로는 더 많은 기능 제공
+
+    ```java
+    ac.getBean(DiscountPolicy.class);
+    ```
+
+  - 스프링 빈 조회에서 학습했듯이 타입으로 조회하면 선택된 빈이 2개 이상일 때 문제가 발생한다.
+    - DiscountPolicy 하위 타입인 FixDiscountPolicy, RateDiscountPolicy 둘 다 스프링 빈으로 선언
+
+      ```java
+      @Component
+      public class FixDiscountPolicy implements DiscountPolicy {}
+      ```
+      ```java
+      @Component
+      public class RateDiscountPolicy implements DiscountPolicy {}
+      ```
+    - NoUniqueBeanDefinitionException 오류가 발생한다.
+    - 이 때 하위 타입으로 빈을 주입 받을 수 있지만 DIP에 위배되며 유연성이 떨어진다.
+
+- 해결 방법 1. @Autowired 필드명
+  - @Autowired는 타입 매칭을 시도하고, 이 때 여러 빈이 있으면 필드 이름, 파라미터 이름으로 빈 이름을 추가 매칭한다.
+    ```java
+    @Autowired
+    private DiscountPolicy disocuntPolicy;
+    ```
+    - 해당에 경우 필드 이름(discountPolicy)가 상위 타입과 동일하기 때문에 NoUniqueBeanDefinitionException 발생
+    ```java
+    @Autowired
+    private DiscountPolicy rateDiscountPolicy;
+    ```
+    - 해당에 경우 필드 이름(rateDiscountPolicy)이므로 등록된 빈 중 RateDiscountPolicy가 등록된다.
+
+  - 타입 매칭을 먼저 시도하고, 그 결과에 여러 빈이 있을 때 추가로 동작하는 기능
+
+- 해결 방법 2. @Qualifier 사용
+  - @Qualifier는 추가 구분자를 붙여주는 방법이다.
+  - 주입 시 추가적인 방법을 제공하는 것인지 빈 이름을 변경하는 것은 아니다.
+  
+  - 주입 시 @Qualifier를 붙여주고 등록한 이름을 적어준다.
+    
+    ```java
+    @Component
+    @Qualifier("mainDiscountPolicy")
+    public class RateDiscountPolicy implements DiscountPolicy {}
+    ```
+    ```java
+    @Component
+    @Qualifier("fixDiscountPolicy")
+    public class FixDiscountPolicy implements DiscountPolicy {}
+    ```
+  
+  - 생성자 자동 주입 예시
+    
+    ```java
+    @Autowired
+    public OrderService(MemberRepository memberRepository, @Qualifier("mainDiscountPolicy") DiscountPolicy discountPolicy) {
+        this.memberRepository = memberRepository;
+        this.discountPolicy = discountPolicy;
+    }
+    ```
+  
+  - 수정자 자동 주입 예시
+    
+    ```java
+    @Autowired
+    public DiscountPolicy setDiscountPolicy(@Qualifier("mainDiscountPolicy") DiscountPolicy discountPolicy) {
+        this.discountPolicy = discountPolicy;
+    }
+    ```
+  
+  - @Qualifier로 주입할 때 @Qualifier("mainDiscountPolicy")를 못찾으면 어떻게 될까?
+    - 먼저 @Qualifier("mainDiscountPolicy") 가 붙은 빈을 찾는다.
+    - 없다면 mainDiscountPolicy라는 이름의 스프링 빈을 추가로 찾는다.
+    - 하지만 경험상 @Qualifier는 매칭하여 @Qualifier를 찾는 용도로만 사용하는게 면확하고 좋다.
+
+- 해결 방법 3. @Primary
+  - @Primary는 우선순위를 정하는 방법이다.
+  - @Autowired 시에 여러 빈이 매칭되면 @Primary 우선권을 가진다.
+    
+    ```java
+    @Component
+    @Primary
+    public class RateDiscountPolicy implements DiscountPolicy {}
+    
+    @Component
+    public class FixDiscountPolicy implements DiscountPolicy {}
+    ```
+  - DiscountPolicy 타입에 생성자 주입은 우선순위가 높은 RateDiscountPolicy가 동작한다.
+
+- @Primary vs @Qualifier
+  - @Qualifier는 빈 등록, 빈 주입시에 모두 사용하여 코드가 길어지는 불편한 점이 있다.
+  - 주 사용 빈은 @Primary로 등록하여 사용하고, 특별한 경우에 사용할 경우 @Qualifier를 사용하자
+    - 만약 Main DB의 커넥션을 획득하는 빈은 @Primary로 사용하고, Sub DB의 커넥션을 획득하는 빈은 @Qualifier를 지정한다.
+    - Sub DB의 커넥션 정보를 주입받는 경우에만 @Qualifier를 지정하여 사용할 수 있게끔 한다.
+  - 즉, 우선순위는 @Qualifier가 @Primary보다 높다.
+    - @Primary는 기본값처럼 동작하며, @Qualifier는 매우 상세하게 동작한다.
+    - 스프링은 좁은 범위의 선택권에 우선 순위를 높게 주기 때문에 빈을 주입 받는 곳에 @Qualifier가 있으면 해당 타입의 빈을 주입한다.
+
 * 출처: 인프런 스프링핵심원리 - 기본편, 김영한님 강연
