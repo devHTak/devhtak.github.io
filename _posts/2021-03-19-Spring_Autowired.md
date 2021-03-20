@@ -346,4 +346,50 @@ category: Spring
     - @Primary는 기본값처럼 동작하며, @Qualifier는 매우 상세하게 동작한다.
     - 스프링은 좁은 범위의 선택권에 우선 순위를 높게 주기 때문에 빈을 주입 받는 곳에 @Qualifier가 있으면 해당 타입의 빈을 주입한다.
 
+#### 조회한 빈이 모두 필요할 때: List, Map
+
+- 의도적으로 해당 타입의 스프링 빈이 다 필요한 경우가 있다.
+  - 할인 서비스를 제공할 때 클라이언트가 할인의 종류를 선택할 수 있다고 가정해보자.
+  - 스프링을 사용하면 전략 패턴을 매우 간단하게 구현할 수 있다.
+
+```java
+public class AllBeanTest {
+    @Test
+    void findAllBean() {
+        ApplicationContext ac = new AnnotationConfigApplicationContext(AutoAppConfig.class, DiscountService.class);
+        DiscountService discountService = ac.getBean(DiscountService.class);
+        Member member = new Member(1L, "test", Grade.VIP);
+        assertNotNull(discountService);
+        
+        int rateDiscountPrice = discountService.discount(member, 10000, "rateDiscountPolicy");
+        assertEquals(rateDicountPrice, 1000);
+    }
+    
+    static class DiscountService {
+        Map<String, DiscountPolicy> policyMap;
+        List<DiscountPolicy> policyList;
+        
+        @Autowired
+        public DiscountService(Map<String, DiscountPolicy> policyMap, List<DiscountPolicy> policyList) {
+            this.policyMap = policyMap;
+            this.policyList = policyList;
+        }
+        
+        public int discount(Member member, int price, String dicountPolicyCode) {
+            DiscountPolicy discountPolicy = policyMap.get(discountPolicyCode);
+            return discountPolicy.discount(member, price);
+        }
+    }
+}
+```
+- 로직 분석
+  - DiscountService는 Map 또는 List로 모든 DiscountPolicy를 주입받는다. 이 때, fixDiscountPolicy, rateDiscountPolicy가 주입된다.
+  - discount() 메서드는 discountCode(key)로 해당하는 DiscountPolicy(value)를 찾아서 실행한다.
+
+- 주입 분석
+  - Map<String, DiscountPolicy>: map의 키에 스프링 빈의 이름을 넣어주고, 그 값으로 DiscountPolicy 타입으로 조회한 모든 스프링 빈을 담아준다.
+  - List<DiscountPolicy>: DiscountPolicy 타입으로 조회한 모든 스프링 빈을 담아준다.
+  - 만약 해당하는 타입의 스프링 빈이 없으면, 빈 컬렉션이나 Map을 주입한다.
+
+
 * 출처: 인프런 스프링핵심원리 - 기본편, 김영한님 강연
