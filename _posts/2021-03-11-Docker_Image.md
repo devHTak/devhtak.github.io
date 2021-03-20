@@ -176,6 +176,148 @@ category: Container
     ```
     $ docker images
     ```
+    
+#### 간단한 Spring boot 프로젝트 Docker로 이미지 만들기
 
-- 출처: 용찬호 님 저자의 시작하세요! 도커/쿠버네티스
-- 출처: 데브옵스를 위한 쿠버네틱스 강의
+- Spring Boot Project 생성
+  
+  - 간단하게 spring-boot-starter-web 의존성을 추가하였다.
+  - Controller 생성하였다.
+    ```java
+    @RestController
+    public class BasicController {
+        @GetMapping("/docker")
+        public String docker() {
+            return "docker";
+        }
+
+        @GetMapping("/hello")
+        public String hello() {
+            return "hello docker";
+        }
+    }
+    ```
+  - Maven 빌드하기
+    - Update Project
+    - maven package
+      - 프로젝트 우클릭 -> run as -> maven build -> goals: package, profiles: pom.xml 설정
+    - target 폴더 아래 생성된 jar파일 ghkrdls
+  - Spring Boot 앱 실행
+    ```
+    $ java -jar target/DockerTest-0.0.1-SNAPSHOT.jar
+    ```
+
+- 도커 파일 만들기
+  - dockerfile 생성
+    ```
+    FROM openjdk:8-jdk-alpine
+    ARG JAR_FILE=./*.jar
+    COPY ${JAR_FILE} app.jar
+    ENTRYPOINT ["java", "-jar", "./app.jar"]
+    ```
+    - FROM
+      - Docker에게 주어진 이미지를(태그 포함) 빌드시 기반으로 사용하도록 지시한다.
+      - openjdk 중 tag가 8-jdk-alpine인 jdk를 기반으로 하여 docker 이미지를 만든다.
+    - ARG
+      - 빌드시 사용할 환경 변수를 선언한다.
+      - Spring JAR 파일이 생성되는 위치를 변수로 선언
+    - COPY
+      - jar 파일을 app.jar 이름으로 복사
+      - 실행할 jar 파일명을 통일하기 위해서이다.
+      - Container화 할 때 Jar 파일명이 매번 달라지면 실행하기 어렵기 때문이다.
+    - ENTRYPOINT
+      - 이미지를 Container로 띄울 때 Jar 파일이 실행되어 Spring 서버가 구동되도록 Command를 설정
+      - shell 스크립트를 직접 작성하고 ENTRYPOINT에 shell을 선언하는 것도 가능하다.
+      
+- dockerfile과 jar 파일 위치
+  ```
+  $ ls
+  app.jar  dockerfile
+  ```
+  - 편의를 위해 jar파일 명을 app으로 수정했다.
+  - jar파일과 dockerfile의 위치가 같기 때문에 JAR_FILE에 위치를 현재 폴더로 하였고, COPY에서도 같은 jar파일명으로 하였다.
+  
+- dockerfile 빌드
+- 
+  ```
+  $ docker build -t demo/spring-docker .
+  ```
+  - docker build -t \[생성할 이미지명 <group>/<artifactId>] [Dockerfile 위치]
+  - 도커 이미지가 생성된 것을 확인할 수 있다.
+  
+  ```
+  $ docker images
+  REPOSITORY           TAG                 IMAGE ID            CREATED             SIZE
+  demo/spring-docker   latest              8a1f21c4467c        2 minutes ago       122MB
+  openjdk              8-jdk-alpine        a3562aa0b991        22 months ago       105MB
+  ```
+  
+- 이미지 실행하기
+  ```
+  $ docker run -p 8080:8080 demo/spring-docker
+  ```
+  - Container가 구동되어 실행하는 것을 ps 명령으로 확인할 수 있다.
+  ```
+  $ docker ps
+  CONTAINER ID        IMAGE                COMMAND                 CREATED              STATUS                        PORTS               NAMES
+  24dfdd1217ab        demo/spring-docker   "java -jar ./app.jar"   About a minute ago   Exited (130) 19 seconds ago                       charming_davinci
+  ```
+
+#### 도커 허브로 이미지 푸시
+
+- 도커 이미지 태그 변경 후 푸시
+  - 먼저 dockerhub 가입을 하자
+  - login 후에 id를 입력하여 권한을 주어야 한다.
+  
+  ```
+  $ docker login
+    # 로그인
+  $ docker tag spring-docker docker_id/spring-docker:v1.0
+    # spring-docker의 태그 변경, Image ID는 같으나 태그만 변경된다.
+  $ docker images
+    # 이미지 확인
+  $ docker push docker_id/spring-docker:v1.0
+    # docker hub로 이미지 푸시
+    # push할 때 이미 있는 레이어는 Mounted from ..으로 push되지 않고, 생성된 이미지만 push된다.
+  ```
+  
+  - https://hub.docker.com/에 접속하여 레파지토리에 도커가 등록됐는지 확인해본다.
+  - 다운로드하여 실행할 수 있다.
+    ```
+    $ docker run -t -p 8080:8080 --name sd --rm docker_id/spring-docker:v1.0
+    ```
+
+- 도커 이미지 히스토리 확인
+  - 도커 이미지가 어떤 히스토리를 가졌는지 확인할 수 있다.
+  - 도커 이미지를 생성할 때 사용된 명령어들을 확인할 수 있다.
+    ```
+    $ docker history docker_id/spring-docker
+    ```
+
+#### private registry server 구현 및 사용
+
+- private registry 만들기 (registry 이미지 사용)
+  ```
+  $ docker run -d --name docker-registry -p 5000:5000 registry
+  ```
+
+- private registry에 이미지 푸시하기
+  ```
+  $ sudo docker tag spring-docker 127.0.0.1:5000/spring-docker
+    # 127.0.0.1을 태그로 새로 만들었다.
+  $ sudo docker push 127.0.0.1:5000/spring-docker
+    # 신규 생성한 registry 서버이기 때문에 모든 레이어가 push되는 것을 확인할 수 있다.
+  ```
+  
+- private registry에서 pull하기
+  ```
+  $ docker pull 127.0.0.1:5000/sprint-docker
+  ```
+  
+- 인증 관련 참고 링크: https://docs.docker.com/registry/configuration/#auth
+
+#### 풀스택 워드프레스 컨테이너 이미지 만들기
+
+
+** 출처: 용찬호님 시작하세요! 도커/쿠버네티스
+** 출처: 데브옵스를 위한 쿠버네틱스 강의
