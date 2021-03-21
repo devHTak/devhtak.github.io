@@ -226,11 +226,89 @@ category: Container
   - Dockerfile의 STOPSIGNAL은 docker run 명령어에서 --stop-signal 옵션으로 개별적으로 설정할 수 있다.
 
 - HealthCheck
+  - 이미지로부터 생성된 컨테이너에서 동작하는 애플리케이션의 상태를 체크하도록 설정
+  - 컨테이너 내부에서 동작중인 애플리케이션의 프로세스가 종료되지는 않았으나 애플리케이션이 동작하고 있지 않은 상태를 방지하기 위해 사용
+  ```
+  FROM nginx
+  RUN apt-get update -y && apt-get install curl -y
+  HEALTHCHECK --interval=1m --timeout=3s --retrieve=3 CMD curl -f http://localhost || exit 1
+  ```
+    - --interval로 설정한 시기마다, CMD curl 부분이 상태를 체크하는 명령어가 된다.
+    - --timeout으로 설정한 시간을 초과하면 실패한 것으로 간주하고 실패한 경우 --retries의 횟수만큼 명령어를 반복한다.
+    - --retries에 설정된 횟수만큼 상태 체크에 실패하면 해당 컨테이너는 unhealthy 상태로 설정
 
 - Shell
+  - Dockerfile에서 기본적으로 사용하는 쉘은 리눅스에서 "/bin/sh -c", 윈도우에서 "cmd /S /C"이다.
+  - 사용하고자 하는 다른 쉘을 사용하고자 할 때, SHELL을 사용한다.
+
+- ADD 와 COPY
+  - ADD는 외부 URL 및 tar 파일에서도 파일을 추가할 수 있다.
+    ```
+    ADD https://raw.githubsercontent.com/alicek106/mydockerrepo/matser/test.htmlk /home/
+    ADD test.tar /home
+    ```
+  - COPY는 로컬 디렉터리에서 읽어 들인 컨텍스트로부터 이미지에 파일을 복사하는 역할을 한다.
+    ```
+    COPY test.html /home/
+    COPY ["test.html", "/home/"]
+    ```
+  - ADD 보다는 COPY를 선호한다. ADD를 했을 경우 정확히 어떤 파일인지 확인하기 어렵기 때문이다.
+
+- ENTRYPOINT와 CMD
+  - 같은 점
+    - ENTRYPOINT는 CMD와 동일하게 컨테이너가 시작될 때 수행할 명령을 지정한다.
+  - 차이점
+    - ENTRYPOINT는 커맨드를 인자로 받아 사용할 수 있는 스크립트의 역할을 할 수 있다는 점에서 다르다.
+  - ENTRYPOINT를 활용한 스크립트 실행
+    ```
+    $ docker run -it --name entrypoint_sh --entrypoint='/test.sh' ubuntu:14.04 /bin/bash
+    ```
+    - 실행할 스크립트는 컨테이너 내부에 존재해야 한다.
+    - 없는 경우 COPY, ADD를 사용하여 복사한다.
+    ```
+    FROM ubuntu:14.04
+    RUN apt-get update
+    RUN apt-get install apache2 -y
+    ADD entrypoint.sh /entrypoint.sh
+    RUN chmod +x /entrypoint.sh
+    ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
+    ```
+
+  - 이미지 빌드 시 이미지 작동 단계
+    - 어떤 설정 및 실행이 필요한지에 대해 스크립트로 정리
+    - ADD 또는 COPY로 스크립트를 이미지로 복사
+    - ENTRYPOINT를 이 스크립트로 설정
+    - 이미지를 빌드해 사용
+    - 스크립트에서 필요한 인자는 docker run 명령어에서 cmd로 entrypoint의 스크립트에 전달
+  
+  - JSON 배열 형태와 일반 형식의 차이점
+    - ENTRYPOINT, CMD 에서 사용할 명령어를 /bin/sh로 사용할 수 없으면, JSON 벼열의 형태로 사용해야 한다.
+
+#### Dockerfile로 빌드할 때 주의점
+
+- 좋은 습관
+  - 하나의 명령어를 \(역슬래시)로 나누어 가독성을 높일 수 있도록 작성하자.
+  - 사용하지 않는 파일은 .dockerignore 파일을 작성해 불필요한 파일을 빌드 컨텍스트에 포함하지 않도록 하자.
+  - 빌드 캐시를 이용해 기존에 사용했던 이미지 레이어를 재사용하자.
+
+- 주의점
+  ```
+  FROM ubuntu:14.04
+  RUN mkdir /test
+  RUN fallocate -l 100m /test/dummy
+  RUN rm /test/dummy
+  ```
+  - 레이어(명령어)를 살펴보면 100m 크기의 /test/dummy를 만들었다가 삭제한다.
+  - 파일을 삭제했다 하더라도 레이어로 만든 기록이 있기 때문에 여전히 이미지의 크기가 높다.
+  - && 으로 실행할 내용을 하나로 묶어서 사용하면 된다.
+  ```
+  FROM ubuntu:14.04
+  RUN mkdir /test && \
+  fallocate -l 100m /test/dummy && \
+  rm /test/dummy
+  ```
+  - RUN이 하나의 이미지 레이어가 된다는 것을 생각해보면 간단한 해결책이다. 
+  - 묶어서 사용하는 명령어는 하나이 레이어로 되며, 레이어 수를 줄일 수 있다.
 
 
 ** 참고: 용찬호 님의 시작하세요! 도커/쿠버네티스
-
-
-
