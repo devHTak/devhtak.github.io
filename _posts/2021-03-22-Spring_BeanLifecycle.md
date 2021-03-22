@@ -154,5 +154,133 @@ category: Spring
 
 참고. 인터페이스를 사용하는 초기화, 종료 방법은 스프링 초창기 방법으로 지금은 거의 사용하지 않는다.
 
+#### 방법2. 빈 설정 정보에 초기화 메소드, 종료 메소드 지정
+
+- 설정 정보에 @Bean(initMethod="init", destroyMethod="close") 처럼 초기화, 소멸 메소드를 지정할 수 있다.
+- 예제 NetworkClient를 바로 보자
+  
+  ```java
+  public class NetworkClient {	
+      private String url;
+      public NetworkClient() {
+          System.out.println("생성자 호출 url: " + this.url);
+      }
+      public void setUrl(String url) {
+          this.url = url;
+      }
+      public void connect() {
+          System.out.println("connect: " + url);
+      }
+      public void call(String message) {
+          System.out.println("call: " + url + " message: " + message);
+      }
+      public void disconnect() {
+          System.out.println("close: " + url);
+      }
+      public void close(){
+          disconnect();
+      }
+      public void init() {
+          connect();
+          call("init");
+      }
+  }
+  ```
+  - 테스트 코드, Config 파일에 빈을 등록할 때 설정 정보를 등록하였다.
+  
+  ```java
+  public class BeanLifecycleTest {
+      @Test
+      public void lifecycleTest() {
+          ConfigurableApplicationContext ac = new AnnotationConfigApplicationContext(LifecycleConfig.class);
+          NetworkClient networkClient = ac.getBean(NetworkClient.class);
+          ac.close();
+      }
+
+      @Configuration
+      static class LifecycleConfig {
+          @Bean(initMethod = "init", destroyMethod = "close")
+          public NetworkClient networkClient() {
+              NetworkClient client = new NetworkClient();
+              client.setUrl("http://hello-spring.dev");
+
+              return client;
+          }
+      }
+  }
+  ```
+  - 테스트 결과
+  
+  ```
+  생성자 호출 url: null
+  connect: http://hello-spring.dev
+  call: http://hello-spring.dev message: init
+  16:39:17.732 [main] DEBUG org.springframework.context.annotation.AnnotationConfigApplicationContext - Closing org.springframework.context.annotation.AnnotationConfigApplicationContext@67c33749, started on Mon Mar 22 16:39:17 KST 2021
+  close: http://hello-spring.dev
+  ```
+  
+- 설정 정보 사용 특징
+  - 메서드 이름을 자유롭게 줄 수 있다.
+  - 스프링 빈이 스프링 코드에 의존하지 않는다.
+  - 코드가 아니라 설정 정보를 사용하기 때문에 코드를 고칠 수 없는 외부 라이브러리에도 초기화, 종료 메서드를 적용할 수 있다.
+
+- 종료 메서드 추론
+  - @Bean의 destroyMethod 속성에는 아주 특별한 기능이 있다.
+  - 라이브러리 대부분, close, shutdown이라는 이름의 종료 메서드를 사용한다.
+  - @Bean의 destroyMethod는 기본값이 (inferred)(추론)으로 등록되어 있다.
+  - 이 추론 기능은 close, shutdown이라는 이름의 메서드를 자동으로 호출해준다. 이름 그대로 종료 메서드를 추론해서 호출한다.
+  - 따라서 직접 스프링 빈으로 등록하면 종료 메서드는 따로 적어주지 않아도 잘 동작한다.
+  - 추론 기능을 사용하기 싫다면 destroyMethod="" 처럼 빈 공백을 지정하면 된다.
+  
+#### 방법3. @PostConstructor, @PreDestroy 애노테이션 지정
+
+- 예제 NetworkClient를 바로 보자
+  
+  ```java
+  public class NetworkClient {	
+    private String url;
+    public NetworkClient() {
+        System.out.println("생성자 호출 url: " + this.url);
+    }
+    public void setUrl(String url) {
+        this.url = url;
+    }
+    public void connect() {
+        System.out.println("connect: " + url);
+    }
+    public void call(String message) {
+        System.out.println("call: " + url + " message: " + message);
+    }
+    public void disconnect() {
+        System.out.println("close: " + url);
+    }
+    @PreDestroy
+    public void clear() {
+        disconnect();
+    }
+    @PostConstruct
+    public void init() {
+        connect();
+        call("init");
+    }
+  }
+  ```
+  - 테스트 실행 결과
+  
+  ```
+  생성자 호출 url: null
+  connect: http://hello-spring.dev
+  call: http://hello-spring.dev message: init
+  16:46:25.985 [main] DEBUG org.springframework.context.annotation.AnnotationConfigApplicationContext - Closing org.springframework.context.annotation.AnnotationConfigApplicationContext@8317c52, started on Mon Mar 22 16:46:25 KST 2021
+  close: http://hello-spring.dev
+  ```
+    - @PostConstruct, @PreDestroy 두 애노테이션을 사용하면 가장 편리하게 초기화와 종료를 실행할 수 있다.
+
+- @PostConstruct, @PreDestroy 애노테이션 특징
+  - 최신 스프링에서 권장하는 방법
+  - Annotation 하나만 붙이면 되므로 편리하다.
+  - 패키지를 잘보면, javax.annotation.PostConstruct이다. 스프링에 종속되지 않는 자바 표준이기 때문에 스프링이 아닌 다른 컨테이너에서도 동작한다.
+  - ComponentScan과 잘어울린다.
+  - 유일한 단점은 외부 라이브러에는 적용하지 못한다. 외부 라이브러리를 초기화, 종료하는 데 사용한다면 @Bean의 설정을 사용하자. 
 
 ** 출처: 김영한님 스프링 핵심원리 기본편 강의
