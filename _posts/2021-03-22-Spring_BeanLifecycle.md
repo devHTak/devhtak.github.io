@@ -14,24 +14,24 @@ category: Spring
   
   ```java
   public class NetworkClient {	
-    private String url;
-    public NetworkClient() {
-        System.out.println("생성자 호출 url: " + url);
-        connect();
-        call("init");
-    }
-    public void setUrl(String url) {
-        this.url = url;
-    }
-    public void connect() {
-        System.out.println("connect: " + url);
-    }
-    public void call(String message) {
-        System.out.println("call: " + url + " message: " + message);
-    }
-    public void disconnect() {
-        System.out.println("close: " + url);
-    }
+      private String url;
+      public NetworkClient() {
+          System.out.println("생성자 호출 url: " + url);
+          connect();
+          call("init");
+      }
+      public void setUrl(String url) {
+          this.url = url;
+      }
+      public void connect() {
+          System.out.println("connect: " + url);
+      }
+      public void call(String message) {
+          System.out.println("call: " + url + " message: " + message);
+      }
+      public void disconnect() {
+          System.out.println("close: " + url);
+      }
   }
   ```
   - 테스트
@@ -238,31 +238,31 @@ category: Spring
   
   ```java
   public class NetworkClient {	
-    private String url;
-    public NetworkClient() {
-        System.out.println("생성자 호출 url: " + this.url);
-    }
-    public void setUrl(String url) {
-        this.url = url;
-    }
-    public void connect() {
-        System.out.println("connect: " + url);
-    }
-    public void call(String message) {
-        System.out.println("call: " + url + " message: " + message);
-    }
-    public void disconnect() {
-        System.out.println("close: " + url);
-    }
-    @PreDestroy
-    public void clear() {
-        disconnect();
-    }
-    @PostConstruct
-    public void init() {
-        connect();
-        call("init");
-    }
+      private String url;
+      public NetworkClient() {
+          System.out.println("생성자 호출 url: " + this.url);
+      }
+      public void setUrl(String url) {
+          this.url = url;
+      }
+      public void connect() {
+          System.out.println("connect: " + url);
+      }
+      public void call(String message) {
+          System.out.println("call: " + url + " message: " + message);
+      }
+      public void disconnect() {
+          System.out.println("close: " + url);
+      }
+      @PreDestroy
+      public void clear() {
+          disconnect();
+      }
+      @PostConstruct
+      public void init() {
+          connect();
+          call("init");
+      }
   }
   ```
   - 테스트 실행 결과
