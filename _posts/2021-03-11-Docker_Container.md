@@ -135,6 +135,6 @@ DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:8080 to:17
 - docker-proxy 는 iptables가 어떠한 이유로 NAT를 사용하지 못하게 될 경우 사용된다고 한다
 
 
-- 출처: https://joont92.github.io/docker/network-%EA%B5%AC%EC%A1%B0/
-- 출처: 용찬호 님 저자의 시작하세요! 도커/쿠버네티스
-- 출처: 데브옵스를 위한 쿠버네틱스 강의
+** 출처: https://joont92.github.io/docker/network-%EA%B5%AC%EC%A1%B0/
+** 출처: 용찬호 님 저자의 시작하세요! 도커/쿠버네티스
+** 출처: 데브옵스를 위한 쿠버네틱스 강의
