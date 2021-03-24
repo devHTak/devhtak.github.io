@@ -137,6 +137,49 @@ DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:8080 to:17
 - docker-proxy 는 iptables가 어떠한 이유로 NAT를 사용하지 못하게 될 경우 사용된다고 한다
 
 
+
+
+#### 컨테이너 애플리케이션 구축
+
+- 도커에서는 DB, Web Server 등을 하나의 컨테이너로 생성할 수 있지만, 분리된 애플리케이션 컨테이너를 권장한다.
+  - 도커 이미지를 관리하고 컴포넌트의 독립성을 유지하기 쉽다
+
+```
+$ docker run -d \
+--name wordpressdb \
+-e MYSQL_ROOT_PASSWORD=password \ 
+-e MYSQL_DATABASE=wordpress \
+mysql:5.7
+```
+  
+  - mysql 이미지를활용하여 데이터베이스 컨테이너 생성
+  
+```
+$ docker run -d \
+-e WORDPRESS_DB_PASSWORD=password \
+--name wordpress \
+--link wordpressdb:mysql \
+-p 80 \
+wordpress
+```
+  
+  - 워드프레스 이미지를 이용하여 워드프레스 웹 서버 컨테이너 생성
+
+- 옵션 살펴보기
+  - -d
+    - -it 가 컨테이너 내부로 진입하도록 attach 가능한 상태로 설정한다면, -d 으 detached모드로 커테이너를 실행하다. 컨테이너를 백그라운드에서 동작하는 애플리케이션으로써 실행하도록 설정
+    
+  - -e
+    - 컨테이너 내부의 환경변수를 설정
+
+  - --link
+    - A 컨테이너에서 B 컨테이너로 접근하는 방법으로 내부 IP를 알 필요 없이 항상 컨테이너에 별명으로 접근하도록 설정
+    - -- link wordpressdb:mysql 은 wordpressdb의 IP를 몰라도 mysql이라는 호스트명으로 접근할 수 있게 된다.
+    - --link 에 입력된 컨테이너가 실행 중이지 않거나 존재하지 않는다면 --link를 적용한 컨테이너 도한 실행할 수 없다.
+    - 현재는 --link 옵션이 deprecated된 옵션으로 docker bridge 네트워크를 사용하면 더욱 손쉽게 사용할 수 있다.
+
 ** 출처: https://joont92.github.io/docker/network-%EA%B5%AC%EC%A1%B0/
+
 ** 출처: 용찬호 님 저자의 시작하세요! 도커/쿠버네티스
+
 ** 출처: 데브옵스를 위한 쿠버네틱스 강의
