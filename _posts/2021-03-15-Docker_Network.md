@@ -103,5 +103,71 @@ category: Container
     ```
     - 해당 명령어로 확인할 수 있다.
 
+#### 브리지 네트워크와 --net-alias
+
+- run 명령어의 --net-alias 옵션을 함께 쓰면 특정 호스트의 이름으로 컨테이너 여러 개에 접근할 수 있다.
+- 예제
+  - 컨테이너 3개 설정
+    ```    
+    $ docker run -it -d --name network_alias_container1 \
+    --net mybridge \
+    --net-alias alicek106 ubuntu:16.04
+    $ docker run -it -d --name network_alias_container2 \
+    --net mybridge \
+    --net-alias alicek106 ubuntu:16.04
+    $ docker run -it -d --name network_alias_container3 \
+    --net mybridge \
+    --net-alias alicek106 ubuntu:16.04
+    ```
+
+  - alicek106 으로 ping 을 날려보자
+    ```
+    $ ping -c 1 alicek106
+    ```
+    - 컨테이너 3개의 IP로 각각 ping이 전송된다.
+    - 매번 달라지는 IP를 결정하는 것은 별도의 알고리즘이 아닌 라운드 로빈 방식이다.
+    - 도커 엔진이 내장된 DNS가 alicek106이라는 호스트 이름을 --net-alias 옵션으로 alicek106을 설정한 컨테이너로 변환해준다.
+
+#### MacVLAN 네트워크
+
+- MacVLAN은 호스트의 네트워크 인터페이스 카드를 가상화해 물리 네트워크 환경을 컨테이너에게 동일하게 제공
+- 즉, 컨테이너는 물리 네트워크 상에서 가상의 맥 주소를 가지며, 해당 네트워크에 연결된 다른 장치와의 통신이 가능해진다.
+- 공유기, 라우터, 스위치와 같은 네트워크 장비에 여러 대의 서버가 연결되어도 통신이 가능하다.
+- 예제
+  - 아래와 같은 네트워크 정보에서 MacVLAN 생성
+    ```
+    공유기의 네트워크 정보: 192.168.0.0/24
+    서버 1(node01): 192.168.0.50
+    서버 2(node02): 192.168.0.51
+    ``` 
+  
+  - 두 서버에서 MacVLAN 네트워크 생성
+    ```
+    $ dockr network create -d mackvlan --subnet=192.168.0.0/24 \
+    --ip-range=192.168.0.68/28 --gateway=192.168.0.1 \
+    -o macvlan_mode=bridge -o parent=eth0 my_macvlan
+
+    $ dockr network create -d mackvlan --subnet=192.168.0.0/24 \
+    --ip-range=192.168.0.128/28 --gateway=192.168.0.1 \
+    -o macvlan_mode=bridge -o parent=eth0 my_macvlan
+    ```
+      - -d: driver로 mackvlan 사용
+      - --subnet: 컨테이너가 사용할 네트워크 정보를 입력. 네트워크 장비의 IP 대역 기본 설정을 그대로 따른다.
+      - --ip-range: MacVLAN을 생성하는 호스트에서 사용할 컨테이너 IP 범위를 입력, 반드시 겹치지 않게 설정해야 한다.
+      - --gateway: 네트워크에 설정된 게이트웨이를 입력
+      - -o: 네트워크의 추가적인 옵션을 설정, 위에서는 모드를 브릿지 모드로 설정하였다
+
+  - node01 에 c1, node02 에 c2 컨테이너 생성
+    ```
+    $ docker run -it --name c1 --hostname c1 \
+    --network my_macvlan ubuntu:14.04
+    ```
+    ```
+    $ docker run -it --name c2 --hostname c2 \
+    --network my_macvlan ubuntu:14.04
+    ```
+    
+  - c1, c2 끼리 통신이 가능해진다.
+
 - 출처: https://joont92.github.io/docker/network-%EA%B5%AC%EC%A1%B0/
 - 출처: 시작하세요. 도커/쿠버네티스 
