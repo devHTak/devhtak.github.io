@@ -367,23 +367,23 @@ category: Spring
     @Component
     @Scope(value = "request")
     public class MyLogger {
-	private String uuid;
-	private String requestURL;
-	public void setRequestURL(String requestURL) {
-		this.requestURL = requestURL;
-	}
-	public void log(String message) {
-		System.out.println("["+uuid+"] "+requestURL+"] " + message);
-	}	
-	@PostConstruct
-	public void init() {
-		uuid = UUID.randomUUID().toString();
-		System.out.println("[" + uuid + "] request scope bean create:" + this);
-	}
-	@PreDestroy 
-	public void destroy() {
-		System.out.println("[" + uuid + "] request scope bean close:" + this);
-	}
+		private String uuid;
+		private String requestURL;
+		public void setRequestURL(String requestURL) {
+			this.requestURL = requestURL;
+		}
+		public void log(String message) {
+			System.out.println("["+uuid+"] "+requestURL+"] " + message);
+		}	
+		@PostConstruct
+		public void init() {
+			uuid = UUID.randomUUID().toString();
+			System.out.println("[" + uuid + "] request scope bean create:" + this);
+		}
+		@PreDestroy 
+		public void destroy() {
+			System.out.println("[" + uuid + "] request scope bean close:" + this);
+		}
     }    
     ```
     - 로그를 출력하기 위한 MyLogger 클래스
@@ -395,21 +395,21 @@ category: Spring
     ```java
     @RestController
     public class LogDemoController {
-	private final LogDemoService logDemoService;
-	private final MyLogger myLogger;
-	@Autowired
-	public LogDemoController(LogDemoService logDemoService, MyLogger myLogger) {
-		this.logDemoService = logDemoService;
-		this.myLogger = myLogger;
-	}
-	@GetMapping("log-demo")
-	public String logDemo(HttpServletRequest request) {
-		String requestURL = request.getRequestURL().toString();
-		myLogger.setRequestURL(requestURL);		
-		myLogger.log("controller test");
-		logDemoService.logic("testID");
-		return "ok";
-	}
+		private final LogDemoService logDemoService;
+		private final MyLogger myLogger;
+		@Autowired
+		public LogDemoController(LogDemoService logDemoService, MyLogger myLogger) {
+			this.logDemoService = logDemoService;
+			this.myLogger = myLogger;
+		}
+		@GetMapping("log-demo")
+		public String logDemo(HttpServletRequest request) {
+			String requestURL = request.getRequestURL().toString();
+			myLogger.setRequestURL(requestURL);		
+			myLogger.log("controller test");
+			logDemoService.logic("testID");
+			return "ok";
+		}
     }
     ```
     
@@ -422,14 +422,14 @@ category: Spring
     ```java
     @Service
     public class LogDemoService {
-	private final MyLogger myLogger;
-	@Autowired
-	public LogDemoService(MyLogger myLogger) {
-		this.myLogger = myLogger;
-	}
-	public void logic(String id) {
-		myLogger.log("service id = " + id);
-	}
+		private final MyLogger myLogger;
+		@Autowired
+		public LogDemoService(MyLogger myLogger) {
+			this.myLogger = myLogger;
+		}
+		public void logic(String id) {
+			myLogger.log("service id = " + id);
+		}
     }
     ```
     
