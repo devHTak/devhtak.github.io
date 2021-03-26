@@ -329,5 +329,122 @@ category: Spring
   스프링을 사용하다 보면 이 기능 뿐만 아니라 다른 기능들도 자바 표준과 스프링이 제공하는 기능이 겹칠때가 많이 있다.
   대부분 스프링이 더 다양하고 편리한 기능을 제공해주기 때문에, 특별히 다른 컨테이너를 사용할 일이 없다면, 스프링이 제공하는 기능을 사용하면 된다.
 ```
+
+#### 웹 스코프
+
+- 웹 스코프의 특징
+  - 웹 스코프는 웹 환경에서만 동작한다.
+  - 웹 스코프는 프로토타입과 다르게 스프링이 해당 스코프의 종료시점까지 관리한다. 따라서 종료 메서드가 호출된다.
+
+- 웹 스코프의 종류
   
+  |웹스코프|설명|
+  |---|---|
+  |request|HTTP 요청 하나가 들어오고 나갈때까지 유지되는 스코프, 각각의 HTTP 요청마다 별도의 빈 인스턴스가 생성되고, 관리된다.|
+  |session|HTTP Session과 동일한 생명주기를 가지는 스코프|
+  |application|서블릿 컨텍스트(ServletContext) 와 동일한 생명주기를 가지는 스코프|
+  |websocket|웹 소켓과 동일한 생명주기를 가지는 스코프|
+
+  - HTTP request 요청 당 각각 할당되는 request scope
+
+#### request 스코프 예제 만들기
+
+- 웹 환경 필요
+  - 웹 스코프는 웹 환경에서만 동작하므로 web 환경이 동작하도록 라이브러리 추가 필요
+  - spring-boot-starter-web 라이브러리 추가 필요
+  - 라이브러리를 차가하면 스프링 부트는 내장 톰캣 서버를 활용하여 웹 서버와 스프링을 함께 실행시킨다.
+  - 스프링 부트는 웹 라이브러리가 없으면 AnnotationConfigApplicationContext를 기반으로 애플리케이션을 구동한다. 
+  - 웹 라이브러리가 추가되면 웹과 관련된 설정과 환경이 필요하므로 AnnotationConfigServletWebServerApplicationContext 를 기반으로 애플리케이션을 구동한다.
+
+- 예제
+
+  - 동시에 여러 HTTP 요청이 오면 정확히 어떤 요청이 남긴 로그인지 구분하기 어렵다.
+  - 이럴 때 사용하기 딱 좋은 것기 request 스코프이다.
+  - UUID를 사용해 HTTP 요청을 구분하자. requestURL 정보도 추가로 넣어 어떤 URL을 요청해서 남은 로그인지 확인하는 예제
+  
+  - MyLogger.class
+    ```java
+    @Component
+    @Scope(value = "request")
+    public class MyLogger {
+        private String uuid;
+        private String requestURL;
+        public void setRequestURL(String requestURL) {
+	    this.requestURL = requestURL;
+        }
+	public void log(String message) {
+            System.out.println("["+uuid+"] "+requestURL+"] " + message);
+	}	
+        @PostConstruct
+	public void init() {
+	    uuid = UUID.randomUUID().toString();
+	    System.out.println("[" + uuid + "] request scope bean create:" + this);
+	}
+	@PreDestroy 
+	public void destroy() {
+	    System.out.println("[" + uuid + "] request scope bean close:" + this);
+	}
+    }    
+    ```
+    - 로그를 출력하기 위한 MyLogger 클래스
+    - @Scope를 통해 request 스코프로 지정했다.
+    - 이 빈은 HTTP 요청 당 하나씩 생성하고, HTTP 요청이 끝나는 시점에 소멸된다.
+
+  - LogDemoController.java
+    
+    ```java
+    @RestController
+    public class LogDemoController {
+        private final LogDemoService logDemoService;
+	private final MyLogger myLogger;
+	@Autowired
+	public LogDemoController(LogDemoService logDemoService, MyLogger myLogger) {
+	    this.logDemoService = logDemoService;
+	    this.myLogger = myLogger;
+	}
+	@GetMapping("log-demo")
+	public String logDemo(HttpServletRequest request) {
+	    String requestURL = request.getRequestURL().toString();
+            myLogger.setRequestURL(requestURL);		
+            myLogger.log("controller test");
+            logDemoService.logic("testID");
+	    return "ok";
+	}
+    }
+    ```
+    
+    - request 객체를 받아 URL을 가져온다.
+    - 이렇게 받은 URL 등을 활용하여 로그를 남긴다.
+    - requestURL 등에 로그를 남기는 부분은 공통처리가 가능한 스프링 인터셉터나 서블릿 필터 같은 곳을 활용하는 것이 좋다.
+
+  - LogDemoService.java
+    
+    ```java
+    @Service
+    public class LogDemoService {
+        private final MyLogger myLogger;
+	@Autowired
+	public LogDemoService(MyLogger myLogger) {
+	    this.myLogger = myLogger;
+	}
+	public void logic(String id) {
+	    myLogger.log("service id = " + id);
+	}
+    }
+    ```
+    
+    - 비즈니스 로직이 있는 서비스 계층에서도 로그를 출력했다.
+    - request scope을 사용하지 않고 파라미터로 해당 정보를 서비스 계층에 넘긴다면, 파라미터가 많아진다.
+    - 더 큰 문제는 requestURL과 괕은 웹과 관련된 정보가 웹과 관련없는 서비스 계층까지 넘어가게 된다.
+    - 웹과 관련된 부분은 컨트롤러까지만 사용해야 한다. 서비스 계층은 웹 기술에 종속되지 않고, 가급적 순수하게 유지하는 것이 유지보수 관점에서 좋ㄴ다.
+    - requestscope의 MyLogger 덕분에 해당 부분을 파라미터로 넘기지 않고, MyLogger의 멤버 변수에 저장해서 코드와 계층을 깔끔하게 유지할 수 있다.
+
+  - 오류가 발생한다.
+    ```
+    Error creating bean with name 'myLogger': Scope 'request' is not active for the current thread; 
+    consider defining a scoped proxy for this bean if you intend to refer to it from a singleton;
+    ```
+    - 스프링 애플리케이션을 실행하는 시점에 싱글톤 빈은 생성해서 주입이 가능하지만, request 스코프 빈은아직 생성되지 않는다.
+    - 이 빈은 실제 고객의 요청이 와야 생성할 수 있다.
+    
 ** 출처: 김영한님 - 스프링 핵심 원리 기본편 강의
