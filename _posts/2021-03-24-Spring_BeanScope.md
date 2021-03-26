@@ -436,7 +436,7 @@ category: Spring
     - 비즈니스 로직이 있는 서비스 계층에서도 로그를 출력했다.
     - request scope을 사용하지 않고 파라미터로 해당 정보를 서비스 계층에 넘긴다면, 파라미터가 많아진다.
     - 더 큰 문제는 requestURL과 괕은 웹과 관련된 정보가 웹과 관련없는 서비스 계층까지 넘어가게 된다.
-    - 웹과 관련된 부분은 컨트롤러까지만 사용해야 한다. 서비스 계층은 웹 기술에 종속되지 않고, 가급적 순수하게 유지하는 것이 유지보수 관점에서 좋ㄴ다.
+    - 웹과 관련된 부분은 컨트롤러까지만 사용해야 한다. 서비스 계층은 웹 기술에 종속되지 않고, 가급적 순수하게 유지하는 것이 유지보수 관점에서 좋다.
     - requestscope의 MyLogger 덕분에 해당 부분을 파라미터로 넘기지 않고, MyLogger의 멤버 변수에 저장해서 코드와 계층을 깔끔하게 유지할 수 있다.
 
   - 오류가 발생한다.
@@ -446,5 +446,59 @@ category: Spring
     ```
     - 스프링 애플리케이션을 실행하는 시점에 싱글톤 빈은 생성해서 주입이 가능하지만, request 스코프 빈은아직 생성되지 않는다.
     - 이 빈은 실제 고객의 요청이 와야 생성할 수 있다.
+    - 즉, 톰캣에 띄울 때 요청이 없는 상태로 빈이 생성되지 않았다. 하지만 Controller와 Service 에서 MyLogger 빈을 주입받아야 되기 때문에 빈이 생성되지 않았다는 오류가 발생하게 된다.
+    
+#### 해결방법 1. Provider
+
+- Provider를 활용하여 빈의 생성 시점(스코프)을 미룰 수 있다.
+- LogDemoController.java
+  
+  ```java
+	@RestController
+	public class LogDemoController {
+
+		private final LogDemoService logDemoService;
+		private final ObjectProvider<MyLogger> myLogger;
+
+		@Autowired
+		public LogDemoController(LogDemoService logDemoService, ObjectProvider<MyLogger> myLogger) {
+			this.logDemoService = logDemoService;
+			this.myLogger = myLogger;
+		}
+
+		@GetMapping("log-demo")
+		public String logDemo(HttpServletRequest request) {
+			String requestURL = request.getRequestURL().toString();
+			MyLogger logger = myLogger.getObject();
+			logger.setRequestURL(requestURL);
+
+			logger.log("controller test");
+			logDemoService.logic("testID");
+			return "ok";
+		}
+	}
+  ```
+- LogDemoService.java
+  ```java
+	@Service
+	public class LogDemoService {
+		private final ObjectProvider<MyLogger> myLoggerProvider;
+
+		@Autowired
+		public LogDemoService(ObjectProvider<MyLogger> myLoggerProvider) {
+			this.myLoggerProvider = myLoggerProvider;
+		}
+
+		public void logic(String id) {
+			MyLogger logger = myLoggerProvider.getObject();
+			logger.log("service id = " + id);
+		}
+	}
+  ```
+  
+  - ObjectProvider 덕분에 ObjectProvider.getObject() 를 호출하는 시점까지 request scope 빈의 생성을 지연할 수 있다.
+  - ObjectProvider.getObject() 를 호출하시는 시점에는 HTTP 요청이 진행중이므로 request scope 빈의 생성이 정상 처리된다.
+  - ObjectProvider.getObject() 를 LogDemoController , LogDemoService 에서 각각 한번씩 따로 호출해도 같은 HTTP 요청이면 같은 스프링 빈이 반환된다
+    
     
 ** 출처: 김영한님 - 스프링 핵심 원리 기본편 강의
