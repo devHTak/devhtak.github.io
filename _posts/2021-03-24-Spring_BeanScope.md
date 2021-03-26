@@ -499,6 +499,19 @@ category: Spring
   - ObjectProvider 덕분에 ObjectProvider.getObject() 를 호출하는 시점까지 request scope 빈의 생성을 지연할 수 있다.
   - ObjectProvider.getObject() 를 호출하시는 시점에는 HTTP 요청이 진행중이므로 request scope 빈의 생성이 정상 처리된다.
   - ObjectProvider.getObject() 를 LogDemoController , LogDemoService 에서 각각 한번씩 따로 호출해도 같은 HTTP 요청이면 같은 스프링 빈이 반환된다
+
+- 결과
+  ```
+  [b0d7fc2c-f1e5-4392-9589-70299350c6a3] request scope bean create:com.example.web.MyLogger@5b37e6fd
+  [b0d7fc2c-f1e5-4392-9589-70299350c6a3] http://localhost:8080/log-demo] controller test
+  [b0d7fc2c-f1e5-4392-9589-70299350c6a3] http://localhost:8080/log-demo] service id = testID
+  [b0d7fc2c-f1e5-4392-9589-70299350c6a3] request scope bean close:com.example.web.MyLogger@5b37e6fd
+  [7f41c158-4693-4164-8bea-9e476bafd94f] request scope bean create:com.example.web.MyLogger@75b97525
+  [7f41c158-4693-4164-8bea-9e476bafd94f] http://localhost:8080/log-demo] controller test
+  [7f41c158-4693-4164-8bea-9e476bafd94f] http://localhost:8080/log-demo] service id = testID
+  [7f41c158-4693-4164-8bea-9e476bafd94f] request scope bean close:com.example.web.MyLogger@75b97525
+  ```
+  - request 당 다른 UUID, MyLogger가 찍히는 것을 확인할 수 있다.
     
     
 ** 출처: 김영한님 - 스프링 핵심 원리 기본편 강의
