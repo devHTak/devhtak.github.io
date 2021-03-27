@@ -226,7 +226,7 @@ category: Container
         worknode1   NotReady   <none>                 8m24s   v1.20.5
         worknode2   NotReady   <none>                 3s      v1.20.5
         ```
- - STATUS: Not Ready
+- STATUS: Not Ready
   - Network 설정을 해야 사용할 수 있다.
   - 참고문헌: https://www.weave.works/docs/net/latest/kubernetes/kube-addon/
     ```
@@ -241,15 +241,6 @@ category: Container
     worknode1   Ready      <none>                 25m   v1.20.5
     worknode2   Ready      <none>                 17m   v1.20.5
     ```
-
-- 일반적인 사용자와 마스터 노드, 워커 노드 연결관계
-
-  - 실무에서 사용되는 환경
-    ![Master and Work](../images/docker/masterandworker.PNG)
-
-  - 현재 설정한 환경
-    - kubectl이 쿠버네티스 클러스터 밖에 있어서 제어하는 것이 아닌, master-virtualbox안에 있다.
-
 - 재부팅 후 이슈 해결
   ```
   $ kubectl get nodes
@@ -263,5 +254,13 @@ category: Container
     $ strace -eopenat kubectl version
     ```
   - swap 설정을 한 후 다시 하면 된다.
+ 
+- 일반적인 사용자와 마스터 노드, 워커 노드 연결관계
+
+  - 실무에서 사용되는 환경
+    ![Master and Work](../images/docker/masterandworker.PNG)
+
+  - 현재 설정한 환경
+    - kubectl이 쿠버네티스 클러스터 밖에 있어서 제어하는 것이 아닌, master-virtualbox안에 있다.
   
 ** 출처: 데브옵스(DevOps)를 위한 쿠버네티스 마스터
