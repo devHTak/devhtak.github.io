@@ -171,7 +171,20 @@ category: Container
     $ reboot
     ```
     
-  - 노드 초기화 (사용할 포드 네트워크 대역을 설정)
+  - 마스터 및 워커 노드 스왑 에러 발생 시 스왑 기능 제거
+    ```
+    $ sudo swapoff -a // 현재 커널에서 스왑 기능 끄기
+    $ sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab // 리붓 후에도 스왑 기능 유지
+    ```
+    - 스왑기능을 비활성 하는 이유
+      - 쿠버네티스 1.8 이후, 노드에서 스왑을 비활성해야 한다. (또는, --fail-swap-on을 false로 설정)
+      - 쿠버네티스의 아이디어는 인스턴스를 최대한 100%에 가깝게 성능을 발휘하는 것
+      - 모든 배포는 CPU/메모리 제한을 고정하는 것이 필요
+      - 따라서 스케줄러가 포드를 머신에 보내면 스왑을 사용하지 않는 것이 필요
+      - 스왑 발생 시 속도가 느려지는 이슈 발생, 성능을 위한 것
+      - 참고 문헌: https://serverfault.com/questions/881517/why-disable-swap-on-kubernetes
+      
+  - 마스터 노드 초기화 (사용할 포드 네트워크 대역을 설정)
     ```
     $ sudo kubeadm init
     ```
@@ -191,42 +204,50 @@ category: Container
       sha256:b16367e80df58c3dbacfc3961126ae82d68519368d345fdb228addf04cb4ea2f ****
     ```
     - 클러스터를 사용 초기 세팅
-      ```
-      ## 다음을 일반 사용자 계정으로 실행 (콘솔에 출력된 메시지를 복붙)
-      $ mkdir -p $HOME/.kube
-      $ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-      $ sudo chown $(id -u):$(id -g) $HOME/.kube/config
-      ## Pod Network 추가
-      $ kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
-      ## 이것을 잘해야 노드 추가 명령어가 잘 실행됩니다!
-      ```
-  - 스왑 에러 발생 시 스왑 기능 제거
+      - 마스터 노드
+        ```
+        ## 다음을 일반 사용자 계정으로 실행 (콘솔에 출력된 메시지를 복붙)
+        $ mkdir -p $HOME/.kube
+        $ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+        $ sudo chown $(id -u):$(id -g) $HOME/.kube/config
+        ```
+      - 워크 노드
+        ```
+        ## Pod Network 추가
+        $ kubeadm join 10.0.2.15:6443 --token clwxjf.xjmjzwgkl364t68n \
+        --discovery-token-ca-cert-hash sha256:683486f3864307d970e4c343c2ce29b3f74ed3604720f1acb601d5765826e5c6
+        ## 이것을 잘해야 노드 추가 명령어가 잘 실행됩니다!
+        ```
+      - 마스터 노드 연결 확인
+        ```
+        $ kubectl get node
+        NAME        STATUS     ROLES                  AGE     VERSION
+        master      NotReady   control-plane,master   15m     v1.20.5
+        worknode1   NotReady   <none>                 8m24s   v1.20.5
+        worknode2   NotReady   <none>                 3s      v1.20.5
+        ```
+ - STATUS: Not Ready
+  - Network 설정을 해야 사용할 수 있다.
+  - 참고문헌: https://www.weave.works/docs/net/latest/kubernetes/kube-addon/
     ```
-    $ sudo swapoff -a // 현재 커널에서 스왑 기능 끄기
-    $ sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab // 리붓 후에도 스왑 기능 유지
+    # 워커 노드에서 실행
+    $ kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
     ```
-    - 스왑기능을 비활성 하는 이유
-      - 쿠버네티스 1.8 이후, 노드에서 스왑을 비활성해야 한다. (또는, --fail-swap-on을 false로 설정)
-      - 쿠버네티스의 아이디어는 인스턴스를 최대한 100%에 가깝게 성능을 발휘하는 것
-      - 모든 배포는 CPU/메모리 제한을 고정하는 것이 필요
-      - 따라서 스케줄러가 포드를 머신에 보내면 스왑을 사용하지 않는 것이 필요
-      - 스왑 발생 시 속도가 느려지는 이슈 발생, 성능을 위한 것
-      - 참고 문헌: https://serverfault.com/questions/881517/why-disable-swap-on-kubernetes
+  - node를 확인하면 Ready 상태로 변경된 것을 확인할 수 있다.
+    ```
+    $ kubectl get nodes
+    NAME        STATUS     ROLES                  AGE   VERSION
+    master      Ready      control-plane,master   32m   v1.20.5
+    worknode1   Ready      <none>                 25m   v1.20.5
+    worknode2   Ready      <none>                 17m   v1.20.5
+    ```
 
 - 일반적인 사용자와 마스터 노드, 워커 노드 연결관계
 
   - 실무에서 사용되는 환경
     ![Master and Work](../images/docker/masterandworker.PNG)
 
-  - 우리가 설정한 환경
+  - 현재 설정한 환경
     - kubectl이 쿠버네티스 클러스터 밖에 있어서 제어하는 것이 아닌, master-virtualbox안에 있다.
-
-
-
-
-
-
-
-
 
 ** 출처: 인프런 강의
