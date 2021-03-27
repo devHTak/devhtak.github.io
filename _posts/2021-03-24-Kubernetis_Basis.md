@@ -250,4 +250,4 @@ category: Container
   - 현재 설정한 환경
     - kubectl이 쿠버네티스 클러스터 밖에 있어서 제어하는 것이 아닌, master-virtualbox안에 있다.
 
-** 출처: 인프런 강의
+** 출처: 데브옵스(DevOps)를 위한 쿠버네티스 마스터
