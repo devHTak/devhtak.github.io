@@ -250,4 +250,18 @@ category: Container
   - 현재 설정한 환경
     - kubectl이 쿠버네티스 클러스터 밖에 있어서 제어하는 것이 아닌, master-virtualbox안에 있다.
 
+- 재부팅 후 이슈 해결
+  ```
+  $ kubectl get nodes
+  The connection to the server 10.0.2.15:6443 was refused - did you specify the right host or port?
+  ```
+  - swap 설정이 제대로 안이뤄져서 그렇다.
+    ```
+    $ sudo -i
+    $ swapoff -a
+    $ exit
+    $ strace -eopenat kubectl version
+    ```
+  - swap 설정을 한 후 다시 하면 된다.
+  
 ** 출처: 데브옵스(DevOps)를 위한 쿠버네티스 마스터
