@@ -86,6 +86,140 @@ category: Container
   - 이 후 이미지 레지스트리에서 이미지를 worker node에 세팅한 후 실행한다.
   - 개발자는 이미지를 만든 후 push하고 control plain에 descrption을 제출한다.
 
+#### Ubuntu에 쿠버네티스 클러스터 구성
+
+- 쿠버네티스 설치 필요 사항
+  - Master 우분투: 쿠버네티스의 마스터 노드가 설정될 호스트
+  - Work 노드(option): 필수 사항은 아니지만, 클러스터에 Work 노드 추가 학습
+  - 버추얼 박스에서 각 노드에서 복제하면서 반드시 변경해야 할 설정
+    - 호스트 이름: /etc/hostname
+    - 네트워크 인터페이스 변경
+    - NAT 네트워크 설정(NAT랑 다름)
+    - (호스트 이름 변경하려면 반드시 리붓)
+
+- 쿠버네티스 우분투에 설치
+  - 도커를 먼저 설치
+    ```
+    $ apt install docker.io
+    # 만약 락이 걸려 있는 경우 reboot 후에 하면 된다.
+    ```
+  - 다음 내용을 install.sh 파일에 작성하고 chmod로 권한을 주고 실행
+    ```
+    $ gedit install.sh
+    sudo apt-get update && sudo apt-get install -y apt-transport-https curl
+    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+    cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
+    deb https://apt.kubernetes.io/ kubernetes-xenial main
+    EOF
+    sudo apt-get update
+    sudo apt-get install -y kubelet kubeadm kubectl
+    sudo apt-mark hold kubelet kubeadm kubectl
+    # 복사
+    # 실행
+    $ bash install.sh 
+    # 설치 확인
+    $ kube + tab
+    kubeadm  kubectl  kubelet
+    # 설치 완료 후 halt(중단)
+    $ halt
+    ```
+  - 쿠버네티스 설치 사이트
+    - https://kubernetes.io/ko/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+  - 신뢰할 수 있는 APT 키 추가
+    - apt-get update && apt-get install -y apt-transport-https curl
+    - curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+
+- Kubenrnetes를 관리하는 명령어
+  - kubeadm
+    - 클러스터를 부트스트랩하는 명령
+  - kubelet
+    - 클러스터의 모든 시스템에서 실행되는 구성요소로 창 및 컨테이너 시작과 같은 작업을 수행
+  - kubectl
+    - 커맨드 라인 util은 당신의 클러스터와 대화
+
+- 마스터 노드에서 Work 노드 복사
+  - 스냅샷 찍기
+    - docker, kubeadm 설치된 스냅샷으로 복원 가능
+  - 복제
+    - 이름 설정
+    - 주소 정책: NAT 네트워크 어댑터 새 MAC 주소 생성
+      - MAC 주소를 새로 생성해야 분리하여 사용할 수 있다.
+  - 파일 -> 환경설정 -> 네트워크 -> 새로운 NAT 추가
+  - 마스터, 워커 노드에 추가한 NAT 추가
+    - 이미지 우 클릭 -> 설정 -> 네트워크 -> NAT 네트워크 -> 추가한 NAT 네트워크로 설정
+    - 고급, MAC 주소 새로고침
+    - 같은 switch에 물릴 수 있도록 해당 설정 진행
+  - 확인
+    - 세개의 이미지를 올린 후에 ping으로 확인
+      ```
+      # 세개의 이미지에서 다른 ip 확인
+      $ ip addr 
+      $ ping 10.0.2.5
+      ```
+    - 만약 같은 ip로 나온다면 아래 설정을 확인해보자
+      - 네트워크 인터페이스의 MAC 주소를 변경하지 않음
+      - 네트워크 설정이 NatNetwork로 지정되지 않음
+
+- 마스터 노드, Work 노드 세팅
+  - 노드 별로 hostname을 수정해야 한다.
+    ```
+    $ vi /etc/hostname
+    Master
+    WorkNode1
+    WorkNode2
+    # reboot해야 hostname 수정이 가능하다.
+    $ reboot
+    ```
+    
+  - 노드 초기화 (사용할 포드 네트워크 대역을 설정)
+    ```
+    $ sudo kubeadm init
+    ```
+    ```
+    ## 초기화 성공시 나오는 메시지
+    Your Kubernetes control-plane has initialized successfully!
+    To start using your cluster, you need to run the following as a regular user:
+      mkdir -p $HOME/.kube
+      sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+      sudo chown $(id -u):$(id -g) $HOME/.kube/config
+    You should now deploy a pod network to the cluster.
+    Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+    https://kubernetes.io/docs/concepts/cluster-administration/addons/
+    Then you can join any number of worker nodes by running the following on each as root:
+      kubeadm join 10.0.2.15:6443 --token dwaoa1.4nf7b81nsfnkxctw \
+      --discovery-token-ca-cert-hash
+      sha256:b16367e80df58c3dbacfc3961126ae82d68519368d345fdb228addf04cb4ea2f ****
+    ```
+    - 클러스터를 사용 초기 세팅
+      ```
+      ## 다음을 일반 사용자 계정으로 실행 (콘솔에 출력된 메시지를 복붙)
+      $ mkdir -p $HOME/.kube
+      $ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+      $ sudo chown $(id -u):$(id -g) $HOME/.kube/config
+      ## Pod Network 추가
+      $ kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+      ## 이것을 잘해야 노드 추가 명령어가 잘 실행됩니다!
+      ```
+  - 스왑 에러 발생 시 스왑 기능 제거
+    ```
+    $ sudo swapoff -a // 현재 커널에서 스왑 기능 끄기
+    $ sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab // 리붓 후에도 스왑 기능 유지
+    ```
+    - 스왑기능을 비활성 하는 이유
+      - 쿠버네티스 1.8 이후, 노드에서 스왑을 비활성해야 한다. (또는, --fail-swap-on을 false로 설정)
+      - 쿠버네티스의 아이디어는 인스턴스를 최대한 100%에 가깝게 성능을 발휘하는 것
+      - 모든 배포는 CPU/메모리 제한을 고정하는 것이 필요
+      - 따라서 스케줄러가 포드를 머신에 보내면 스왑을 사용하지 않는 것이 필요
+      - 스왑 발생 시 속도가 느려지는 이슈 발생, 성능을 위한 것
+      - 참고 문헌: https://serverfault.com/questions/881517/why-disable-swap-on-kubernetes
+
+- 일반적인 사용자와 마스터 노드, 워커 노드 연결관계
+
+  - 실무에서 사용되는 환경
+    ![Master and Work](../images/docker/masterandworker.PNG)
+
+  - 우리가 설정한 환경
+    - kubectl이 쿠버네티스 클러스터 밖에 있어서 제어하는 것이 아닌, master-virtualbox안에 있다.
 
 
 
