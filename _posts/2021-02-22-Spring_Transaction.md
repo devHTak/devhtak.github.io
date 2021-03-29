@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Spring Boot_@Transactional
+title: Spring_@Transactional
 summary: 선언적 트랜잭션 @Transactional
 author: devhtak
 date: '2021-02-21 22:41:00 +0900'
