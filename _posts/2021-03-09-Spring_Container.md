@@ -280,7 +280,9 @@ void findAllBeanByObjectType() {
 #### BeanFactory와 ApplicationContext
 
 - BeanFactory와 ApplicationContext 상속 구조
-  - < <interface> > BeanFactory <- < <interface> > ApplicationContext <- AnnotationConfigApplicationContext
+  - BeanFactory <- ApplicationContext <- AnnotationConfigApplicationContext
+    - BeanFactory: interface
+    - ApplicationContext: interface
 
 - BeanFactory
   - 스프링 컨테이너의 최상위 인터페이스
