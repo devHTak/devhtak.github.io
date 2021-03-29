@@ -9,7 +9,7 @@ category: Spring
 
 #### Overview
 
-- Spring Security에 JWT 연동을 목적으로 JWT에 대해 공부한 것을 정리합니다.
+- 기존에 사용했던 인증/인가에 대해 학습하고, 추후 Spring Security에 JWT 연동을 목적으로 JWT에 대해 공부한 것을 정리
 
 #### Spring Session
 
