@@ -54,7 +54,7 @@ category: Container
 - 직접 볼륨을 공유하는 것이 아닌 -v 옵션을 적용한 컨테이너를 통해 공유
 
 ```
-$ dockerrun -i -t \
+$ docker run -i -t \
 --name volume_override \
 -v /home/wordpress_db:/home/testdir_2 \ 
 alicek106/volume_test
