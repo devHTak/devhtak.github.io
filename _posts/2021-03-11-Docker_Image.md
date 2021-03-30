@@ -317,4 +317,5 @@ category: Container
 - 인증 관련 참고 링크: https://docs.docker.com/registry/configuration/#auth
 
 ** 출처: 용찬호님 시작하세요! 도커/쿠버네티스
+
 ** 출처: 데브옵스를 위한 쿠버네틱스 강의
