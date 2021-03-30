@@ -238,7 +238,7 @@ category: Container
   - jar파일과 dockerfile의 위치가 같기 때문에 JAR_FILE에 위치를 현재 폴더로 하였고, COPY에서도 같은 jar파일명으로 하였다.
   
 - dockerfile 빌드
-- 
+ 
   ```
   $ docker build -t demo/spring-docker .
   ```
