@@ -263,4 +263,120 @@ category: Container
   - 현재 설정한 환경
     - kubectl이 쿠버네티스 클러스터 밖에 있어서 제어하는 것이 아닌, master-virtualbox안에 있다.
   
+#### 쿠버네티스에 Spring boot 컨테이너 올리기
+
+- Spring Boot Application 이미지 생성 및 컨테이너 실행, Docker hub로 push
+
+  - Dockerfile 작성
+    ```
+    FROM openjdk:9-=
+    ARG JAR_FILE=./*.jar
+    COPY ${JAR_FILE} app.jar
+    ENTRYPOINT ["java", "-jar", "./app.jar"]
+    ```
+  - 확인하기
+    ```
+    root@Master:/test# ls
+    Dockerfile  KubernetesTest.jar   
+    ```
+  - 빌드하기
+    ```
+    $ root@Master:/test# docker build -t test .
+    $ root@Master:/test# docker images
+    REPOSITORY                           TAG                 IMAGE ID            CREATED              SIZE
+    demo/test                            latest              afa3b1837de4        About a minute ago   122MB
+    openjdk                              8-jdk-alpine        a3562aa0b991        22 months ago        105MB
+    ```
+    - java 실행 파일인 openjdk와 demo/test가 생성되었다.
+
+  - 컨테이너 생성하기
+    ```
+    root@Master:/test# docker run -d -p 8080:8080 --name test demo/test
+    2b2ec8ed403aabf6a6ab08b667ddfd5b45ca0215be04b55fe2cc653dced7261d
+    root@Master:/test# docker ps 
+    CONTAINER ID        IMAGE                  COMMAND                  CREATED             STATUS              PORTS                         NAMES
+    2b2ec8ed403a        demo/test              "java -jar ./app.jar"    35 seconds ago      Up 33 seconds       0.0.0.0:8080->8080/tcp   test
+    ```
+  - 접속 확인하기
+    ```
+    localhost:8080/hello
+    ```
+  - 도커 허브에 push
+    ```
+    $ docker login
+    $ docker tag demo/test devtak/test:v1.0
+    $ docker push devtak/test:v1.0
+    ```
+    - denied-requested-access-to-the-resource-is-denied-docker 오류
+      - 참고: https://stackoverflow.com/questions/41984399/denied-requested-access-to-the-resource-is-denied-docker
+      - 해결 방법1. 정상 로그인을 해야 한다.
+      - 해결 방법2. docker hub 레퍼지토리에 맞는 tag를 주어야 한다.
+        ```
+        $ docker login
+        <enter user name and password for Docker Hub Repository>
+        $ docker tag first-image {docker-hub-username}/{default-repo-folder-name}:first-image
+        $ docker push {docker-hub-username}/{default-repo-folder-name}:first-image
+        ```
+
+- Kubernetest 앱 실행하기
+  - 보통 배포하려는 모든 컴포넌트의 설명이 기술된 JSON 또는 YAML 매니페스트 준비 필요
+  - 이를 위해서는 쿠버네티스에서 사용되는 컴포넌트 유형을 잘 알아야 함
+  - 여기서는 명령어에 몇 가지 옵션으로 디스크립션을 간단히 전달하여 한줄로 앱 실행
+    ```
+    $ kubectl create deploy demo/test --image=devtak/test
+    deployment/demo/test created
+    ```
+  - 포드란?
+    - 쿠버네티스는 kubectl get container와 같이 컨테이너를 취급하지 않는다.
+    - 대신 여러 위치에 배치된 컨테이너 개념인 컨테이너 그룹으로 포드라는 개념을 사용한다.
+    ```
+    $ kubectl get pods
+    NAME                        READY   STATUS    RESTARTS  AGE
+    test-XXXXXXXXXX-th8gg    0/1     Pending   0         5s
+    ```
+  - 포드 특징
+    - 포드는 하나 이상의 밀접하게 관련된 컨테이너로 구성된 그룹
+    - 동일한 리눅스 네임스페이스와 동일한 워커 노드에서 항상 함께 실행
+    - 각 포드는 애플리케이션을 실행하는 자체 IP, 호스트 이름, 프로세스 등이 있는 별도의 논리적 시스템
+
+  - 웹 애플리케이션 생성
+    - 실행 중인 포드는 클러스터의 가상 네트워크에 포함돼 있음
+    - 어떻게 액세스 할 수 있을까?
+    - 외부에서 액세스하려면 서비스 객체를 통해 IP를 노출하는 것이 필요
+    - LoadBalancer라는 서비스를 작성하면 외부 로드 밸런서가 생성
+    - 로드 밸런서의 공인 IP를 통해 포드에 연결 가능 (하지만 로컬 쿠버네티스에서는 동작하지 않으며 externalDNS가 필요함, 이 기능은 GKE, EKS 같은 클라우드에서 사용 가능(구글, AWS 계정 필요))
+      ```
+      $ kubectl expose deployment test --type=LoadBalancer --name test-svc --port=8080 --target-port=8080
+      service/test-svc exposed
+      $ kubectl get services
+      NAME            TYPE         CLUSTER-IP     EXTERNAL-IP PORT(S)         AGE
+      kubernetes      ClusterIP    10.96.0.1      <none>      443/TCP         33m
+      test-http       LoadBalancer 10.109.140.155 <pending>   8080:32464/TCP  21s
+      ```
+
+  - 동작 방식 이해
+    - 사실 실제로 포드도 직접 만들지 않음
+    - kubectl create deploy 명령을 실행하면 디플로이먼트가 생성
+    - 디플로이먼트가 실제 포드 객체를 생성
+    - 해당 디플로이먼트가 관리하는 포드의 포트 8080을 노출하라고 명령 필요
+      ```
+      request (8080port) --> 
+      서비스: test-svc, 내부 IP: 10.96.11.175, 외부IP: <pending> (8080port) ->
+      컨테이너 포드: test-XXXXXXXX-th8gg IP: 10.244.1.2
+      <- 디플로이먼트: test Replicas: 1
+      ```
+  - 디플로이먼트의 역할
+    - 디플로이먼트는 레플리카셋을 생성
+    - 레플리카셋은 수를 지정하여 알려주면 그 수만큼 포드를 유지
+    - 어떤 이유로든 포드가 사라지면 레플리카셋은 누락된 포드를 대체할 새로운 포드를 생성
+
+  - 서비스의 역할
+    - 포드는 일시적이므로 언제든지 사라질 가능성 존재
+    - 포드가 다시 시작되는 경우에는 언제든 IP와 ID 변경됨
+    - 서비스는 변화하는 포드 IP 주소의 문제를 해결하고 단일 IP 및 포트 쌍에서 여러 개의 포드 노출
+    - 서비스가 생성되면 정적 IP를 얻게 되고 서비스의 수명 내에서는 변하지 않음
+    - 클라이언트는 포드에 직접 연결하는 대신 IP 주소를 통해 서비스에 연결
+    - 서비스는 포드 중 하나로 연결을 포워딩
+
 ** 출처: 데브옵스(DevOps)를 위한 쿠버네티스 마스터
+
