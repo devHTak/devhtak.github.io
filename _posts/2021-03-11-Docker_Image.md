@@ -201,7 +201,7 @@ category: Container
     - Update Project
     - maven package
       - 프로젝트 우클릭 -> run as -> maven build -> goals: package, profiles: pom.xml 설정
-    - target 폴더 아래 생성된 jar파일 ghkrdls
+    - target 폴더 아래 생성된 jar파일 확인
   - Spring Boot 앱 실행
     ```
     $ java -jar target/DockerTest-0.0.1-SNAPSHOT.jar
