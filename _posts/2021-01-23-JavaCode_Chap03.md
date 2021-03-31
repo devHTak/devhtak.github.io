@@ -265,6 +265,6 @@ public static <T> T getObject(Class<T> classType) {
 - JUnit
   - https://junit.org/junit5/docs/5.0.3/api/org/junit/platform/commons/util/ReflectionUtils.html
   
-- 참고
-  - https://docs.oracle.com/javase/tutorial/reflect/index.html
+** 참고 https://docs.oracle.com/javase/tutorial/reflect/index.html
+** 참고 더 자바, 코드를 조작하는 다양한 방법, 백기선님 강연
   
