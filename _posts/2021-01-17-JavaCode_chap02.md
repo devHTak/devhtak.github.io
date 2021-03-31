@@ -224,5 +224,5 @@ category: The Java
   - ClassPathScanningCandidateComponentProvider -> SimpleMetadataReader
   - ClassReader와 Visitor 사용해서 클래스에 있는 메타 정보를 읽어온다.
 
-
+** 출처: 더 자바, 코드를 조작하는 다양한 방법, 백기선님 
 
