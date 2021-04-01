@@ -345,7 +345,7 @@ category: Container
       ```
       server1@Master:~$ kubectl get pod
       NAME                    READY   STATUS    RESTARTS   AGE
-      test-86bb8685b7-r6q4z   0/1     Pending   0          2m2s
+      test-86bb8685b7-r6q4z   0/1     Running   0          2m2s
       ```
     
   - 포드 특징
@@ -403,5 +403,41 @@ category: Container
     - 클라이언트는 포드에 직접 연결하는 대신 IP 주소를 통해 서비스에 연결
     - 서비스는 포드 중 하나로 연결을 포워딩
 
-** 출처: 데브옵스(DevOps)를 위한 쿠버네티스 마스터
+#### HTTP 서버 스케일링과 테스트
 
+- 애플리케이션의 수평 스케일링
+  - 쿠버네티스를 사용해 얻을 수 있는 큰 이점 중 하나는 간단하게 컨테이너의 확장이 가능하다는 점
+  - 포드의 개수를 늘리는 것도 쉽게 가능
+  - 포드는 디플로이먼트가 관리
+
+  ```
+  server1@Master:~$ kubectl scale deploy test --replicas=3
+  deployment.apps/test scaled
+  server1@Master:~$ kubectl get pod
+  NAME                    READY   STATUS    RESTARTS   AGE
+  test-86bb8685b7-gpntg   0/1     Running   0          5s
+  test-86bb8685b7-gxbt7   0/1     Running   0          23m
+  test-86bb8685b7-h85cl   0/1     Running   0          5s
+  server1@Master:~$ kubectl get replicaset
+  NAME              DESIRED   CURRENT   READY   AGE
+  test-86bb8685b7   3         3         0       23m
+  ```
+
+- 직접 앱에 접근하기
+  - curl을 통하여 loadbalancer 확인하기
+    ```
+    server1@Master:~$ kubectl exec test-86bb8685b7-gpntg -- curl 10.107.156.154:8080/hello -s
+    ```
+
+- 앱의 위치 확인
+  ```
+  server1@Master:~$ kubectl get pod -o wide
+  ```
+
+- 포드의 자세한 내용 살펴보기
+  - 예정된 노드, 시작된 시간, 실행중인 이미지 등 유용한 정보 포함
+    ```
+    $ kubectl describe pod test-86bb8685b7-gpntg
+    ```
+
+** 출처: 데브옵스(DevOps)를 위한 쿠버네티스 마스터
