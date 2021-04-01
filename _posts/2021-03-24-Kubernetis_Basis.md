@@ -323,22 +323,41 @@ category: Container
   - 이를 위해서는 쿠버네티스에서 사용되는 컴포넌트 유형을 잘 알아야 함
   - 여기서는 명령어에 몇 가지 옵션으로 디스크립션을 간단히 전달하여 한줄로 앱 실행
     ```
-    $ kubectl create deploy demo/test --image=devtak/test
-    deployment/demo/test created
+    $ kubectl create deploy test --image=devtak/test
+    deployment.apps/test created
     ```
+    - 생성한 deploy 확인하기 
+      ```
+      server1@Master:~$ kubectl get deploy
+      NAME   READY   UP-TO-DATE   AVAILABLE   AGE
+      test   0/1     1            0           49s
+      ```
+    - repllicaset 확인하기
+      ```
+      server1@Master:~$ kubectl get replicaset
+      NAME              DESIRED   CURRENT   READY   AGE
+      test-86bb8685b7   1         1         0       92s
+      ```
+
   - 포드란?
     - 쿠버네티스는 kubectl get container와 같이 컨테이너를 취급하지 않는다.
     - 대신 여러 위치에 배치된 컨테이너 개념인 컨테이너 그룹으로 포드라는 개념을 사용한다.
-    ```
-    $ kubectl get pods
-    NAME                        READY   STATUS    RESTARTS  AGE
-    test-XXXXXXXXXX-th8gg    0/1     Pending   0         5s
-    ```
+      ```
+      server1@Master:~$ kubectl get pod
+      NAME                    READY   STATUS    RESTARTS   AGE
+      test-86bb8685b7-r6q4z   0/1     Pending   0          2m2s
+      ```
+    
   - 포드 특징
     - 포드는 하나 이상의 밀접하게 관련된 컨테이너로 구성된 그룹
     - 동일한 리눅스 네임스페이스와 동일한 워커 노드에서 항상 함께 실행
     - 각 포드는 애플리케이션을 실행하는 자체 IP, 호스트 이름, 프로세스 등이 있는 별도의 논리적 시스템
-
+  
+  - 잘못 만든 경우 삭제 (deploy, replicaset, pod 한번에 삭제 된다)
+    ```
+    server1@Master:~$ kubectl delete deploy test
+    ```
+    
   - 웹 애플리케이션 생성
     - 실행 중인 포드는 클러스터의 가상 네트워크에 포함돼 있음
     - 어떻게 액세스 할 수 있을까?
@@ -346,12 +365,22 @@ category: Container
     - LoadBalancer라는 서비스를 작성하면 외부 로드 밸런서가 생성
     - 로드 밸런서의 공인 IP를 통해 포드에 연결 가능 (하지만 로컬 쿠버네티스에서는 동작하지 않으며 externalDNS가 필요함, 이 기능은 GKE, EKS 같은 클라우드에서 사용 가능(구글, AWS 계정 필요))
       ```
-      $ kubectl expose deployment test --type=LoadBalancer --name test-svc --port=8080 --target-port=8080
+      server1@Master:~$ kubectl expose deployment test --name=test-svc --type=LoadBalancer --port=8080
       service/test-svc exposed
-      $ kubectl get services
-      NAME            TYPE         CLUSTER-IP     EXTERNAL-IP PORT(S)         AGE
-      kubernetes      ClusterIP    10.96.0.1      <none>      443/TCP         33m
-      test-http       LoadBalancer 10.109.140.155 <pending>   8080:32464/TCP  21s
+      server1@Master:~$ kubectl get svc
+      NAME         TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE
+      kubernetes   ClusterIP      10.96.0.1        <none>        443/TCP          5d2h
+      test-svc     LoadBalancer   10.107.156.154   <pending>     8080:31394/TCP   7s
+      ```
+      - deployment 하는 데 오래 걸린다.
+        ```
+        server1@Master:~$ kubectl get svc -w
+        ```
+        - 변경 사항을 모니터링 할 수 있다.
+        
+    - 서비스 삭제
+      ```
+      server1@Master:~$ kubectl delete svc test-svc
       ```
 
   - 동작 방식 이해
