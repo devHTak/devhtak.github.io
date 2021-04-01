@@ -384,16 +384,12 @@ category: Container
       ```
 
   - 동작 방식 이해
+    ![kubernetes architecture](../images/docker/kube.PNG)
     - 사실 실제로 포드도 직접 만들지 않음
     - kubectl create deploy 명령을 실행하면 디플로이먼트가 생성
     - 디플로이먼트가 실제 포드 객체를 생성
     - 해당 디플로이먼트가 관리하는 포드의 포트 8080을 노출하라고 명령 필요
-      ```
-      request (8080port) --> 
-      서비스: test-svc, 내부 IP: 10.96.11.175, 외부IP: <pending> (8080port) ->
-      컨테이너 포드: test-XXXXXXXX-th8gg IP: 10.244.1.2
-      <- 디플로이먼트: test Replicas: 1
-      ```
+     
   - 디플로이먼트의 역할
     - 디플로이먼트는 레플리카셋을 생성
     - 레플리카셋은 수를 지정하여 알려주면 그 수만큼 포드를 유지
