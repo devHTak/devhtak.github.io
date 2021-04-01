@@ -94,7 +94,8 @@ category: Test
   public class StudyServiceTest {
       @Mock MemberService memberService;
       @Autowired StudyRepository studyRepository;
-
+      
+      @Container
       static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer()
           .withDatabaseName("studytest");
 
@@ -133,6 +134,7 @@ category: Test
   ```java
   GenericContainer container = new GenericContainer(String imageName);
   ```
+  
 - 네트워크
   - 호스트 포트 설정
     ```java
@@ -221,6 +223,7 @@ category: Test
       @Mock MemberService memberService;
       @Autowired StudyRepository studyRepository;
       @Autowired Environment environment; // Spring에 있는 Environment 사용
+      @Value("${container.port}") int port;
 
       static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer()
           .withDatabaseName("studytest");
@@ -238,7 +241,8 @@ category: Test
       @BeforeEach
       void beforeEach() {
           studyRepository.deleteAll();
-          System.out.println(environment.getProperty("container.port");
+          System.out.println(environment.getProperty("container.port"));
+          System.out.println(port);
       }
       
       static class ContainerPropertyInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
