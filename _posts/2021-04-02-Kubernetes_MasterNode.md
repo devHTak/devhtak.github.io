@@ -12,7 +12,7 @@ category: Container
 ![kubernetes architecture](../images/docker/KubernetesArchitecture.PNG)
 - 이미지 출처: https://medium.com/@chkrishna/kubernetes-architecture-f7ca63fff46e
 
-- Master Plain
+- Kubernetes Control Plain(Master)
   - Kube API Server
   - Kube Controller
   - Kube Scheduler
