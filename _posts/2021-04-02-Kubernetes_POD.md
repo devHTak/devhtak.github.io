@@ -316,10 +316,18 @@ category: Container
         initialDelaySeconds: 5
         periodSeconds: 5
   ```
+    - initialDelaySeconds: 5 -> POD이 실행되고 5초 뒤부터 확인
+    - periodSeconds: 5 -> 5초마다 확인
+    - spec.containers.args 에서 /tmp/healthy를 생성하고 삭제했다.
+    - livenessProve는 /tmp/healthy를 확인한다. 즉, 30초 뒤에 삭제하기 때문에 30초 뒤에 컨테이너가 죽었다고 판단하고 다시 실행한다.
+    - 아래 명령어로 확인할 수 있다.
+      ```
+      $ kubectl describe pod liveness-exec
+      ```
   
 - Liveness 웹 설정 - http 요청 확인
   - Response Code가 200 이상, 400 미만: 컨테이너 유지
-  - Response Code가 그 외: 컨테이너 재시작
+  - Response Code가 그 외(500 server error): 컨테이너 재시작
   ```
   apiVersion: v1
   kind: Pod
@@ -342,9 +350,10 @@ category: Container
             value: Awesome
         initialDelaySeconds: 3
         periodSeconds: 3
-  ```  
+  ```
 
 - TCP 설정
+  - TCP 연결로 확인
   - Readiness TCP 설정
     - 준비 프로브는 8080포트를 검사
     - 5초 후부터 검사 시작
