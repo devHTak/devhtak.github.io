@@ -275,4 +275,138 @@ category: Container
     server1@server1-VirtualBox:~/yaml$ kubectl delete pod --all
     ```
 
+#### 라이브니스, 레디네스, 스타트업 프로브 구성
+
+- Liveness Probe
+  - 컨테이너 살았는지 판단하고 다시 시작하는 기능
+  - 컨테이너의 상태를 스스로 판단하여 교착 상태에 빠진 컨테이너를 재시작
+  - 버그가 생겨도 높은 가용성을 보입
+
+- Readiness Probe
+  - 포드가 준비된 상태에 있는지 확인하고 정상 서비스를 시작하는 기능
+  - 포드가 적절하게 준비되지 않은 경우 로드밸런싱을 하지 않음
+
+- Startup Probe
+  - 애플리케이션의 시작 시기 확인하여 가용성을 높이는 기능
+  - Liveness, Readiness의 기능 비활성화
+
+- Liveness Command 설정 - 파일 존재 여부 확인
+  - 리눅스 환경에서 커맨드 실행 성공 시 0 (컨테이너 유지)
+  - 실패하면 그 외 값 출력 (컨테이너 재시작)
+  ```
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    labels:
+      test: liveness
+    names: liveness-exec
+  spec:
+    containers:
+    - name: liveness
+      image: k8c.gcr.io/busybox
+      args:
+      - /bin/sh
+      - -c
+      - touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600
+      livenessProve:
+        exec:
+          command:
+          - cat
+          - /tmp/healthy
+        initialDelaySeconds: 5
+        periodSeconds: 5
+  ```
+  
+- Liveness 웹 설정 - http 요청 확인
+  - Response Code가 200 이상, 400 미만: 컨테이너 유지
+  - Response Code가 그 외: 컨테이너 재시작
+  ```
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    labels:
+      test: liveness
+    names: liveness-http
+  spec:
+    containers:
+    - name: liveness
+      image: k8c.gcr.io/busybox
+      args:
+      - /server
+      livenessProve:
+        httpGet:
+          path: /healthz
+          port: 8080
+          httpHeaders:
+          - name: Custom-Header
+            value: Awesome
+        initialDelaySeconds: 3
+        periodSeconds: 3
+  ```  
+
+- TCP 설정
+  - Readiness TCP 설정
+    - 준비 프로브는 8080포트를 검사
+    - 5초 후부터 검사 시작
+    - 검사 주기는 10초 -> 서비스를 시작해도 된다.
+
+  - Liveness TCP 설정
+    - 활성화 프로브는 8080포트를 검사
+    - 15초 후부터 검사 시작
+    - 검사 주기는 20초 -> 컨테이너를 재시작하지 않아도 된다.
+  
+  ```
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    names: goproxy
+    labels:
+      app: goproxy
+  spec:
+    containers:
+    - name: goproxy
+      image: k8c.gcr.io/goproxy:0.1
+      ports:
+      - containerPort: 8080
+      readinessProve:
+        tcpSocket:
+          port: 8080
+        initialDelaySeconds: 5
+        periodSeconds: 10
+      livenessProbe:
+        tcpSocket:
+          port:8080
+        initialDelaySeconds: 3
+        periodSeconds: 3
+  ```  
+
+- Startup Probe
+  - 시작할 때까지 검사를 수행
+  - http 요청을 통해 검사
+  - 30번을 검사하며 10초 간격으로 수행
+  - 300(30 * 10)초 후에도 포드가 정상 동작하지 않는 경우 종료 -> 300초 동안 포드가 정상 실행되는 시간을 벌어준다.
+  
+  ```
+  ports:
+  - name: liveness-port
+    containerPort: 8080
+    hostPort: 8080
+
+  livenessProbe:
+      httpGet:
+        path: /healthz
+        port: liveness-port
+      failureThreshold: 1
+      periodSeconds: 10
+
+  startupProbe:
+    httpGet:
+      path: /healthz
+      port: liveness-port
+    failureThreshold: 30
+    periodSeconds: 10
+  ```
+
+** 참고: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+
 ** 참고: 데브옵스를 위한 쿠버네티스 마스터
