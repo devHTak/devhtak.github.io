@@ -7,6 +7,17 @@ date: '2021-04-02 21:41:00 +0900'
 category: Container
 ---
 
+#### 쿠버네티스 아키텍처
+
+![kubernetes architecture](../images/docker/KubernetesArchitecture.PNG)
+- 이미지 출처: https://medium.com/@chkrishna/kubernetes-architecture-f7ca63fff46e
+
+- Master Plain
+  - Kube API Server
+  - Kube Controller
+  - Kube Scheduler
+  - ETCD
+
 #### 큐브 API 서버
 
 - 쿠버네티스 시스템 컴포넌트는 오직 API 서버와 통신한다.
