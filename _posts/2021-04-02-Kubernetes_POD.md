@@ -274,3 +274,5 @@ category: Container
     ```
     server1@server1-VirtualBox:~/yaml$ kubectl delete pod --all
     ```
+
+** 참고: 데브옵스를 위한 쿠버네티스 마스터
