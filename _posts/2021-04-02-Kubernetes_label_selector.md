@@ -32,18 +32,18 @@ category: Container
 - go-test-v2.yaml 작성
   - labels: creation_method / env 지정  
     ```
-    server1@server1-VirtualBox:~/yaml$ vi go-test-v2.yaml 
+    server1@server1-VirtualBox:~/yaml$ vi go-test-v3.yaml 
     apiVersion: v1
     kind: Pod
     metadata:
-      name: http-go-v2
+      name: go-test-v2
       labels:
         creation_method: manual
         env: prod
     spec:
       containers:
       - image: devtak/test:v1.0
-        name: test-go-label
+        name: go-test-v2
         ports:
         - containerPort: 8080
           protocol: TCP
@@ -92,6 +92,7 @@ category: Container
     go-test    1/1  Running   0        62m
     go-test-v2 1/1  Running   0        11m  go-test beta
     ```
+    - 없어도 빈 값으로 보여진다.
     
 - 레이블로 필터링하여 검색
   - -l 옵션을 확인해서 필터링 기능을 사용할 수 있다.
