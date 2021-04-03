@@ -137,4 +137,6 @@ category: Container
     |Project-ID|연관된 프로젝트 ID|my-project-276|
     |Customer-ID|자원을 할당한 고객 ID|customer-id-29|
     
-** 출처: 데브옵스를 위한 쿠버네티스 마스터    
+** 출처: 데브옵스를 위한 쿠버네티스 마스터
+
+** 출처: 쿠버네티스 인 액션
