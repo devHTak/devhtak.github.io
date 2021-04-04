@@ -1,0 +1,259 @@
+---
+layout: post
+title: Kubernetes ReplicaSet과 Deployment
+summary: Kubernetes
+author: devhtak
+date: '2021-04-04 21:41:00 +0900'
+category: Container
+---
+
+#### Replication Controller
+
+- Kubernetes 1.8 이후 ReplicaSet으로 변경
+- Replication
+  - 데이터 저장과 백업하는 방법과 관련이 있는 데이터를 호스트 컴퓨터에서 다른 컴퓨터로 복산하는 것
+- 포드가 항상 실행되도록 유지하는 쿠버네티스 리소스
+- 노드가 클러스터에서 사라지는 경우 해당 포드를 감지하고 대체 포드 생성
+- 실행중인 포드의 목록을 지속적으로 모니터링 하고, '유형'의 실제 포드 수가 원하는 수와 항상 일치하는지 확인
+
+- Replication Controller 의 세가지 요소
+  - Replication Controller가 관리하는 포드 범위를 결정하는 레이블 셀렉터
+  - 실행해야 하는 포드의 수를 결정하는 복제본 수
+  - 새로운 포드의 모양을 설명하는 포드 템플릿
+
+- Replication Controller 의 장점
+  - 포드가 없는 경우 새 포드를 항상 실행
+  - 노드에 장애 발생 시 다른 노드에 복제본 생성
+  - 수동, 자동으로 수평 스케일링
+
+- YAML 작성
+
+  ```
+  apiVersion: v1
+  kind: ReplicationController
+  metadata:
+    name: http-go
+  spec:
+    replicas: 3
+    selector:
+      app: http-go
+    template:
+      metadata:
+        name: http-go 
+        labels:
+          app: http-go
+      spec:
+        containers:
+        - name: http-go 
+          image: nginx
+          ports:
+          - containerPort: 80
+  ```
+  - replicas: 3
+    - 실행해야 하는 포드의 수를 결정하는 복제본 수
+  - selector.app: nginx
+    - 레플리케이션 컨트롤러가 관리하는 포드 범위를 결정하는 레이블 셀렉터
+  - template 하위
+    - 새로운 포드의 모양을 설명하는 포드 템플릿
+  - name과 app의 이름이 일치해야 한다.
+
+- 실행 중인 레플리케이션컨트롤러와 포드 확인
+  ```
+  $ kubectl get pod
+  NAME            READY   STATUS    RESTARTS   AGE
+  http-go-4bfns   1/1     Running   0          61s
+  http-go-j6zp8   1/1     Running   0          61s
+  http-go-r68zp   1/1     Running   0          61s
+  
+  $ kubectl get rc
+  NAME      DESIRED   CURRENT   READY   AGE
+  http-go   3         3         3       75s
+  ```
+  
+- 포드를 임의로 정지시켜 반응 확인
+  ```
+  $ kubectl delete pod http-go-4bfns
+  pod "http-go-4bfns" deleted
+  $ kubectl get pod
+  NAME            READY   STATUS    RESTARTS   AGE
+  http-go-88g46   1/1     Running   0          11s
+  http-go-j6zp8   1/1     Running   0          2m23s
+  http-go-r68zp   1/1     Running   0          2m23s
+  ```
+  - 일부로 delete한 후, 새로운 포드가 올라오는 지 확인
+    - http-go-88g46 새로 생성
+    
+- 레플리케이션 정보 확인
+  ```
+  server1@server1-VirtualBox:~/yaml$ kubectl describe rc http-go
+  Name:         http-go
+  Namespace:    default
+  Selector:     app=http-go
+  Labels:       app=http-go
+  Annotations:  <none>
+  Replicas:     3 current / 3 desired
+  Pods Status:  3 Running / 0 Waiting / 0 Succeeded / 0 Failed
+  Pod Template:
+    Labels:  app=http-go
+    Containers:
+     http-go:
+      Image:        nginx
+      Port:         80/TCP
+      Host Port:    0/TCP
+      Environment:  <none>
+      Mounts:       <none>
+    Volumes:        <none>
+  Events:
+    Type    Reason            Age    From                    Message
+    ----    ------            ----   ----                    -------
+    Normal  SuccessfulCreate  4m17s  replication-controller  Created pod: http-go-r68zp
+    Normal  SuccessfulCreate  4m17s  replication-controller  Created pod: http-go-4bfns
+    Normal  SuccessfulCreate  4m17s  replication-controller  Created pod: http-go-j6zp8
+    Normal  SuccessfulCreate  2m5s   replication-controller  Created pod: http-go-88g46
+  ```
+  
+- 노드 통신 직접 다운 시켜보기
+  - 포드 사용 노드 확인
+    ```
+    server1@server1-VirtualBox:~/yaml$ kubectl get pod -o wide
+    ```
+  - work node 다운시키기
+    ```
+    $ gcloud compute ssh Worker2
+    $ sudo ifconfig eth0 down
+    (응답없음…)
+    $ kubectl get node
+    NAME    STATUS    ROLES   AGE   VERSION
+    Master  Ready     <none>  10h   v1.12.8-gke.6
+    Worker1 Ready     <none>  10h   v1.12.8-gke.6
+    Worker2 NotReady  gpu     10h   v1.12.8-gke.6
+    ```
+  - Worker2에 있던 POD가 Running에서 업데이트 된다
+    - 5분(Kubernetes default) 후 라는 시간을 준 것은 트래픽으로 인해 통신이 안되는 것을 감안한 것
+    - Terminating이 되고 새로운 POD를 복구(생성) Pending 상태, ContainerCreating, Running 상태가 된다.
+  
+  - 네트워크 복구
+    - 장애가 발생한 POD는 삭제한다.
+    - 신규 POD는 장애가 생긴 Node가 아닌 현재 생성 가능한 Node에 생성한다.
+
+- 레플리카컨트롤러 관리 레이블 벗어나기
+  ```
+  server1@server1-VirtualBox:~/yaml$ kubectl label pod http-go-88g46 app-
+  pod/http-go-88g46 labeled
+  server1@server1-VirtualBox:~/yaml$ kubectl get pod --show-labels
+  NAME            READY   STATUS    RESTARTS   AGE     LABELS
+  http-go-64qrb   1/1     Running   0          21s     app=http-go
+  http-go-88g46   1/1     Running   0          4m17s   <none>
+  http-go-j6zp8   1/1     Running   0          6m29s   app=http-go
+  http-go-r68zp   1/1     Running   0          6m29s   app=http-go
+  nginx-test      1/1     Running   1          25h     app=nginx,team=dev2
+  ```
+  - 포드의 레이블이 변경되어 관리 밖으로 벗어나면 이를 건드리지 않고 새로운 포드를 생성한다.
+    - http-go-88g46의 app 레이블 삭제했다.
+    - http-go-64qrb을 새로 생성하여 관리한다.
+
+- scaling 방법 1. 설정파일 수정하기
+  ```
+  $ kubectl edit rc http-go
+  # Please edit the object below. Lines beginning with a '#' will be ignored,
+  # and an empty file will abort the edit. If an error occurs while saving this file will be
+  # reopened with the relevant failures.
+  #
+  apiVersion: v1
+  kind: ReplicationController
+  metadata:
+    creationTimestamp: "2021-04-04T04:30:32Z"
+    generation: 2
+    labels:
+      app: http-go
+    name: http-go
+    namespace: default
+    resourceVersion: "26271"
+    uid: e706c584-9897-4b96-9e00-db25ed11d502
+  spec:
+    replicas: 10
+    selector:
+      app: http-go
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: http-go
+        name: http-go
+      spec:
+        containers:
+        - image: nginx
+          imagePullPolicy: Always
+          name: http-go
+          ports:
+          - containerPort: 80
+            protocol: TCP
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 10
+
+  ```
+  - vi이 열리면spec.replicas 개수를 10에서 5개로 수정
+  - 포드의 수 변화 확인
+    ```
+    server1@server1-VirtualBox:~/yaml$ kubectl get pod
+    NAME            READY   STATUS    RESTARTS   AGE
+    http-go-64qrb   1/1     Running   0          13m
+    http-go-88g46   1/1     Running   0          17m
+    http-go-f7n5t   1/1     Running   0          2m23s
+    http-go-j6zp8   1/1     Running   0          19m
+    http-go-r68zp   1/1     Running   0          19m
+    ```
+    
+- scaling 방법 2. Replication Controller 설정 변경
+  ```
+  server1@server1-VirtualBox:~/yaml$ kubectl scale rc http-go --replicas=10
+  replicationcontroller/http-go scaled
+  server1@server1-VirtualBox:~/yaml$ kubectl get pod
+  NAME            READY   STATUS              RESTARTS   AGE
+  http-go-64qrb   1/1     Running             0          11m
+  http-go-6v2wx   0/1     ContainerCreating   0          4s
+  http-go-88g46   1/1     Running             0          15m
+  http-go-bbqnc   0/1     ContainerCreating   0          4s
+  http-go-bt47n   0/1     ContainerCreating   0          4s
+  http-go-f7n5t   0/1     ContainerCreating   0          4s
+  http-go-j6zp8   1/1     Running             0          17m
+  http-go-nhkvb   0/1     ContainerCreating   0          4s
+  http-go-r9vjr   0/1     ContainerCreating   0          4s
+  http-go-sgz6k   0/1     ContainerCreating   0          4s
+  ```
+
+- scaling 방법 3. 새로운 yaml 파일을 생성하여 적용하기
+  ```
+  $ cp replication-controller.yaml replication-controller-v2.yaml
+  $ kubectl apply -f replication-controller-v2.yaml
+  ```
+
+- 삭제
+  - 일반적인 삭제 명령어와 동일
+  ```
+  $ kubectl delete rc http-go
+  ```
+  
+- 실행 시키고 있는 포드는 계속 실행을 유지하고 싶은 경우에는 --cascade 옵션 사용
+  ```
+  server1@server1-VirtualBox:~/yaml$ kubectl delete rc http-go --cascade=false
+  warning: --cascade=false is deprecated (boolean value) and can be replaced with --cascade=orphan.
+  replicationcontroller "http-go" deleted
+  server1@server1-VirtualBox:~/yaml$ kubectl get pod
+  NAME            READY   STATUS    RESTARTS   AGE
+  http-go-64qrb   1/1     Running   0          16m
+  http-go-88g46   1/1     Running   0          20m
+  http-go-f7n5t   1/1     Running   0          5m17s
+  http-go-j6zp8   1/1     Running   0          22m
+  http-go-r68zp   1/1     Running   0          22m
+  ```
+  
+** 참조: 데브옵스(DevOps)를 위한 쿠버네티스 마스터
