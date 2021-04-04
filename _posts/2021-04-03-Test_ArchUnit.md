@@ -13,8 +13,8 @@ category: Test
 
 - 아키텍처 테스트 유즈 케이스
   - A라는 패키지가 B 또는 C, D 패키지에서만 사용되고 있는지 확인 가능
-  - *Service라는 이름의 클래스들이 *Controller 또는 *Service라는 이름의 클래스에서만 참조하고 있는지 확인
-  - *Service라는 이름의 클래스들이 ..service.. 라는 패키지에 들어있는지 확인
+  - \*Service라는 이름의 클래스들이 \*Controller 또는 \*Service라는 이름의 클래스에서만 참조하고 있는지 확인
+  - \*Service라는 이름의 클래스들이 ..service.. 라는 패키지에 들어있는지 확인
   - A라는 애노테이션을 선언한 메소드만 특정 패키지 또는 특정 애노테이션을 가진 클래스를 호출하고 있는지 확인
   - 특정한 스타일의 아키텍처를 따르고 있는지 확인
   
@@ -59,27 +59,33 @@ category: Test
   - @AnalyzeClasses: 클래스를 읽어들여서 확인할 패키지 설정
   - @ArchTest: 확인할 규칙 정의
 
+#### 패치지 의존성 확인하기
+
+- 예제
+  - Study -> Member
+  - Study -> Domain
+  - Member -> Domain
+
+- 실제로 그런지 확인하려면
+  - ..domain.. 패키지에 있는 클래스는 ..study.., ..member.., ..domain..에서 참조 가능
+  - ..member.. 패키지에 있는 클래스는 ..study..와 ..member..에서만 참조 가능
+    - 반대로, ..domain.. 패키지는 ..member.. 패키지를 참조하지 못한다.
+  - ..study.. 패키지에 있는 클래스는 ..study.. 에서만 참조 가능
+  - 순환 참조가 없어야 한다.
+
+#### JUnit 5 연동하기
+
+- @AnalyzeClasses: 클래스를 읽어들여서 확인할 패키지 설정
+- @ArchTest: 확인할 규칙 정의
+
+```java
+@AnalyzeClasses(packagesOf = App.class)
+public class ArchTests {
+    
+    @ArchTest
+    ArchRule domainPackageRule = classes().
+}
+```
   
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+** 참조: 백기선님 더 자바 애플리케이션을 테스트하는 다양한 방법 강의
