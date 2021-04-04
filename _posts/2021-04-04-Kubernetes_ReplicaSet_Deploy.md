@@ -256,4 +256,106 @@ category: Container
   http-go-r68zp   1/1     Running   0          22m
   ```
   
+#### ReplicaSet
+
+- 레플리카셋의 등장
+  - 쿠버네티스 1.8부터 deployment, demonset, replicaset, statefulset 인 네개의 API가 베타로 업데이트되고, 1.9 버전에서는 정식 버전으로 업데이트 되었다.
+  - ReplicaSet은 차세대 Replication Controller로 Replication Controller를 완전히 대체 가능
+  - 초기 쿠버네티스에서 제공했기 때문에 여전히 Replication Controller 사용중인 경우도 존재
+
+- Replication Controller VS ReplicaSet
+  - ReplicaSet은 Replication Controller와 거의 동일하게 동작
+  - ReplicaSet이 더 풍부한 표현식으로 포드 셀렉터 사용 가능하다.
+    - Replication Controller: 특정 레이블을 포함하는 포드가 일치하는 지 확인
+    - ReplicaSet: 특정 레이블이 없거나 해당 값과 관계업이 특정 레이블 키를 포함하는 포드를 매치하는지 확인
+
+- ReplicaSet 생성
+  - 대부분의 요소는 거의 비슷
+  - apiVersion: apps/v1beta2
+  - kind: ReplicaSet
+  - matchExpressions: 레이블을 매칭하는 별도의 표현 방식 존대
+    ```
+    spec:
+      replicas: 3
+      selector:
+        matchExpressions:
+        - key: app
+          operator: In
+          values:
+          - http-go
+    ```
+    ```
+    spec:
+      replicas: 3
+      selector:
+        matchExpressions:
+          app: http-go
+    ```
+    ```
+    spec:
+      replicas: 3
+      selector:
+        matchLabels:
+          tier: some-tier
+        matchExpressions:
+        - {key: tier, operator: In, values: [some-tier]}        
+    ```
+
+- 레플리카셋의 조회와 삭제
+  - 다른 리소스와 모두 동일
+  - 조회
+    ```
+    $kubectl get rs
+    ```
+  - 상세 조회 
+    ```
+    $ kubectl describe rs http-go-rs
+    ```
+  - 삭제
+    ```
+    $ kubectl delete rs http-go-rs
+    ```
+    
+#### Deployment
+
+- 애플리케이션을 다운 타입 없이 업데이트 가능하도록 도와주는 리소스
+- 레플리카셋과 레플리케이션 컨트롤러 상위의 배포되는 리소스
+- Deployment -> ReplicaSet or Replication Controller -> POD
+
+- 모든 포드를 업데이트 하는 방법
+  - 잠깐의 다운 타임 발생, 새로운 포드를 실행시키고 작업이 완료되면 오래된 포드를 삭제
+  - 롤링 업데이트
+
+- Deployment 작성 요령
+  - 포드의 metadata 부분과 spec 부분을 그대로 옮김
+  - Deployment의 spec.template에는 배포할 포드를 설정
+  - replicas에는 이 포드를 몇개를 배포할 지 명시
+  - label은 deployment가 배포한 포드를 관리하는 데 사용
+    
+  ```
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-deployment
+    labels:
+      app: nginx
+  spec:
+    replicas: 3
+    selector:
+      matchLabels:
+        app: nginx
+    template:
+  ```
+  
+ - Deployment scaling
+  - yaml 파일 직접 수정하여 replicas 수 조정
+    ```
+    $ kubectl edit deploy <deploy name>
+    ```
+  - --replicas 옵션으로 replicas 수 조정
+    ```
+    $ kubectl scale deploy <deploy name> --replicas=<Number>
+    ```
+    
+  
 ** 참조: 데브옵스(DevOps)를 위한 쿠버네티스 마스터
