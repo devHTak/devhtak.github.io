@@ -77,6 +77,7 @@ category: Java Study
 - @Retention
   - 어노테이션이 유지되는 기간(Life Time)을 설정하는 어노테이션
   - 설정 값
+    - RetentionPolicy 라는 enum을 통해 지정한다.
     - SOURCE : 소스파일에만 존재하고, 클래스파일에는 존재x, 컴파일러에 의해 버려진다. 바이트코드에 남아있지 않다.
     - CLASS : 클래스파일에는 존재하지만 런타임 시에 유지할 필요 없다는 것을 알리고 이 값이 default이다.
       - 바이트코드 조작이 가능하다. ByteBuddy
