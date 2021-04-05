@@ -316,6 +316,72 @@ category: Container
     ```
     $ kubectl delete rs http-go-rs
     ```
+
+- 예제
+  - nginx 이미지로 rs-nginx 이름의 ReplicaSet 생성 후 10개로 scaling 
+  - rs-nginx.yaml
+    ```
+    apiVersion: apps/v1
+    kind: ReplicaSet
+    metadata:
+      name: rs-nginx
+    spec:
+      replicas: 3
+      selector:
+        matchLabels:
+          app: rs-nginx
+      template:
+        metadata:
+          labels:
+            app: rs-nginx
+        spec:
+          containers:
+          - name: nginx
+            image: nginx
+            ports:
+              containerPort: 80
+    ```
+    ```
+    $ kubectl create -f rs-nginx.yaml
+    ```
+  - 생성 확인
+    ```
+    $ kubectl get rs
+    NAME       DESIRED   CURRENT   READY   AGE
+    rs-nginx   3         3         3       38s
+    $ kubectl get pod
+    NAME             READY   STATUS    RESTARTS   AGE
+    rs-nginx-lh59v   1/1     Running   0          22s
+    rs-nginx-njwc6   1/1     Running   0          22s
+    rs-nginx-vg7pj   1/1     Running   0          22s
+    ```
+  - 10개로 scaling
+    - scale 명령
+      ```
+      $ kubectl scale rs rs-nginx --replicas=10
+      replicaset.apps/rs-nginx scaled
+      $ kubectl get pod
+      NAME             READY   STATUS              RESTARTS   AGE
+      rs-nginx-2s8bk   1/1     Running             0          23s
+      rs-nginx-89nzk   1/1     Running             0          23s
+      rs-nginx-jjmh9   0/1     ContainerCreating   0          23s
+      rs-nginx-jtqjk   1/1     Running             0          23s
+      rs-nginx-l9pvq   1/1     Running             0          23s
+      rs-nginx-lh59v   1/1     Running             0          92s
+      rs-nginx-mtvtd   0/1     ContainerCreating   0          23s
+      rs-nginx-njwc6   1/1     Running             0          92s
+      rs-nginx-s8z7m   1/1     Running             0          23s
+      rs-nginx-vg7pj   1/1     Running             0          92s
+      ```
+    - yaml파일 작성 후 apply
+      ```
+      $ kubectl apply -f rs-nginx2.yaml 
+      ```
+    - edit 명령으로 rs 수정
+      ```
+      $ kubectl edit rs rs-nginx
+      replicaset.apps/rs-nginx edited
+      ```
     
 #### Deployment
 
