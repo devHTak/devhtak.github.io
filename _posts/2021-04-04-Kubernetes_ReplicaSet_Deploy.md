@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Kubernetes ReplicaSet과 Deployment
+title: Kubernetes ReplicaSet
 summary: Kubernetes
 author: devhtak
 date: '2021-04-04 21:41:00 +0900'
@@ -427,6 +427,44 @@ category: Container
     ```
     $ kubectl scale deploy <deploy name> --replicas=<Number>
     ```
-    
-  
+
+- 연습문제, jenkins 디플로이먼트를 deploy-jenkins를 생성하라
+ - app: jenkins-test로 레이블링
+   - deploy-jenkins.yaml
+     ```
+     apiVersion: apps/v1
+     kind: Deployment
+     metadata
+       name: deploy-jenkins
+     spec:
+       replicas: 3
+       selector:
+         matchLabels:
+           app: jenkins-test
+       template:
+         metadata:
+           labels:
+             app: jenkins-test
+         spec:
+           containers:
+           - name: jenkins
+             image: jenkins/jenkins
+             ports:
+             - containerPort: 8080
+     ```
+    - 확인
+      ```
+      server1@server1-VirtualBox:~/yaml$ kubectl get deploy
+      NAME             READY   UP-TO-DATE   AVAILABLE   AGE
+      depoly-jenkins   3/3     3            3           3m23s
+      server1@server1-VirtualBox:~/yaml$ kubectl get rs
+      kNAME                        DESIRED   CURRENT   READY   AGE
+      depoly-jenkins-7ccbbccdc5   3         3         3       3m27s
+      server1@server1-VirtualBox:~/yaml$ kubectl get pod
+      NAME                              READY   STATUS    RESTARTS   AGE
+      depoly-jenkins-7ccbbccdc5-5ggxq   1/1     Running   0          3m30s
+      depoly-jenkins-7ccbbccdc5-cnkcz   1/1     Running   0          3m30s
+      depoly-jenkins-7ccbbccdc5-r8qls   1/1     Running   0          3m30s
+      ```
+      
 ** 참조: 데브옵스(DevOps)를 위한 쿠버네티스 마스터
