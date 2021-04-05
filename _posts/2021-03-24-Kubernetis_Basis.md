@@ -63,7 +63,7 @@ category: Container
   - 이미지 출처: https://medium.com/@chkrishna/kubernetes-architecture-f7ca63fff46e
   
   - Kubernetes Control Plane (Masters)
-    - Control plain에서는 클러스터를 관리하고 클러스터의 기능
+    - Control Plane에서는 클러스터를 관리하고 클러스터의 기능
     - 단일 마스터 노드에서 실행하거나 여러 노드로 분할되고 복제해 고가용성을 보장
     - 클러스터의 상태를 유지하고 제어하지만 애플리케이션을 실행하지 않는다.
     - 구성 요소
