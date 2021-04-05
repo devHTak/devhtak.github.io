@@ -10,6 +10,7 @@ category: Container
 #### Replication Controller
 
 - Kubernetes 1.8 이후 ReplicaSet으로 변경
+- 지정한 replica 수의 POD Replica 가 실행중임을 보장한다. 즉, 레플리케이션 컨트롤러는 POD 또는 동일 종류의 POD의 Set이 항상 기동되고 사용 가능한지 확인한다
 - Replication
   - 데이터 저장과 백업하는 방법과 관련이 있는 데이터를 호스트 컴퓨터에서 다른 컴퓨터로 복사하는 것
 - 포드가 항상 실행되도록 유지하는 쿠버네티스 리소스
@@ -318,7 +319,10 @@ category: Container
     
 #### Deployment
 
-- 애플리케이션을 다운 타입 없이 업데이트 가능하도록 도와주는 리소스
+- 디플로이먼트(Deployment) 는 파드와 레플리카셋(ReplicaSet)에 대한 선언적 업데이트를 제공한다.
+- 디플로이먼트에서 의도하는 상태 를 설명하고, 디플로이먼트 컨트롤러(Controller)는 현재 상태에서 의도하는 상태로 비율을 조정하며 변경한다. 
+- 새 레플리카셋을 생성하는 디플로이먼트를 정의하거나 기존 디플로이먼트를 제거하고, 모든 리소스를 새 디플로이먼트에 적용할 수 있다.
+- 애플리케이션을 다운 타임 없이 업데이트 가능하도록 도와주는 리소스
 - 레플리카셋과 레플리케이션 컨트롤러 상위의 배포되는 리소스
 - Deployment -> ReplicaSet or Replication Controller -> POD
 
