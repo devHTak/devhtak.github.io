@@ -206,7 +206,8 @@ void create_instance() {
       - System.getenv 는 환경변수를 가져올 수 있다.
       - cmd(window): set TEST_ENV="LOCAL"
       - linux: vim ~/.zhsrc 하여 export TEST_ENV=LOCAL 저장
-  - assumeThat(조건, 테스트)
+      
+  - assuming That(조건, 테스트)
     - 조건이 참이면 lambda로 표현한 테스트를 실행한다.
     - 조건이 틀리더라도 테스트는 성공으로 표현된다.
       ```java
