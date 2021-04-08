@@ -119,3 +119,5 @@ category: Container
   $ kubectl delete ns test-ns
   ```
   - test-ns에 해당하는 것들이 모두 사라진다.
+
+** 출처: 데브옵스(DevOps)를 위한 쿠버네티스 마스터
