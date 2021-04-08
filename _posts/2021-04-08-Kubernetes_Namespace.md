@@ -64,7 +64,7 @@ category: Container
     spec: {}
     status: {}
     ```
-    - --dry-run=client: 맞는 문법인지 확인
+    - --dry-run=client: 실행하지 않고, 문법이 맞는지 확인한다.
     - -o yaml: yaml 파일까지 만들어 준다.
       ```
       kubectl create ns test-ns3 -o yaml > test-ns3.yaml
@@ -98,10 +98,17 @@ category: Container
     storage-provisioner                1/1     Running   19         7d1h
     ```
 
-- namespace를 주기 위해 create할 때 -n 옵션으로 줄 수 있다.
-  ```
-  $ kubectl create -f deploy-jenkins.yaml -n test-ns
-  ```
+- namespace 할당하기
+  - namespace를 주기 위해 create할 때 -n 옵션으로 줄 수 있다.
+    ```
+    $ kubectl create -f deploy-jenkins.yaml -n test-ns
+    ```
+  - YAML 파일에 namespace 할당 가능하다.
+    ```
+    metadata:
+      name: test
+      namespace: test-ns
+    ```
   
 - default 네임스페이스가 아닌 특정 네임스페이스로 변경하기
   - ~/.kube/config 를 할당하면 된다.
