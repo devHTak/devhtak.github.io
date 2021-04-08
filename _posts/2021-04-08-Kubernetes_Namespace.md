@@ -18,8 +18,14 @@ category: Container
   
   - 현재 클러스터의 기본 네임스페이스 확인하기
     ```
-    $ kubectl get ns    
+    $ kubectl get ns
+    NAME              STATUS   AGE
+    default           Active   7d1h
+    kube-node-lease   Active   7d1h
+    kube-public       Active   7d1h
+    kube-system       Active   7d1h 
     ```
+    - Namespace를 설정하지 않으면 default를 사용하게 된다.
     
 - 각 네임스페이스 상세 내용 확인
   - kubectl get을 옵션없이 사용하면 default 네임스페이스에 질의
@@ -45,11 +51,71 @@ category: Container
       ```
   - kubectl 명령어로 yaml 없이 바로 네임스페이스 생성 가능
     ```
-    $ kubectl create namespace "test-namespace"
+    $ kubectl create ns "test-ns"
+    namespace/test-ns created
     ```
+    ```
+    $ kubectl create ns test-ns2 --dry-run=client -o yaml
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      creationTimestamp: null
+      name: test-ns2
+    spec: {}
+    status: {}
+    ```
+    - --dry-run=client: 맞는 문법인지 확인
+    - -o yaml: yaml 파일까지 만들어 준다.
+      ```
+      kubectl create ns test-ns3 -o yaml > test-ns3.yaml
+      ```
 
 - 전체 네임스페이스 조회
   - 전체 네임스페이스를 대상으로 kubectl을 실행하는 방법
+    ```
+    $ kubectl get pod --all-namespaces
+    NAMESPACE     NAME                               READY   STATUS    RESTARTS   AGE
+    kube-system   coredns-74ff55c5b-sxvfj            1/1     Running   10         7d1h
+    kube-system   etcd-minikube                      1/1     Running   10         7d1h
+    kube-system   kube-apiserver-minikube            1/1     Running   10         7d1h
+    kube-system   kube-controller-manager-minikube   1/1     Running   12         7d1h
+    kube-system   kube-proxy-pdqqx                   1/1     Running   10         7d1h
+    kube-system   kube-scheduler-minikube            1/1     Running   10         7d1h
+    kube-system   storage-provisioner                1/1     Running   19         7d1h
+    ```
+  
+  - 특정 namespace에 해당하는 deploy, rs, pod 얻기
+    ```
+    $ kubectl get all -n test-ns
+    $ kubectl get pod -n kube-system
+    NAME                               READY   STATUS    RESTARTS   AGE
+    coredns-74ff55c5b-sxvfj            1/1     Running   10         7d1h
+    etcd-minikube                      1/1     Running   10         7d1h
+    kube-apiserver-minikube            1/1     Running   10         7d1h
+    kube-controller-manager-minikube   1/1     Running   12         7d1h
+    kube-proxy-pdqqx                   1/1     Running   10         7d1h
+    kube-scheduler-minikube            1/1     Running   10         7d1h
+    storage-provisioner                1/1     Running   19         7d1h
+    ```
+
+- namespace를 주기 위해 create할 때 -n 옵션으로 줄 수 있다.
   ```
-  $ kubectl get pod --all-namespaces
+  $ kubectl create -f deploy-jenkins.yaml -n test-ns
   ```
+  
+- default 네임스페이스가 아닌 특정 네임스페이스로 변경하기
+  - ~/.kube/config 를 할당하면 된다.
+    ```
+    contexts:
+    - context:
+        cluster: kubernetes
+        user: kubernetes-admin
+        namespace: test-ns
+    ```
+    - contexts.context.namespace 추가
+
+- 네임스페이스 삭제하기
+  ```
+  $ kubectl delete ns test-ns
+  ```
+  - test-ns에 해당하는 것들이 모두 사라진다.
