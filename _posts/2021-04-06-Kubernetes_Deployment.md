@@ -94,22 +94,28 @@ category: Container
 #### Rolling Update와 Rollback
 
 - 기존의 모든 포드를 삭제 후 새로운 포드 생성
-  - 잠깐의 다운 타임 발생
+  - 기존 서비스 업데이트를 진행할 때에는 잠깐의 서비스 다운 타임이 발생했다.
 
-- 새로운 포드를 실행시키고 작업이 완료되면 오래된 포드를 삭제
-  - 새 버전을 실행하는 동안 구 버전 포드와 연결
-  - 서비스의 레이블 셀렉터를 수정하여 간단하게 수정 가능
+- Rolling Update 사용
+  - 새로운 포드를 실행시키고 작업이 완료되면 오래된 포드를 삭제
+    - 새 버전을 실행하는 동안 구 버전 포드와 연결
+    - 서비스의 레이블 셀렉터를 수정하여 간단하게 수정 가능
 
 - ReplicaSet이 제공하는 Rolling Update
   - 이전에는 kubectl을 사용해 스케일링을 사용하여 수동으로 롤링 업데이트 진행 가능
-  - kubectl이 중단되면 업데이트는 어떻게 될까?? 
+    - kubectl -> Replication Controller 다수 -> POD 다수
+    - 수동으로 작업하면 Human Error, 노가다 등의 문제 발생
+  - kubectl이 중단되면 업데이트는 어떻게 될까??    
   - ReplcaSet 또는 Replicatoin Controller을 통제할 수 있는 시스템이 필요하다.
-
-- Deployment 생성
+    
+- Deployment 로 해결
   - Label Selector, 원하는 복제본 수(replicas), 포드 템플릿
   - 디플로이먼트의 전략은 yaml에 지정하여 사용 가능
   - 먼저 업데이트 시나리오를 위해 3개의 도커 이미지 준비
-  
+    - gasbugs/http-go:v1
+    - gasbugs/http-go:v1
+    - gasbugs/http-go:v1
+    
   - YAML 만들기
     ```
     apiVersion: apps/v1
@@ -134,27 +140,80 @@ category: Container
     ```
     $ kubectl create -f http-go-deployment.yaml --record=true
     ```
-    - --record=true 옵션을 주었다.
+    - history에 백업하기 위해서 --record=true 옵션을 주었다.
   
   - deployment 확인
     ```
     $ kubectl get deployment
+    NAME      READY   UP-TO-DATE   AVAILABLE   AGE
+    http-go   0/3     3            0           76s
     ```
     
   - ReplicaSet 확인
     ```
     $ kubectl get rs
+    NAME                DESIRED   CURRENT   READY   AGE
+    http-go-ccb794f48   3         3         0       97s
     ```
     
   - POD 확인
     ```
     $ kubectl get pod
+    NAME                      READY   STATUS              RESTARTS   AGE
+    http-go-ccb794f48-5md8p   0/1     ContainerCreating   0          111s
+    http-go-ccb794f48-cwqtj   0/1     ContainerCreating   0          111s
+    http-go-ccb794f48-wht5s   0/1     ContainerCreating   0          111s
+    ```
+    
+  - deploy 상세 설정 확인
+    ```
+    $ kubectl describe deploy http-go
+    Name:                   http-go
+    Namespace:              default
+    CreationTimestamp:      Thu, 08 Apr 2021 14:46:21 +0900
+    Labels:                 app=http-go
+    Annotations:            deployment.kubernetes.io/revision: 1
+    Selector:               app=http-go
+    Replicas:               3 desired | 3 updated | 3 total | 0 available | 3 unavailable
+    StrategyType:           RollingUpdate
+    MinReadySeconds:        0
+    RollingUpdateStrategy:  25% max unavailable, 25% max surge
+    Pod Template:
+      Labels:  app=http-go
+      Containers:
+       http-go:
+        Image:        gasbugs/http-go:v1
+        Port:         8080/TCP
+        Host Port:    0/TCP
+        Environment:  <none>
+        Mounts:       <none>
+      Volumes:        <none>
+    Conditions:
+      Type           Status  Reason
+      ----           ------  ------
+      Available      False   MinimumReplicasUnavailable
+      Progressing    True    ReplicaSetUpdated
+    OldReplicaSets:  <none>
+    NewReplicaSet:   http-go-ccb794f48 (3/3 replicas created)
+    Events:
+      Type    Reason             Age    From                   Message
+      ----    ------             ----   ----                   -------
+      Normal  ScalingReplicaSet  3m38s  deployment-controller  Scaled up replica set http-go-ccb794f48 to 3
     ```
   
   - rollout을 통해 상태 확인
     ```
-    $ kubectl rollout status deployment http-go
+    $ kubectl rollout status deploy http-go
+    deployment "http-go" successfully rolled out    
     ```
+  - history 확인
+    ```
+    $ kubectl rollout history deploy http-go
+    deployment.apps/http-go 
+    REVISION  CHANGE-CAUSE
+    1         kubectl create --filename=http-go-deploy.yaml --record=true
+    ```
+  
     
 - Deployment update 전략
   - Rolling Update (기본값)
@@ -176,16 +235,35 @@ category: Container
     ```
     $ kubectl patch deployment http-go -p {"spec": {"minReadySeconds": 10}}
     ```
+    - minReadySeconds: 업데이트 준비를 10초 동안 갖게 된다.
+  
+  - Load Balancer를 위한 expose
+    ```
+    $ kubectl expose deploy http-go
+    service/http-go exposed
+    $ kubectl get svc
+    NAME         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+    http-go      ClusterIP   10.107.200.227   <none>        8080/TCP   6s
+    kubernetes   ClusterIP   10.96.0.1        <none>        443/TCP    4m52s
+    ```
     
 - 디플로이먼트 업데이트 실행
   - 새로운 터미널을 열어 이미지 업데이트 실행
     ```
-    $ kubectl set image deployment http-go http-go=gasbug/http-go:v2
+    $ kubectl set image deployment http-go http-go=gasbugs/http-go:v2
+    deployment.apps/http-go image updated
+    kubectl rollout history deploy http-go
+    deployment.apps/http-go 
+    REVISION  CHANGE-CAUSE
+    1         kubectl create --filename=http-go-deploy.yaml --record=true
+    2         kubectl create --filename=http-go-deploy.yaml --record=true
     ```
+    - http-go의 이미지를 v2로 set
+    - 두번째 revision이 추가되었다.
   
   - 모니터링하는 시스템 관찰
     ```
-    $ while true; curl <ip>; sleep 1; done
+    $ while true; curl 10.107.200.227; sleep 1; done
     ```
     
 - 디플로이먼트 업데이트 실행 결과
@@ -198,18 +276,38 @@ category: Container
 - rollback 실행하기
   - 롤백을 실행하면 이전 업데이트 상태로 돌아감
   - 롤백을 하여도 히스토리의 리비전 상태는 이전 상태로 돌아가지 않음
-  
-  ```
-  $ kubectl set image deployment http-go http-go=gasbugs/http-go:v3
-  
-  $ kubectl rollout undo deployment http-go
-  
-  $ kubectl exec http-go-7dbc5877-d6n6p curl 127.0.0.1:8080
-  
-  $ kubectl rollout undo deployment http-go --to-revision=1
-  ```
-  
+  - 이미지 수정
+    ```
+    $ kubectl edit deploy http-go # iamge 버전 수정
+    deployment.apps/http-go edited
+    $ kubectl rollout history deploy http-go
+    deployment.apps/http-go 
+    REVISION  CHANGE-CAUSE
+    1         kubectl create --filename=http-go-deploy.yaml --record=true
+    2         kubectl create --filename=http-go-deploy.yaml --record=true
+    3         kubectl create --filename=http-go-deploy.yaml --record=true
+    ```
+  - 롤백하기
+    ```
+    $ kubectl rollout undo deploy http-go
+    deployment.apps/http-go rolled back
+    $ kubectl rollout history deploy http-go
+    deployment.apps/http-go 
+    REVISION  CHANGE-CAUSE
+    1         kubectl create --filename=http-go-deploy.yaml --record=true
+    3         kubectl create --filename=http-go-deploy.yaml --record=true
+    4         kubectl create --filename=http-go-deploy.yaml --record=true
+    ```
+    - 특정 버전으로 rollback하기
+      ```
+      $ kubectl rollout undo deploy http-go --to-revision=1
+      ```
+      - revision 1로 롤백
+        
 - 롤링 업데이터 전략 세부 설정
+  ```
+  RollingUpdateStrategy:  25% max unavailable, 25% max surge
+  ```
   - maxSurge
     - 기본값 25%, 개수로도 설정 가능
     - 최대로 추가 배포를 허용할 개수 설정
@@ -259,6 +357,5 @@ category: Container
     spec:
       processDeadlineSeconds: 600
     ```
-
 
 ** 출처: 데브옵스(DevOps)를 위한 쿠버네티스 마스터
