@@ -33,23 +33,67 @@ category: Container
   apiVersion: v1
   kind: Service
   metadata:
-    name: http-go-svc
+    name: http-go-svc 
   spec:
-    ports:
-    - port: 80
-      targetPort: 8080
     selector:
       app: http-go
+    ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+
+  ---
+
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: http-go
+    name: http-go
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: http-go
+    strategy: {}
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: http-go
+      spec:
+        containers:
+        - image: gasbugs/http-go
+          name: http-go
+          ports:
+          - containerPort: 8080
+          resources: {}
+  status: {}
   ```
     - 80번 포트로 service를 접근하고, 서비스가 POD를 8080 포트로 접근한다.
     - selector의 labels -> service가 POD를 선택할 때 기준이 되는 label
     
   ```
   $ kubectl create -f http-go-svc.yaml
-  
-  $ kubectl create -f http-go-rs.yaml
-  
-  $ kubectl get svc
+  service/http-go-svc created
+  deployment.apps/http-go created
+  $ kubectl get all
+  NAME                         READY   STATUS    RESTARTS   AGE
+  pod/http-go-65b9844c-66hgq   1/1     Running   0          96s
+
+  NAME                  TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+  service/http-go-svc   ClusterIP   10.97.199.186   <none>        80/TCP    96s
+  service/kubernetes    ClusterIP   10.96.0.1       <none>        443/TCP   7m43s
+
+  NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
+  deployment.apps/http-go   1/1     1            1           96s
+
+  NAME                               DESIRED   CURRENT   READY   AGE
+  replicaset.apps/http-go-65b9844c   1         1         1       96s
+  $ kubectl get pod -o wide
+  NAME                     READY   STATUS    RESTARTS   AGE    IP           NODE       NOMINATED NODE   READINESS GATES
+  http-go-65b9844c-66hgq   1/1     Running   0          110s   172.17.0.6   minikube   <none>           <none>
   ```
   
 - 서비스 기능 확인
@@ -60,43 +104,47 @@ category: Container
 
 #### 포드 간의 통신을 위한 ClusterIP
 
+- 기본적으로 Service type이 CluterIP로 생성된다. 
+- 내부에서 로드밸런싱하도록 도와준다. 외부 노출은 하지 않는다.
 - 다순의 포드를 하나의 서비스로 묶어서 관리
   - Frontend(Front_POD1, Front_POD2, ..) - Backend_ClusterIP -> Backend(Back_POD1, Back_POD2, ..) - DB_ClusterIP -> DB(DB_POD1, DB_POD2, ..)
-  - Backend_ClusterIP
-    ```
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: back-end
-    spec:
-      type: ClusterIP
-      ports:
-      - targetPort: 80
-        port: 80
-      selector:
-        app: myapp
-        type: back-end
-    ```
-  - DB_ClusterIP
-    ```
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: db
-    spec:
-      type: ClusterIP
-      ports: 
-      - targetPort: 3006
-        port: 3306
-      selector:
-        app: mysql
-        type: db
-    ```
+    - Backend_ClusterIP
+      ```
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: back-end
+      spec:
+        type: ClusterIP
+        ports:
+        - targetPort: 80
+          port: 80
+        selector:
+          app: myapp
+          type: back-end
+      ```
+    - DB_ClusterIP
+      ```
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: db
+      spec:
+        type: ClusterIP
+        ports: 
+        - targetPort: 3006
+          port: 3306
+        selector:
+          app: mysql
+          type: db
+      ```
     
 - 서비스의 세션 고정
   - 서비스가 다수의 포드로 구성하면 웹서비스의 세션이 유지되지 않는다.
+    - 여러 POD의 접근했을 때 Session이 유지되지 않으면, 2번 POD에서 로그인한 후 3번 POD로 요청을 보냈는데, Session이 유지되지 않으면 로그인을 확인하지 못한다.
   - 이를 위해 처음 들어왔던 클라이언트 IP를 그대로 유지해주는 방법 필요
   - sessionAffinity: ClientIP라는 옵션을 주면 해결 완료!
+    - Session Affinity: 동일한 서버에 요청을 동일 서버로 라우팅하도록 한다.
     ```
     apiVersion: v1
     kind: Service
@@ -110,6 +158,15 @@ category: Container
       selector:
         app: http-go
     ```
+  - 접속 확인
+    ```
+    $ kubectl run -it --rm --image=busybox bash
+    / # wget -O- -q 10.97.199.186
+    Welcome! http-go-65b9844c-klhj9
+    / # wget -O- -q 10.97.199.186
+    Welcome! http-go-65b9844c-klhj9
+    ```
+    - 같은 POD로 접속되는 것을 확인할 수 있다.
 
 - 다중 포트 서비스 방법
   - 포트에 그대로 나열해서 사용
@@ -127,6 +184,7 @@ category: Container
         port: 443
         targetPort: 8443
     ```
+      - YAML 작성 법. 복수형(s)가 나오면 그 다음에는 -를 추가하여 list로 구성한다.
     ```
     $ kubectl get svc
     ```
@@ -136,9 +194,26 @@ category: Container
   - 서비스 세부 사항에는 연결될 IP에 대한 정보가 존재
     ```
     $ kubectl describe svc http-go-svc
+    Name:              http-go-svc
+    Namespace:         default
+    Labels:            <none>
+    Annotations:       <none>
+    Selector:          app=http-go
+    Type:              ClusterIP
+    IP Families:       <none>
+    IP:                10.97.199.186
+    IPs:               10.97.199.186
+    Port:              <unset>  80/TCP
+    TargetPort:        8080/TCP
+    Endpoints:         172.17.0.10:8080,172.17.0.6:8080,172.17.0.8:8080
+    Session Affinity:  None
+    Events:            <none>
     ```
+      - Endpoints에 여러 POD의 IP가 들어있고 로드밸런싱할 수 있도록 설정되어 있다.
 
 - 외부 IP 연결 설정 YAML
+  - 내부에서 로드밸런싱해서 외부로 나가기 위해 사용
+  - 온프레미스에서 클라우드로 이전 작업, 하이브리드 형태에서 사용한다.
   - Service와 Endpoints 리소스 모두 생성 필요
     - external-svc.yaml
       ```
@@ -163,9 +238,10 @@ category: Container
           ports:
           - port: 80
       ```
+      
   - Service와 Endpoints 연결 구조
     ![image](https://user-images.githubusercontent.com/42403023/114120132-e1bd0400-9926-11eb-88a5-896ff6b98ac2.png)
-    ** 이미지 출처: DevOps를 위한 Kubernetes 마스터 강의
+    **  이미지 출처: DevOps를 위한 Kubernetes 마스터 강의
     
 #### 서비스 노출하는 세가지 방법
 
@@ -175,9 +251,10 @@ category: Container
 
 #### NodePort
 
+- Node의 자체 Port를 사용하여 리다이렉션한다.
 - NodePort 생성하기
   - Service Yaml 파일 작성
-    - type을 NodePort를 지정
+    - type을 NodePort를 지정하여 최종적으로 서비스되는 포트로 지정한다.
     - 30000 ~ 32767 포트만 사용가능
       ```
       apiVersion: v1
@@ -205,6 +282,10 @@ category: Container
 
   ![image](https://user-images.githubusercontent.com/42403023/114121182-df5ba980-9928-11eb-9983-c64c6eb7e90b.png)
   ** 이미지 출처: https://kubernetes.io/docs/concepts/services-networking/service
+  
+  - NodePort(3001번 포트)로 Node에 접근 -> API Server(Kubectl Proxy) RR 방식으로 -> POD 접근
+    - (참고)RoundRobin: Using Round robin method, client requests are routed to available servers on a cyclical basis. Round robin server load balancing works best when servers have roughly identical computing capabilities and storage capacity.
+  - (클러스터 내) Node - Service - POD
 
 - 노드포트를 활용한 로드밸런싱
   
@@ -214,6 +295,7 @@ category: Container
 #### 로드밸런스
 
 - NodePort 서비스의 확장된 서비스
+  - Node 앞에 Load Balancer를 두는 방식
 - 클라우드 서비스에서 사용 가능
 - yaml 파일에서 타입을 NodePort 대신 LoadBalancer를 설정
 - 로드 밸런서의 IP 주소를 통해 서비스에 액세스
@@ -250,6 +332,7 @@ category: Container
 
 - 인그레스의 필요성
   - 인그레스는 하나의 IP이나 도메인으로 다수의 서비스를 제공
+    - L4의 기능으로 NodePort가 제공되어야 사용할 수 있다. 
   - ingress: (어떤 장소에) 들어감, 입장; 들어갈 수 있는 권리, 입장권
   
   ![image](https://user-images.githubusercontent.com/42403023/114121443-55601080-9929-11eb-9668-32e08d9db481.png)
