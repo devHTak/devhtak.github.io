@@ -27,6 +27,7 @@ category: Container
 #### 서비스의 생성 방법
 
 - kubectl의 expose가 가장 쉬운 방법
+  
 - YAML을 통해 버전 관리 기능
   ```
   apiVersion: v1
@@ -40,6 +41,9 @@ category: Container
     selector:
       app: http-go
   ```
+    - 80번 포트로 service를 접근하고, 서비스가 POD를 8080 포트로 접근한다.
+    - selector의 labels -> service가 POD를 선택할 때 기준이 되는 label
+    
   ```
   $ kubectl create -f http-go-svc.yaml
   
