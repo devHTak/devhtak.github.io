@@ -260,22 +260,30 @@ category: Container
       apiVersion: v1
       kind: Service
       metadata:
-        name: http-go-svc
+        name: http-go-np
       spec:
         type: NodePort
+        selector:
+          run: http-go
         ports:
         - port: 80 # 서비스의 포트
-          target: 8080 # 포드의 포트
+          targetPort: 8080 # 포드의 포트
           nodePort: 30001 # 최종적으로 서비스되는 포트
-        selector
-          app: http-go
       ```
+      ```
+      $ kubectl get svc
+      NAME         TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+      http-go-np   NodePort    10.101.61.80   <none>        80:30001/TCP   7s
+      kubernetes   ClusterIP   10.96.0.1      <none>        443/TCP        4m13s
+      ```
+        - External-IP가 none이지만 PORT가 80:30001로 NodePort가 30001로 설정되어 있기 때문에 외부에서 접근할 수 있다.
+        - 모든 노드에 동일한 포트가 생성된다.
   
   - GCP 에서 방화벽 해제 후 노드로 직접 접속
     ```
     $ gcloud compute firewall-rules create http-go-svc-rule --allow=tcp:30001
     $ kubectl get node -o wide
-    $ curl IP
+    $ curl Node-External-IP:NodePort
     ```
 
 - 노드포트 서비스의 패킷 흐름
@@ -297,6 +305,7 @@ category: Container
 - NodePort 서비스의 확장된 서비스
   - Node 앞에 Load Balancer를 두는 방식
 - 클라우드 서비스에서 사용 가능
+  - virtual box에서는 안된다.
 - yaml 파일에서 타입을 NodePort 대신 LoadBalancer를 설정
 - 로드 밸런서의 IP 주소를 통해 서비스에 액세스
 
@@ -317,8 +326,13 @@ category: Container
     ```
     ```
     $ kubectl get svc
-    $ curl IP
-    ```    
+    NAME         TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+    http-go-lb   LoadBalancer   10.108.173.114   <pending>     80:31350/TCP   13s
+    http-go-np   NodePort       10.100.133.123   <none>        80:30001/TCP   10m
+    kubernetes   ClusterIP      10.96.0.1        <none>        443/TCP        10m
+    $ curl LoadBalancer_External_IP
+    ```
+     - http-go-lb의 NodePort를 설정하지 않았지만, 임의의 포트로 설정해준다.
 
 - 로드 밸런스 서비스의 패킷 흐름
   - 클러스터에 로드밸런싱을 해주는 개체 필요
