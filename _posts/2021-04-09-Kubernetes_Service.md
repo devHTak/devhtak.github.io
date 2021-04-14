@@ -405,15 +405,13 @@ category: Container
               serviceName: http-go-np
               servicePort: 8080
   ```
-    - host 반복
+    - rules에 host 를 list로 하면 다수의 서비스를 제공할 수 있다.
 
   ```
-  $ kubectl get ingress
-  
+  $ kubectl get ingress  
   $ sudo vim /etc/hosts
-  
-  $ curl www.gasbugs.com
-  
+  # hosts 파일을 추가하여 ip <-> domain을 맞춰준다.  
+  $ curl www.gasbugs.com  
   $ curl dict.gasbugs.com
   ```
   
