@@ -251,7 +251,7 @@ public class SpringMemberControllerV2 {
           return "new-form";
       }
 
-      @GetMapping("/save")
+      @PostMapping("/save")
       public String save(@RequestParam("username") String username, @RequestParam("age") int age, Model model) {
           Member member = new Member();
           member.setUsername(username); member.setAge(age);
