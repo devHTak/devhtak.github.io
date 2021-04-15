@@ -287,5 +287,13 @@ public class SpringMemberControllerV2 {
       - @RequestMapping(value = "/new-form", method = RequestMethod.GET)
     - @GetMapping , @PostMapping 으로 더 편리하게 사용할 수 있다.
       - 참고로 Get, Post, Put, Delete, Patch 모두 애노테이션이 준비되어 있다.
+      - @GetMapping 
+        ```
+        @Target(ElementType.METHOD)
+        @Retention(RetentionPolicy.RUNTIME)
+        @Documented
+        @RequestMapping(method = RequestMethod.GET)
+        ```
+        - RequestMapping에 method를 Get으로 사용하는 것
       
 ** 출처: 스프링 MVC - 백엔드 웹 개발 핵심 기술
