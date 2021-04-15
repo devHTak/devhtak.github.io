@@ -141,4 +141,43 @@ category: Container
     - /var/log, /var/lib/docker/containers 는 노드의 local storage에 저장되어 있다.
     - /var/lib/docker/containers 에는 docker container에 대한 정보를 가지고 있다.
 
+- 예제
+  - work1에 디렉터리 생성 및 index.html 생성
+    ```
+    $ sudo mkdir /var/htdocs
+    $ sudo -i
+    $ echo "index - work1" > /var/htdocs/index.html
+    ```
+  - pod 생성 - volumes: hostPath
+    ```
+    $ vi hostpath-httpd.yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: hostpath-http
+    spec:
+      containers:
+      - image: httpd
+        name: web-server
+        volumeMounts:
+        - name: html
+          mountPath: /usr/local/apache2/htdocs
+        ports:
+        - containerPort: 80
+          protocol: TCP
+      volumes:
+      - name: html
+        hostPath: 
+          path: /var/htdocs
+          type: Directory
+    $ kubectl create -f hostpath-httpd.yaml
+    $ kubectl port-forward hostpath-http 8080:80
+    ```
+  - 127.0.0.1:8080으로 접속하여 index.html이 정상 접속하는지 확인해보자
+  - 정상적으로 뜬다면 해당 POD이 work1 노드에 있다는 것을 확인할 수 있다.
+    ```
+    $ kubectl get pod -o wide
+    ```
+
+    
 ** 출처: 데브옵스(DevOps)를 위한 쿠버네티스 마스터 강의
