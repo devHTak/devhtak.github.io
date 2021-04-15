@@ -10,7 +10,9 @@ category: Spring
 #### Spring MVC 전체 구조
 
 - Spring MVC 구조
+  
   ![image](https://user-images.githubusercontent.com/42403023/114796789-b88bf000-9dcc-11eb-9281-8f25cc28a7be.png)
+  
   ** 이미지 출처: https://www.egovframe.go.kr/wiki/doku.php?id=egovframework:rte2:ptl:spring_mvc_architecture
   - 0. Client 에 HTTP 요청 -> Dispatcher Servlet
   - 1. DispatcherServlet 에서 Handler Mapping을 통해 핸들러 조회
