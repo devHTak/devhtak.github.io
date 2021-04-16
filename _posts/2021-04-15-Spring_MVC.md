@@ -14,22 +14,22 @@ category: Spring
   ![image](https://user-images.githubusercontent.com/42403023/114796789-b88bf000-9dcc-11eb-9281-8f25cc28a7be.png)
   
   ** 이미지 출처: https://www.egovframe.go.kr/wiki/doku.php?id=egovframework:rte2:ptl:spring_mvc_architecture
-  - 0. Client 에 HTTP 요청 -> Dispatcher Servlet
-  - 1. DispatcherServlet 에서 Handler Mapping을 통해 핸들러 조회
+  - Client 에 HTTP 요청 -> Dispatcher Servlet
+  - DispatcherServlet 에서 Handler Mapping을 통해 핸들러 조회
     - 핸들러 조회: 핸들러 매핑을 통해 요청 URL에 매핑된 핸들러(컨트롤러) 조회
-  - 2. DispatcherServlet 에서 Handler Adapter 목록을 통해 핸들러를 처리할 수 있는 Handler Adapter 조회
+  - DispatcherServlet 에서 Handler Adapter 목록을 통해 핸들러를 처리할 수 있는 Handler Adapter 조회
     - 핸들러 어댑터 조회: 핸들러를 실행할 수 있는 핸들러 어댑터 조회
-  - 3. DispatcherServlet 에서 Handler Adapter 호출(호출 메서드: handle(handler))
+  - DispatcherServlet 에서 Handler Adapter 호출(호출 메서드: handle(handler))
     - 핸들러 어댑터 실행: 핸들러 어댑터를 실행
-  - 4. Handler Adapter 에서 Handler 호출
+  - Handler Adapter 에서 Handler 호출
     - 핸들러 실행: 핸들러 어댑터가 실제 핸들러 실행
-  - 5. Handler Adapter 에서 Dispatcher Servlet 에게 ModelAndView 반환
+  - Handler Adapter 에서 Dispatcher Servlet 에게 ModelAndView 반환
     - ModelAndView 반환: 핸들러 어댑터는 핸들러가 반환하는 정보를 ModelAndView에 담아서 반환한다.
-  - 6. Dispatcher Servlet에서 ViewResolver 호출
+  - Dispatcher Servlet에서 ViewResolver 호출
     - ViewReolsver 호출: ViewResolver를 찾고 실행한다.
-  - 7. ViewResolver가 Dispatcher Servlet에게 View 반환
+  - ViewResolver가 Dispatcher Servlet에게 View 반환
     - View 반환: ViewResolver는 뷰의 논리 이름을 물리 이름으로 바꾸고, 렌더링 역할을 담당하는 View 객체를 반환한다.
-  - 8. Dispatcher Servlet이 View 호출 (호출 메서드: render(model))
+  - Dispatcher Servlet이 View 호출 (호출 메서드: render(model))
     - View Rendering: 뷰를 통해서 뷰를 렌더링한다.
 
 - Dispatcher Servlet
