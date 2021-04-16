@@ -179,5 +179,87 @@ category: Container
     $ kubectl get pod -o wide
     ```
 
+#### k8s와 NFS 네트워크 볼륨
+
+- NFS 사용하기 위한 사전 작업
+  - NFS 서버 설치
+    ```
+    $ apt-get update
+    $ apt-get install nfs-common nfs-kernel-server portmap
+    ```
+
+  - 공유할 디렉터리 생성
+    ```
+    $ mkdir /home/nfs
+    $ chmod 777 /home/nfs
+    ```
+
+  - /etc/exports 파일에 다음 내용 추가
+    ```
+    /home/nfs 10.0.2.15(rw,sync,no_subtree_check) 10.0.2.4(rw,sync,no_subtree_check) 10.0.2.5(rw,sync,no_subtree_check)
+    $ service nfs-server restart
+    $ showmount -e 127.0.0.1
+    ```
+
+  - NFS 클라이언트에서는 mount 명령어로 마운트해서 사용
+    ```
+    $ mount -t nfs 10.0.2.5:/home/nfs/mnt
+    $ echo 'test' > /home/nfs/test.txt
+    $ cat /mnt/test.txt
+    test
+    $ lst /home/nfs/text.txt
+    조회되지 않는다.
+    ```
+
+- nfs-http.yaml 파일 실행
+  - Work2에서 공유할 index.html 생성
+    ```
+    $ echo "test" > /home/nfs/index.html
+    ```
+  - Master에서 nfs_http.yaml 생성하여 실행
+    ```
+    $ vi nfs_http.yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: nfs-httpd
+    spec:
+      containers:
+      - image: httpd
+        name: web
+        volumeMounts:
+        - mountPath: /usr/local/apache2/htdocs
+          name: nfs-volume
+          readOnly: true
+      volumes:
+      - name: nfs-volume
+        nfs:
+          server: 10.0.2.5 #Worker2 IP
+          path: /home/nfs
+    $ kubectl create -f 
+    ```
+  - container가 뜨지 않았다. -> truble shooting
+    - 오류 로그 확인
+      ```
+      $ kubectl describe pod nfs-httpd
+      ```
+      - /sbin/mount.<type> helper program을 확인하라는 오류 메시지 발견
     
+    - 마스터에 NFS와 관련된 발생
+      ```
+      $ api-get update
+      $ ap-get nfs-common nfs-kernel-server portmap
+      ```
+
+- 접속 확인
+  ```
+  $ kubectl port-forward nfs-httpd 8080:80
+  $ 127.0.0.1:8080 접속 확인
+  ```
+  - 포트-포워딩에서 포트 사용으로 인한 오류발생하면 사용하지 않는 포트를 사용하거나 미사용 포트면 죽이자
+    ```
+    $ ps -eaf | grep port-forward
+    $ kill -9 PID
+    ```
+
 ** 출처: 데브옵스(DevOps)를 위한 쿠버네티스 마스터 강의
