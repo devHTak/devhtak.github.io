@@ -250,7 +250,7 @@ public class RequestHeaderController {
     - 데이터 형식은 주로 JSON 사용
     - POST, PUT, PATCH
 
-#### 쿼리 파라미터 전송 및 HTML Form 전송
+#### HTTP 요청 메시지 - 쿼리 파라미터 전송 및 HTML Form 전송
 
 - GET, 쿼리 파라미터 전송
   ```
@@ -393,5 +393,6 @@ public class RequestHeaderController {
   - String, int, Integer와 같이 primitive type과 그에대한 wrapper class -> @RequestParam
   - 나머지 -> @ModelAttribute (argument resolver로 지정해둔 타입 외)
 
+#### HTTP 요청 메시지 - Http Message Body
 
 ** 참고: 스프링 MVC - 백엔드 웹 개발 핵심 기술
