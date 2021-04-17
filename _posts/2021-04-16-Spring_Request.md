@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Spring MVC - 요청과 응답
+title: Spring MVC - 요청
 summary: 김영한님 - 스프링 MVC - 백엔드 웹 개발 핵심 기술
 author: devhtak
 date: '2021-04-16 21:41:00 +0900'
@@ -393,6 +393,172 @@ public class RequestHeaderController {
   - String, int, Integer와 같이 primitive type과 그에대한 wrapper class -> @RequestParam
   - 나머지 -> @ModelAttribute (argument resolver로 지정해둔 타입 외)
 
-#### HTTP 요청 메시지 - Http Message Body
+#### HTTP 요청 메시지 - HTTP Message Body
 
+- HTTP message body에 데이터를 직접 담아서 요청
+  - HTTP API에서 주로 사용, JSON, XML, TEXT
+  - 데이터 형식은 주로 JSON 사용
+  - POST, PUT, PATCH
+
+- 요청 파라미터와 다르게, HTTP 메시지 바디를 통해 데이터가 직접 데이터가 넘어오는 경우는 @RequestParam , @ModelAttribute 를 사용할 수 없다. (물론 HTML Form 형식으로 전달되는 경우는요청 파라미터로 인정된다.)
+
+- 일반 텍스트
+```java
+@Slf4j
+@Controller
+public class RequestBodyStringController {
+	
+	@PostMapping("/request-body-string-v1")
+	public void requestBodyStringV1(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		ServletInputStream inputStream = request.getInputStream();
+		String messageBody = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);		
+		log.info("messageBody: {}", messageBody);		
+		response.getWriter().write("ok");
+	}
+	
+	@PostMapping("/request-body-string-v2")
+	public void requestBodyStringV2(InputStream inputStream, Writer responseWriter) throws IOException {
+		String messageBody = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
+		log.info("messageBody: {}", messageBody);
+		responseWriter.write("ok");
+	}
+	
+	@PostMapping("/request-body-string-v3")
+	public HttpEntity<String> requestBodyStringV3(HttpEntity<String> httpEntity){
+		String messageBody = httpEntity.getBody();
+		log.info("messageBody: {}", messageBody);		
+		return new HttpEntity<>("ok");
+	}
+	
+	@PostMapping("/request-body-string-v3-1")
+	public ResponseEntity<String> requestBodyStringV3_1(RequestEntity<String> requestEntity){
+		String messageBody = requestEntity.getBody();
+		log.info("messageBody: {}", messageBody);		
+		return ResponseEntity.ok().body("ok");
+	}
+	
+	@PostMapping("/request-body-string-v4")
+	@ResponseBody
+	public String requestBodyStringV4(@RequestBody String messageBody){
+		log.info("messageBody: {}", messageBody);		
+		return "ok";
+	}
+}
+```
+  - V1
+    - request 객체에서 InputStream을 받아서 body를 얻을 수 있다.
+  
+  - V2
+    - parameter로 바로 InputStream과 OutputStream을 받아서 사용할 수 있다.
+    - InputStream(Reader): HTTP 요청 메시지 바디의 내용을 직접 조회
+    - OutputStream(Writer): HTTP 응답 메시지의 바디에 직접 결과 출력
+
+  - V3
+    - HttpEntity 객체를 파라미터, 리턴 타입으로 지정할 수 있다.
+    - HttpEntity: HTTP header, body 정보를 편리하게 조회
+      - 메시지 바디 정보를 직접 조회
+      - 요청 파라미터를 조회하는 기능과 관계 없음 @RequestParam X, @ModelAttribute X
+    - HttpEntity는 응답에도 사용 가능
+      - 메시지 바디 정보 직접 반환헤더 정보 포함 가능
+      - view 조회X
+  
+  - V3_1
+    - HttpEntity 를 상속받은 다음 객체들도 같은 기능을 제공한다.
+    - RequestEntity
+      - HttpMethod, url 정보가 추가, 요청에서 사용
+    - ResponseEntity
+      - HTTP 상태 코드 설정 가능, 응답에서 사용
+        ```java
+      	return new ResponseEntity<String>("Hello World", responseHeaders, HttpStatus.CREATED)
+	```
+
+  - V4
+    - @RequestBody 로 HttpEntity 객체 없이 바로 객체를 받을 수 있다.
+      - @RequestBody 를 사용하면 HTTP 메시지 바디 정보를 편리하게 조회할 수 있다. 
+      - 참고로 헤더 정보가 필요하다면 HttpEntity 를 사용하거나 @RequestHeader 를 사용하면 된다.
+      - 이렇게 메시지 바디를 직접 조회하는 기능은 요청 파라미터를 조회하는 @RequestParam ,@ModelAttribute 와는 전혀 관계가 없다.
+    - @ResponseBody 로 바로 객체를 리턴할 수 있다.
+      - @ResponseBody 를 사용하면 응답 결과를 HTTP 메시지 바디에 직접 담아서 전달할 수 있다.
+      - 물론 이 경우에도 view를 사용하지 않는다.
+
+- JSON 요청
+```java
+@Slf4j
+@Controller
+@RequiredArgsConstructor
+public class RequestBodyJsonController {
+	
+	private final ObjectMapper objectMapper;
+	
+	@PostMapping("/request-body-json-v1")
+	public void requestBodyJsonV1(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		ServletInputStream inputStream = request.getInputStream();
+		String messageBody = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
+		
+		log.info("messageBody: {}", messageBody);
+		HelloData helloData = objectMapper.readValue(messageBody, HelloData.class);
+		log.info("username: {}, age: {}", helloData.getUsername(), helloData.getAge());
+		response.getWriter().write("ok");
+	}
+
+	@PostMapping("/request-body-json-v2")
+	@ResponseBody
+	public String requestBodyJsonV2(@RequestBody String messageBody) throws IOException {
+		log.info("messageBody: {}", messageBody);
+		HelloData helloData = objectMapper.readValue(messageBody, HelloData.class);
+		log.info("username: {}, age: {}", helloData.getUsername(), helloData.getAge());
+		return "ok";
+	}
+	
+	@PostMapping("/request-body-json-v3")
+	@ResponseBody
+	public String requestBodyJsonV3(@RequestBody HelloData helloData) {
+		log.info("username: {}, age: {}", helloData.getUsername(), helloData.getAge());
+		return "ok";
+	}
+	
+	@PostMapping("/request-body-json-v4")
+	@ResponseBody
+	public String requestBodyJsonV4(HttpEntity<HelloData> httpEntity) {
+		HelloData helloData = httpEntity.getBody();
+		log.info("username: {}, age: {}", helloData.getUsername(), helloData.getAge());
+		return "ok";
+	}
+	
+	@PostMapping("/request-body-json-v5")
+	@ResponseBody
+	public HelloData requestBodyJsonV5(@RequestBody HelloData helloData) {
+		log.info("username: {}, age: {}", helloData.getUsername(), helloData.getAge());
+		return helloData;
+	}
+}
+```
+  - V1
+    - HttpServletRequest를 사용해서 직접 HTTP 메시지 바디에서 데이터를 읽어와서, 문자로 변환한다.
+    - 문자로 된 JSON 데이터를 Jackson 라이브러리인 objectMapper 를 사용해서 자바 객체로 변환한다
+
+  - V2
+    - 이전에 학습했던 @RequestBody 를 사용해서 HTTP 메시지에서 데이터를 꺼내고 messageBody에 저장한다.
+    - 문자로 된 JSON 데이터인 messageBody 를 objectMapper 를 통해서 자바 객체로 변환한다.
+
+  - V3
+    - @RequestBody 객체 파라미터
+      - @RequestBody HelloData data
+      - @RequestBody 에 직접 만든 객체를 지정할 수 있다.
+      - HttpEntity , @RequestBody 를 사용하면 HTTP 메시지 컨버터가 HTTP 메시지 바디의 내용을 우리가 원하는 문자나 객체 등으로 변환해준다.
+      - HTTP 메시지 컨버터는 문자 뿐만 아니라 JSON도 객체로 변환해주는데, 우리가 방금 V2에서 했던 작업을 대신 처리해준다.
+    - @RequestBody는 생략 불가능
+      - @ModelAttribute 에서 학습한 내용을 떠올려보자.
+      - 스프링은 @ModelAttribute , @RequestParam 해당 생략시 다음과 같은 규칙을 적용한다.
+      - String , int , Integer 같은 단순 타입 = @RequestParam, 나머지 = @ModelAttribute (argument resolver 로 지정해둔 타입 외)
+    
+  - V4
+    - @ResponseBody
+      - 응답의 경우에도 @ResponseBody 를 사용하면 해당 객체를 HTTP 메시지 바디에 직접 넣어줄 수 있다.
+      - 물론 이 경우에도 HttpEntity 를 사용해도 된다.
+    - @RequestBody 요청
+      - JSON 요청 HTTP 메시지 컨버터 객체
+    - @ResponseBody 응답
+      - 객체 HTTP 메시지 컨버터 JSON 응답
+      
 ** 참고: 스프링 MVC - 백엔드 웹 개발 핵심 기술
