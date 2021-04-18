@@ -103,7 +103,7 @@ category: Spring
     <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-thymeleaf</artifactId>
-		</dependency>
+    </dependency>
     ```
   - 스프링 부트가 자동으로 ThymeleafViewResolver와 필요한 스프링 빈들을 등록한다.
   - 설정: application.properties
@@ -310,8 +310,9 @@ public class ResponseBodyController {
               @Override
               public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
                   //...
-              }          
-	      @Override
+              }
+	      
+              @Override
               public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
                   //...
               }
