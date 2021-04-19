@@ -222,7 +222,7 @@ category: Spring
   |---|---|---|
   |ANNOTATION|디폴트, 애노테이션을 인식해서 동작|org.example.SomeAnnotation|
   |ASSIGNABLE_TYPE|지정한 타입과 자식 타입을 인식해서 동작|org.example.SomeClass|
-  |ASPECTJ|AspectJ 패턴(AOP) 사용|org.example..\*Service+|
+  |ASPECTJ|AspectJ 패턴 사용|org.example..\*Service+|
   |REGEX|정규 표현식|org\.example\.Default\.\*|
   |CUSTOM|TypeFilter 라는 인터페이스를 구현하여 처리|org.example.MyTypeFilter|
   
