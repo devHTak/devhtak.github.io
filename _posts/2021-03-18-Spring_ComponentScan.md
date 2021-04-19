@@ -270,4 +270,4 @@ category: Spring
     Consider renaming one of the beans or enabling overriding by setting spring.main.allow-bean-definition-overriding=true
     ```
 
-* 참고: 인프런 영한님의 스프링 핵심원리 - 기본편 강의
+** 참고: 인프런 영한님의 스프링 핵심원리 - 기본편 강의
