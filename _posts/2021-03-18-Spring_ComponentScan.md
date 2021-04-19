@@ -48,7 +48,7 @@ category: Spring
       }
       ```
     - RateDiscountPolicy.java
-      ```
+      ```java
       @Component
       public class RateDiscountPolicy implements DiscountPolicy {
           // ...
