@@ -117,3 +117,4 @@ category: Java Study
 - 보일러플레이트 코드를 제거하는데 도움이 된다.
   - AbstractProcessor를 implements하여 구현체를 만들 수 있으며 Lombok의 @Getter, @Setter와 같은 어노테이션을 이용하는 것만으로도 컴파일 타임에 알아서 getter/setter를 만들어주는 방식으로 보일러플레이트 코드 제거
   
+** 참조: 백기선님과 스터디할래# 12 Annotation
