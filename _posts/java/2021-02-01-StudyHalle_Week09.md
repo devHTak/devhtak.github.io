@@ -153,14 +153,12 @@ category: Java Study
 - RuntimeException
   - RuntimeException 클래스를 상속받는 자식 클래스들은 주로 치명적인 예외 상황을 발생시키지 않는 예외들로 구성되어있다.
   - try / catch문을 사용하기 보다는 프로그램을 작성하면서 예외가 발생하지 않도록 주의 하는 것이 좋다
-  - 예외 발생 시 트랜잭션 rollback한다
 
 - CheckedException
   - CheckedException 클래스인 Exception 클래스에 속하는 자식 클래스들은 치명적인 예외 상황을 발생시키기 때문에 반드시 try / catch 문을 사용하여 예외처리를 해야만한다
   - 자바 컴파일러는 RuntimeException 클래스 이외의 Exception 클래스의 자식 클래스에 속하는 예외가 발생할 가능성이 있는 구문에는 반드시 예외를 처리하도록 강제하고 있다
   - 만약 이러한 예외가 발생할 가능성이 있는 구문을 예외처리하지 않았을 때는 컴파일 시 오류를 발생시킨다.
   - 컴파일 단계에서 확인가능
-  - 예외 발생 시 트랜잭션 rollback 하지 않는다
 
 #### 커스텀한 예외 만드는 방법
 
