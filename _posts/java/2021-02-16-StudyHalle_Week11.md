@@ -152,3 +152,5 @@ public class EnumMain {
       }
   }
   ```
+
+** 출처: 백기선님과 스터디 할래 #11. Enum
