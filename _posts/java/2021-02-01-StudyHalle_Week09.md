@@ -210,3 +210,5 @@ public class MyException extends Exception{
   - 이렇게 catch문장을 처리해주는건 피해야한다.
   - 여기서 SomeException 이라는 것은 그냥 어떤 예외를 잡는다는 것을 의미할뿐 실제 존재한다는게 아니다
   - catch에 아무런 작업을 하지않으면 어디서 발생했는지 전혀 문제를 찾을 수 없다.
+
+** 참조: 백기선님과 스터디할래 #9 Exception
