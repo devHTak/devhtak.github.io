@@ -76,6 +76,67 @@ category: JPA
       // 즉시 로딩 시 조인하여 한번에 관계된 객체까지 가져온다.
       ```
 
+- JPA 구동 방식
+  - 설정
+    - 경로: /src/main/resources/META-INF/persistence.xml
+    ```
+    <?xml version="1.0" encoding="UTF-8"?> 
+    <persistence version="2.2" 
+        xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+        xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd"> 
+        <persistence-unit name="hello"> 
+            <properties> 
+                <!-- 필수 속성 --> 
+                <property name="javax.persistence.jdbc.driver" value="org.h2.Driver"/> 
+                <property name="javax.persistence.jdbc.user" value="sa"/> 
+                <property name="javax.persistence.jdbc.password" value=""/> 
+                <property name="javax.persistence.jdbc.url" value="jdbc:h2:tcp://localhost/~/test"/> 
+                <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/> 
+
+                <!-- 옵션 --> 
+                <property name="hibernate.show_sql" value="true"/> 
+                <property name="hibernate.format_sql" value="true"/> 
+                <property name="hibernate.use_sql_comments" value="true"/> 
+                <!--<property name="hibernate.hbm2ddl.auto" value="create" />--> 
+            </properties> 
+        </persistence-unit> 
+    </persistence>
+    ```
+  - 구동 방식
+    - Persistence -> 설정 정보 조회 (META-INF/persistence.xml or application.properties)
+    - Persistence -> Entity Manager Factory 생성
+    - Entity Manager Factory -> Entity Manager 생성
+    - 주의할 점
+      - Entity Manager Factory는 하나만 생성해서 애플리케이션 전체에서 공유
+      - Entity Manager는 Thread 간에 공유하지 않는다. 사용하고 버려야 한다.
+      - JPA의 모든 데이터 변경은 트랜잭션 안에서 실행한다.
+    
+    ```java
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        // TODO Auto-generated method stub
+
+        EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("hello");		
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        EntityTransaction transaction = entityManager.getTransaction();
+        transaction.begin();
+
+        try {
+            Member member = new Member(); member.setName("hello");
+            entityManager.persist(member);
+
+            Member findMember = entityManager.find(Member.class, member.getId());
+            System.out.println(member.getId() + " " + findMember.getId());
+            transaction.commit();
+        } catch(Exception e) {
+            transaction.rollback();
+        } finally {
+            entityManager.close();
+            entityManagerFactory.close();
+        }		
+    }
+    ```
+
 
 
 ** 출처: 자바 ORM 표준 JPA 프로그래밍 - 기본편
