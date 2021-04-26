@@ -89,6 +89,7 @@ category: Spring
     
   - isolation
     - 트랜잭션에서 일관성없는 데이터 허용 수준을 설정한다.
+    
     |옵션|설명|
     |---|---|
     |Default|사용하는 DB 드라이버의 디폴트 설정을 따른다. 대부분 READ_COMMITED를 기본 격리수준으로 설정한다.|
@@ -130,6 +131,7 @@ category: Spring
   - 레벨을 높게 조정할 수록 발생하는 비용이 증가함
   - 낮은 단계 Isolation Level을 활용할 때 발생하는 현상들
   - 격리 수준에 따른 현상
+  
     |격리 수준|DIRTY READ|NON-REPEATABLE READ|PHANTOM READ|
     |READ UNCOMMITED|v|v|v|
     |READ COMMITED|-|v|v|
