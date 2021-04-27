@@ -79,6 +79,10 @@ category: Java Study
     
 #### 쓰레드의 상태
 
+![image](https://user-images.githubusercontent.com/42403023/116192711-2f2fd280-a769-11eb-8692-7472dd7cacc9.png)
+
+** 이미지 출처: https://cornswrold.tistory.com/185
+
 - Thread 상태
 
   |상태|의미|
