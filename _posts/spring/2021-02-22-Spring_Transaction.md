@@ -133,6 +133,7 @@ category: Spring
   - 격리 수준에 따른 현상
   
     |격리 수준|DIRTY READ|NON-REPEATABLE READ|PHANTOM READ|
+    |---|---|---|---|
     |READ UNCOMMITED|v|v|v|
     |READ COMMITED|-|v|v|
     |REPEATABLE READ|-|-|v|
