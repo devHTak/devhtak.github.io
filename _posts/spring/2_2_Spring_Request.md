@@ -356,7 +356,7 @@ public class RequestHeaderController {
       - username 프로퍼티의 값을 변경하면 setUsername() 이 호출되고, 조회하면 getUsername() 이 호출된다
       
   - username, age를 갖는 객체 생성
-    ```
+    ```java
     @Getter @Setter @ToString
     public class HelloData {
         private String username;
