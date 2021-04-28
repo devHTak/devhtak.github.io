@@ -143,12 +143,14 @@ category: Spring
 #### Handler Mapping과 Handler Adapter
 
 - Handler Mapping
+  - 요청 정보를 기준으로 어떤 핸들러를 사용할 것 인가를 결정하는 인터페이스로, url, header 정보 등으로 해당 컨트롤러(핸들러)를 선택하는 기준이 되는 인터페이스이다
   - 우선순위 0: Request Mapping Handler Mapping
     - 애노테이션 기반의 컨트롤러인 @RequestMapping에서 사용
   - 우선순위 1: BeanName Url Handler Mapping
     - 스프링 빈의 이름으로 핸들러를 찾는다.
 
 - Handler Adapter
+  - HandlerMapping에서 결정된 핸들러 정보로 해당 메서드를 직접 호출해 주는 스펙
   - 우선순위 0: Request Mapping Handler Adapter
     - 애노테이션 기반의 컨트롤러인 @RequestMapping 에서 사용
   - 우선순위 1: Http Request Handler Adapter
