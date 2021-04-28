@@ -174,8 +174,15 @@ public class Member {
     - 속성: stragegy
       - IDENTITY: 데이터베이스에 위임, MYSQL
         - @GeneratedValue(strategy = GenerationType.IDENTITY)
+        - 기본 키 생성을 데이터베이스에 위임
+        - MySQL, PostgreSQL, SQL Server, DB2에서 사용
+          - 예: MySQL의 AUTO_INCREMENT)
+        - JPA는 보통 트랜잭션 커밋 시점에 INSERT SQL 실행하지만 AUTO_INCREMENT는 데이터베이스에 INSERT SQL을 실행한 이후에 ID 값을 알 수 있다
+        - IDENTITY 전략은 em.persist() 시점에 즉시 INSERT SQL 실행하고 DB에서 식별자 조회하여 Persistence Context가 관리된다.
+
       - SEQUENCE: 데이터베이스 시퀀스 오브젝트 사용, Oracle
         - DB 시퀀스는 유일한 값을 순서대로 생성하는 특별한 데이터베이스 오브젝트(예, 오라클 시퀀스)
+        - SEQUENCE 또한 DB에서 조회가 가능하다. 저장할 때 해당 SEQUENCE에서 next_value를 조회하여 세팅한다. INSERT는 트랜잭션이 끝날 때 실행한다.
         - 오라클, PostgreSQL, DB2, H2 데이터베이스 사용
         - @SequenceGenerator를 통해서 테이블 별 sequence 를 매핑할 수 있다.
           ```java
