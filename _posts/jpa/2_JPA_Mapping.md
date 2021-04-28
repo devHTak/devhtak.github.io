@@ -226,6 +226,7 @@ public class Member {
           ```
           
           |속성|설명|기본값|
+          |---|---|---|
           |name|식별자 생성기 이름|필수|
           |table|키생성 테이블명|hibernate_sequences|
           |pkColumnName|시퀀스 컬럼명|sequence_name|
