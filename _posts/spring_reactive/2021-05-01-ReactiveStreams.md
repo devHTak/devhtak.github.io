@@ -1,15 +1,4 @@
-
-#### 출처
-
-- 토비의 봄 TV 5회 스프링 리액티브 프로그래밍(1) - Reactive Streams
-  (URL: https://www.youtube.com/watch?v=8fenTR3KOJo&list=PLv-xDnFD-nnmof-yoZQN8Fs2kVljIuFyC&index=10&ab_channel=TobyLee)
-
-- 참고: [Java] Reactive Stream 이란? 
-  (URL: https://sabarada.tistory.com/98)
-   
-- 
-   
-   
+  
 #### Reactive stream
    
 - non-blocking backPressure(배압) 을 이용하여 비동기 서비스를 할 때 기본이 되는 스펙
@@ -27,3 +16,54 @@
   - 이러한 배압은 시스템이 부하로 인해 무너지지 않고 정상적으로 응답할 수 있게 하는 중요한 피드백 방법이다.
   - 배압은 사용자에게까지 전달되어 응답성이 떨어질 수 있지만, 이 메커니즘은 부하에 대한 시스템의 복원력을 보장하고 시스템 자체가 부하를 분산할 다른 자원을 제공할 수 있는지 정보를 제공할 것이다.
    
+#### Reactive Programming
+
+```
+In computing, reactive programming is a declarative programming
+paradigm concerned with data streams and the propagation of change.
+(변화의 전파와 데이터 흐름과 관련된 선언적 프로그래밍 패러다임이다.)
+```
+- 변화의 전파와 데이터 흐름: 데이터가 변경될 때마다 이벤트를 발생시켜 데이터를 계속적으로 전달한다.
+- 선언적 프로그래밍: 실행할 동작을 구체적으로 명시하는 명령형 프로그래밍과 달리 선언형 프로그래밍은 단순히 목표를 선언한다.
+  ```java
+  // 선언형 프로그래밍 방법
+  List<Integer> numbers = Arrays.asList(1, 3, 21, 10, 8, 11);
+  int sum1 = numbers.stream().filter(number -> number > 6 && (number % 2 != 0)).mapToInt(number -> number).sum();
+  System.out.println("선언형 프로그래밍 사용: " + sum1);
+  
+  int sum2 = 0;
+  for(Integer i : numbers) {
+      if(i > 6 && (i % 2 != 0)) {
+          sum2 += i
+      }
+  }
+  System.out.println("명령형 프로그래밍 사용: " + sum2);
+  ```
+  - 명령형은 for, if문등을 활용하여 구체적인 알고리즘을 명시
+
+- 리액티브의 개념이 적용된 예
+  - PUSH 방식: 데이터의 변화가 발생했을 때 변경이 발생한 곳에서 데이터를 보내주는 방식
+    - 리액티브 방식
+  - PULL 방식: 변경된 데이터가 있는지 요청을 보내 질의하고 변경된 데이터를 가져오는 방식
+
+#### 마블 다이어그램
+
+- 리액티브 프로그래밍을 통해 발생하는 비동기적인 데이터의 흐름을 시간의 흐름에 따라 시각적으로 표시한 다이어그램
+- 마블 다이어그램 알아야 하는 이유
+  - 문장으로 적혀 있는 리액티브 연산자(Operators)의 기능을 이해하기 어려움
+  - 리액티브 연산자의 기능이 시각화되어 있어서 이해하기 쉬움
+  - 리액티브 프로그래밍의 핵심인 연산자를 사용하기 위한 핵심 도구
+
+![image](https://user-images.githubusercontent.com/42403023/116775768-b948a580-aa9f-11eb-99c0-8091ea5b5ba5.png)
+
+  - map operator: Observable의 값을 다니며 선언된 함수에 대한 연산을 진행하여 Observable을 return한다.
+  - filter operator: Observable의 값을 다니며 선언된 조건에 부합한 데이터만 Observable을 return한다.
+  - just 함수: 데이터 가공, 변화하는 함수가 아닌 Observable, Flowable을 생성하는 함수이다.
+
+
+#### 출처
+
+- Kevin의 RxJava 강의
+
+- 참고: [Java] Reactive Stream 이란? 
+  (URL: https://sabarada.tistory.com/98)
