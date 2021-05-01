@@ -206,12 +206,14 @@ public class Member {
 #### 다대일(@ManyToOne)
 
 - 단방향
+
   ![image](https://user-images.githubusercontent.com/42403023/116778363-6c1f0080-aaac-11eb-9f2f-6ac14a7432a0.png)
 
   - 가장 많이 사용하는 연관관계
   - 다대일의 반대는 일대다
 
 - 양방향
+
   ![image](https://user-images.githubusercontent.com/42403023/116778388-8658de80-aaac-11eb-80d2-399124692303.png)
   
   - 외래 키가 있는 쪽이 연관관계의 주인
@@ -220,6 +222,7 @@ public class Member {
 #### 일대다
 
 - 단방향
+
   ![image](https://user-images.githubusercontent.com/42403023/116778513-480fef00-aaad-11eb-85ec-93838a954180.png)
   
   - 일대다 단방향은 일대다(1:N)에서 일(1)이 연관관계의 주인
@@ -233,6 +236,7 @@ public class Member {
   - 일대다 단방향 매핑보다는 다대일 양방향 매핑을 사용하자
 
 - 양방향
+
   ![image](https://user-images.githubusercontent.com/42403023/116778543-78f02400-aaad-11eb-8e4a-8daa60fc4e13.png)
 
   - 이런 매핑은 공식적으로 존재하지 않는다.
