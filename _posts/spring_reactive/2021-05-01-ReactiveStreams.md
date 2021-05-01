@@ -57,7 +57,17 @@ paradigm concerned with data streams and the propagation of change.
 ![image](https://user-images.githubusercontent.com/42403023/116775768-b948a580-aa9f-11eb-99c0-8091ea5b5ba5.png)
 
   - map operator: Observable의 값을 다니며 선언된 함수에 대한 연산을 진행하여 Observable을 return한다.
+    ```java
+    Observable observable = Observable.just(1, 25, 9, 15, 7, 30)
+       .map(x -> x * 10)
+       .subscribe(x - > System.out.println(x)); // 10, 250, 90, 150, 70, 300 출력
+    ```
   - filter operator: Observable의 값을 다니며 선언된 조건에 부합한 데이터만 Observable을 return한다.
+    ```java
+    Observable observable = Observable.just(1, 25, 9, 15, 7, 30)
+       .filter(x -> x > 10)
+       .subscribe(x - > System.out.println(x)); // 25, 15, 30 출력
+    ```
   - just 함수: 데이터 가공, 변화하는 함수가 아닌 Observable, Flowable을 생성하는 함수이다.
 
 
