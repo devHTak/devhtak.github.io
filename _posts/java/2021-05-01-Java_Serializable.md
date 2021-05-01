@@ -182,7 +182,10 @@ category: Java Study
 - 기본적으로 직렬화시에 기본적으로 타입에 대한 정보 등 클래스의 메타 정보도 갖고 있기 때문에 상대적으로 다른 포맷에 비해 용량이 크다.
   
 ** 참고[직렬화]: 우아한형제들, 자바 직렬화, 그것이 알고싶다. 훑어보기편
+
 ** 참고[직렬화]: 우아한형제들, 자바 직렬화, 그것이 알고싶다. 실무편
+
 ** 참고[serialVersionUID]: https://ktko.tistory.com/entry/JAVA-%EA%B0%9D%EC%B2%B4%EC%9D%98-%EC%A7%81%EB%A0%AC%ED%99%94Serializable-serialVersionUID
+
 ** 참고[InvalidClassException]: https://tomining.tistory.com/80
 
