@@ -180,6 +180,7 @@ category: JPA
   - 모든 엔티티에 생성자, 생성 일시, 수정자, 수정 일시를 추가하자
   
     ```java
+    @Getter @Setter
     @MappedSuperclass
     public class BaseEntity {
         private String createdBy;
