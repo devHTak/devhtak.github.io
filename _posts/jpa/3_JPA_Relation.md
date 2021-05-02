@@ -205,6 +205,26 @@ public class Member {
 
 #### 다대일(@ManyToOne)
 
+- 예제
+  - Member 객체와 Order 객체는 1대다관계
+    ```java
+    public class Orders {
+      // ...
+      @ManyToOne
+      @JoinColumn(name = "MEMBER_ID")
+      private Member member;
+      // ...
+    }
+    ```
+    ```java
+    public class Member {
+        // ...
+        @OneToMany(mappedBy = "member")
+        private List<Orders> orders = new LinkedList<>();
+        // ...
+    }
+    ```
+
 - 단방향
 
   ![image](https://user-images.githubusercontent.com/42403023/116778363-6c1f0080-aaac-11eb-9f2f-6ac14a7432a0.png)
@@ -244,3 +264,81 @@ public class Member {
   - 읽기 전용 필드를 사용해서 양방향 처럼 사용하는 방법
   - 다대일 양방향을 사용하자
 
+#### 일대일
+
+- 예제
+  - Member와 Locker는 1:1 관계
+    ```java
+    public class Member {
+        // ...
+        @OneToOne
+        @JoinColumn(name = "LOCKER_ID")
+        private Locker locker;
+        // ...
+    }
+    ```    
+    ```java
+    public class Locker {
+        // ...
+        @OneToOne(mappedBy = "locker")
+        private Member member;
+        // ...
+    }
+    ```
+- 일대일 관계
+  - 일대일 관계는 그 반대도 일대일
+  - 주 테이블이나 대상 테이블 중에 외래 키 선택 가능
+    - 주 테이블에 외래 키
+    - 대상 테이블에 외래 키
+  - 외래 키에 데이터베이스 유니크(UNI) 제약 조건 추가된다.
+
+- 단방향
+  - 주 테이블에 외래 키 단방향
+    
+    ![image](https://user-images.githubusercontent.com/42403023/116806742-fc6f4b00-ab69-11eb-9d3b-a28d5bc7def3.png)
+
+    - 다대일(@ManyToOne) 단방향 매핑과 유사
+
+  - 대상 테이블에 외래키 단방향
+    
+    ![image](https://user-images.githubusercontent.com/42403023/116806777-30e30700-ab6a-11eb-9436-27807cb86011.png)
+    
+    - 단방향 관계는 JPA 지원 X
+    - 양방향 관계는 지원
+    
+- 양방향
+  - 주 테이블에 외래 키 양방향
+    
+    ![image](https://user-images.githubusercontent.com/42403023/116806755-0db85780-ab6a-11eb-9e96-33c56753b52d.png)
+
+    - 다대일 양방향 매핑처럼 외래 키가 있는 곳이 연관관계의 주인
+    - 반대편은 mappedBy 적용
+
+  - 대상 테이블에 외래 키 양방향
+    
+    ![image](https://user-images.githubusercontent.com/42403023/116806790-3e988c80-ab6a-11eb-8660-da71b4ae9992.png)
+    
+    - 사실 일대일 주 테이블에 외래 키 양방향과 매핑 방법은 같다.
+
+- 외래키의 위치
+  - 주 테이블에 외래 키
+    - 주 객체가 대상 객체의 참조를 가지는 것처럼 주 테이블에 외래 키를 두고 대상 테이블을 찾는다.
+    - 객체지향 개발자 선호, JPA 매핑 편리
+    - 장점: 주 테이블만 조회해도 대상 테이블에 데이터가 있는지 확인 가능하다.
+    - 단점: 값이 없으면 외래 키 null 허용
+  - 대상 테이블에 외래 키
+    - 대상 테이블에 외래 키가 존재
+    - 전통적인 데이터베이스 개발자 선호
+    - 장점: 주 테이블과 대상 테이블을 일대일에서 일대다 관계로 변경할 때 테이블 구조 유지
+    - 단점: 프록시 기능의 한계로 지연 로딩으로 설정해도 항상 즉시 로딩된다.
+
+#### 다대다
+
+- 다대다 관계
+  - 관계형 데이터베이스는 정규화된 테이블 2개로 다대다 관계를 표현할 수 없다.
+  - 연결 테이블을 추가해서 일대다, 다대일 관계를 풀어내야 한다.
+  - 객체는 컬렉션을 사용하여 객체 2개로 다대다 관계 가능하다.
+  - 하지만 실무에서 사용하지 말자.
+    - 연결 테이블이 단순히 연결만 하고 끝나지 않는다.
+    - 여러 컬럼이 포함될 수 있기 때문에 다대다 관계를 일대다, 다대일 관계로 풀어 사용하자
+    - @ManyToMany -> @OneToMany, @ManyToOne
