@@ -156,3 +156,71 @@ category: JPA
 - 단점
   - 여러 자식 테이블을 함께 조회할 때 성능이 느리다.(UNION SQL 필요)
   - 자식 테이블을 통합해서 쿼리하기 어렵다.
+
+#### @MappedSuperclass
+
+- 공통 매핑 정보(id, name 등)가 필요할 때 사용한다.
+
+![image](https://user-images.githubusercontent.com/42403023/116807940-00eb3200-ab71-11eb-8413-4dd1beb75ac2.png)
+
+- 특징
+  - 상속관계 매핑되지 않는다.
+  - 엔티티가 아니다. 테이블과 매핑되지 않는다.
+  - 부모 클래스를 상속받는 자식 클래스에 매핑 정보만 제공
+  - 조회, 검색 불가
+    ```
+    // BaseEntity baseEntity = entityManager.find(BaseEntity.class, entity.getId());
+    ```
+  - 직접 생성해서 사용할 일이 없으므로 추상 클래스 권장
+  - 테이블과 관계 없고, 단순히 엔티티가 공통으로 사용하는 매핑 정보를 모으는 역할
+  - 주로 등록일, 수정일, 등록자, 수정자 같은 전체 엔티티에서 공통으로 적용하는 정보를 모을 때 사용
+  - 참고: @Entity 클래스는 엔티티나 @MappedSuperclass로 지정한 클래스만 상속 가능
+
+- 예시
+  - 모든 엔티티에 생성자, 생성 일시, 수정자, 수정 일시를 추가하자
+  
+    ```java
+    @MappedSuperclass
+    public class BaseEntity {
+        private String createdBy;
+        private LocalDateTime createdDate;
+        private String modifiedBy;
+        private LocalDateTime modifiedDate;
+    }
+    ```
+    ```java
+    public class Member extends BaseEntity { ... }
+    ```
+    ```java
+    public class Orders extends BaseEntity { ... }
+    ```
+  - 생성 쿼리
+    ```
+    Hibernate: 
+    create table member (
+       member_id bigint not null,
+        created_by varchar(255),
+        created_date timestamp,
+        modified_by varchar(255),
+        modified_date timestamp,
+        city varchar(255),
+        name varchar(255),
+        street varchar(255),
+        zipcode varchar(255),
+        locker_id bigint,
+        primary key (member_id)
+    )
+    Hibernate:     
+    create table orders (
+       order_id bigint not null,
+        created_by varchar(255),
+        created_date timestamp,
+        modified_by varchar(255),
+        modified_date timestamp,
+        order_date timestamp,
+        order_status varchar(255),
+        delivery_id bigint,
+        member_id bigint,
+        primary key (order_id)
+    )
+    ```
