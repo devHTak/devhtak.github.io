@@ -226,19 +226,150 @@ paradigm concerned with data streams and the propagation of change.
           System.out.println(Thread.currentThread().getName() +  " # end: " + LocalDateTime.now());
       }
       ```
-  
+  - DROP 전략
+    - 버퍼에 데이터가 모두 채워진 상태가 되면 이후에 생성되는 데이터를 버리고(DROP), 버퍼가 비워지는 시점에 DROP 되지 않은 데이터부터 다시 버퍼에 담는다.
+      ```java
+      public static void main(String[] args) throws InterruptedException {
+          System.out.println(Thread.currentThread().getName() +  " # start: " + LocalDateTime.now());
+
+          Flowable.interval(300L, TimeUnit.MILLISECONDS)
+              .doOnNext(data -> System.out.println(Thread.currentThread().getName() + " #doOnNext: " + data))
+              .onBackpressureDrop(dropData -> System.out.println("drop: " + dropData))
+              .observeOn(Schedulers.computation(), false, 1)
+              .subscribe(data -> {
+                  TimeUnit.SECONDS.sleep(1);
+                  System.out.println(Thread.currentThread().getName() +  " SUBSCRIBE: " + data);
+              }, error -> {
+                  System.out.println(Thread.currentThread().getName() +  " ERROR: " + error);
+              });
+
+          TimeUnit.SECONDS.sleep(3);
+          System.out.println(Thread.currentThread().getName() +  " # end: " + LocalDateTime.now());
+      }
+      ```
+  - LATEST 전략
+    - 버퍼에 데이터가 모두 채워진 상태가 되면 버퍼가 비워질 때까지 통지된 데이터는 버퍼 밖에서 대기하여 버퍼가 비워지는 시점에 가장 나중(최근)에 통지된 데이터부터 버퍼에 담는다.
+      ```java
+      public static void main(String[] args) throws InterruptedException {
+          System.out.println(Thread.currentThread().getName() +  " # start: " + LocalDateTime.now());
+
+          Flowable.interval(300L, TimeUnit.MILLISECONDS)
+              .doOnNext(data -> System.out.println(Thread.currentThread().getName() + " #doOnNext: " + data))
+              .onBackpressureLatest()
+              .observeOn(Schedulers.computation(), false, 1)
+              .subscribe(data -> {
+                  TimeUnit.SECONDS.sleep(1);
+                  System.out.println(Thread.currentThread().getName() +  " SUBSCRIBE: " + data);
+              }, error -> {
+                  System.out.println(Thread.currentThread().getName() +  " ERROR: " + error);
+              });
+
+          TimeUnit.SECONDS.sleep(3);
+          System.out.println(Thread.currentThread().getName() +  " # end: " + LocalDateTime.now());
+      }
+      ```
+  - 
 - Flowable
   ```java 
   public abstract class Flowable<T> implements Publisher<T> {
       // ...
   }
   ```
+  - Flowable을 사용해야하는 경우
+    - 10,000개 이상의 데이터 흐름이 발생하는 경우
+    - 디스크에서 파일을 읽는 경우 (기본적으로 Blocking/Pull-based 방식)
+    - JDBC에서 데이터베이스를 읽는 경우 (기본적으로 Blocking/Pull-based 방식)
+    - 네트워크 IO 실행 시
+    - Blocking/Pull-based 방식을 사용하고 있는데 나중에 Non-Blocking 방식의 Reactive API/드라이버에서 데이터를 가져올 일이 있는 경우
+
+  - 예제
+    ```java
+    public static void main(String[] args) throws InterruptedException {
+        Flowable<String> flowable = Flowable.create(new FlowableOnSubscribe<String>() {
+            @Override
+            public void subscribe(@NonNull FlowableEmitter<String> emitter) throws Exception {
+                // TODO Auto-generated method stub
+                String[] datas = {"Hello", "RxJava"};
+                for(String data: datas) {
+                    if(emitter.isCancelled()) {
+                        return;
+                    }
+
+                    emitter.onNext(data); // 데이터 통지
+                }
+                emitter.onComplete(); // 데이터 통지 완료를 알린다.
+            }			
+        }, BackpressureStrategy.BUFFER); // 구독자의 처리가 늦을 경우 데이터를 버퍼에 담아두는 설정
+
+        flowable.observeOn(Schedulers.computation())
+            .subscribe(new Subscriber<String>() {
+                private Subscription subscription; // 데이터 개수 요청 및 구독을 취소하기 위한 subscription 객체
+                @Override
+                public void onSubscribe(Subscription subscription) {
+                    this.subscription = subscription;
+                    this.subscription.request(Long.MAX_VALUE);
+                }
+                @Override
+                public void onNext(String data) { System.out.println("ON_NEXT: " + data); }
+
+                @Override
+                public void onError(Throwable error) { System.out.println("ERROR: " + error);}
+
+                @Override
+                public void onComplete() { System.out.println("ON COMPLETE"); }				
+            });
+        Thread.sleep(5000);
+    }
+    ```
+    - FlowableOnSubscribe, Subscriber는 lambda 표현식으로 변경할 수 있다.
+    
 - Observable
   ```java
   public abstract class Observable<T> implements ObservableSource<T> {
       // ...
   }
   ```
+  - Observable을 사용해야하는 경우
+    - 1,000개 미만의 데이터 흐름이 발생하는 경우
+    - 적은 데이터 소스만을 활용하여 OutOfMemoryException이 발생할 확률이 적은 경우
+    - 마우스 이벤트나 터치 이벤트와 같은 GUI 프로그래밍을 하는 경우 (초당 1,000회 이하의 이벤트는 Observable의 sample()이나 debounce()로 핸들링 가능)
+    - 동기적인 프로그래밍이 필요하지만 플랫폼에서 Java Streams을 지원하지 않는 경우
+  - 예제
+    ```java
+    public static void main(String[] args) throws InterruptedException {
+        Observable<String> observable = Observable.create(new ObservableOnSubscribe<String>() {
+            @Override
+            public void subscribe(ObservableEmitter<String> emitter) throws Exception {
+                // TODO Auto-generated method stub
+                String[] datas = {"Hello", "RxJava"};
+                for(String data: datas) {
+                    if(emitter.isDisposed()) {
+                        return;
+                    }
+                    emitter.onNext(data);
+                }
+                emitter.onComplete();
+            }
+        });
+
+        observable.observeOn(Schedulers.computation())
+            .subscribe(new Observer<String>() {
+                @Override
+                public void onSubscribe(Disposable d) { 
+                    // 아무 처리도 하지 않는다. 					
+                }
+                @Override
+                public void onNext(String data) { System.out.println("ON_NEXT: " + data); }
+
+                @Override
+                public void onError(Throwable error) { System.out.println("ERROR: " + error);}
+
+                @Override
+                public void onComplete() { System.out.println("ON COMPLETE"); }					
+            });
+        Thread.sleep(5000);
+    }
+    ```
 
 #### 출처
 
