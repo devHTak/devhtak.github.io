@@ -371,6 +371,160 @@ paradigm concerned with data streams and the propagation of change.
     }
     ```
 
+- Single
+  - 데이터를 1건만 통지하거나 에러를 통지한다.
+  - 데이터 통지 자체가 완료를 의미하기 때문에 완료 통지는 하지 않는다.
+  - 데이터를 1건만 통지하므로 데이터 개수를 요청할 필요가 없다.
+  - onNext(), onComplete()가 없으며 이 둘을 합한 onSuccess()를 제공한다.
+  - Single의 대표적인 소비자는 SingleObserver이다.
+  - 클라이언트의 요청에 대응하는 서버의 응답이 Single을 사용하기 좋은 대표적인 예이다.
+  - 예제
+    ```java
+    Single<String> single = Single.create(new SingleOnSubscribe<String>() {
+        @Override
+        public void subscribe(SingleEmitter<String> emitter) throws Exception {
+            // TODO Auto-generated method stub
+            emitter.onSuccess(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+        }			
+		});
+		
+		single.subscribe(new SingleObserver<String>() {
+        @Override
+        public void onSubscribe(Disposable d) {} // 아무것도 하지 않음 
+        @Override
+        public void onSuccess(String t) {System.out.println("SUCCESS: " + t);}
+        @Override
+        public void onError(Throwable e) { System.out.println("ERROR: " + e.getMessage()); }			
+		});
+    ```
+  - 람다도 가능하다.    
+    ```java
+    Single<String> single = Single.create(emitter -> emitter.onSuccess(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)));
+		
+		single.subscribe(
+        data -> System.out.println("SUCCESS: " + t),
+        error -> System.out.println("ERROR: " + e.getMessage())
+		);
+    ```
+  - just 사용
+    ```java
+    Single.just(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+        .subscribe(
+            data -> System.out.println("SUCCESS: " + data),
+            error -> System.out.println("ERROR: " + error.getMessage())
+        );
+    ```
+    
+- Maybe 
+  - 데이터를 1건만 통지하거나 1건도 통지하지 않고 완료 또는 에러를 통지한다.
+  - 데이터 통지 자체가 완료를 의미하기 때문에 완료 통지는 하지 않는다.
+  - 단, 데이터를 1건도 통지하지 않고 처리가 종료될 경우에는 완료 통지를 한다.
+  - Maybe의 대표적인 소비자는 MaybeObserver이다.
+  - 예제
+    ```java
+    Maybe<String> maybe = Maybe.create(new MaybeOnSubscribe<String>() {
+        @Override
+        public void subscribe(MaybeEmitter<String> emitter) throws Exception {
+            // TODO Auto-generated method stub
+            emitter.onComplete();
+        }			
+		});
+		
+		maybe.subscribe(new MaybeObserver<String>() {
+        @Override
+        public void onSubscribe(Disposable d) {} // 아무것도 하지 않음 
+        @Override
+        public void onSuccess(String t) {System.out.println("SUCCESS: " + t);}
+        @Override
+        public void onError(Throwable e) { System.out.println("ERROR: " + e.getMessage()); }
+        @Override
+        public void onComplete() { System.out.println("COMPLETE!"); }
+		});
+    ```
+  - 람다를 사용할 수 있다.
+    ```java
+    Maybe<String> maybe = Maybe.create(emitter -> emitter.onComplete());
+		
+		maybe.subscribe(
+        data -> System.out.println("SUCCESS: " + t),
+        error -> System.out.println("ERROR: " + error.getMessage()),
+        () -> System.out.println("COMPLETE")
+		);
+    ```
+  - just 사용
+    - 1건을 보내어 onSuccess를 호출하였다.
+      ```java
+      Maybe.just(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+          .subscribe(
+              data -> System.out.println("SUCCESS: " + data),
+              error -> System.out.println("ERROR: " + error.getMessage()),
+              ()-> System.out.println("COMPLETE")
+          );
+      ```
+  - empty 사용
+    - 1건도 통제하지 않고 바로 onComplete 메서드가 호출된다.
+      ```java
+      Maybe.empty()
+            .subscribe(
+                data -> System.out.println("SUCCESS: " + data),
+                error -> System.out.println("ERROR: " + error.getMessage()),
+                ()-> System.out.println("COMPLETE")
+            );
+      ```
+  - Single 객체로부터 Maybe 객체로 변환하여 사용할 수 있다.
+    ```java
+    Single<String> single = Single.just(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+    Maybe.fromSingle(single)
+          .subscribe(
+              data -> System.out.println("SUCCESS: " + data),
+              error -> System.out.println("ERROR: " + error.getMessage()),
+              ()-> System.out.println("COMPLETE")
+          );
+    ```
+    
+- Completable
+  - 데이터 생산자이지만 데이터를 1건도 통지하지 않고 완료 또는 에러를 통지한다.
+  - 데이터 통지의 역할 대신에 Completable 내에서 특정 작업을 수행한 후, 해당 처리가 끝났음을 통지하는 역할을 한다.
+  - Completable의 대표적인 소비자는 CompletableObserver이다.
+  - 예제
+    ```java
+    Completable completable = Completable.create(new CompletableOnSubscribe() {
+        @Override
+        public void subscribe(CompletableEmitter emitter) throws Exception {
+            // TODO Auto-generated method stub
+            int sum = 0;
+            for(int i = 0; i < 100; i++) { sum += i; }
+            System.out.println("합계: " + sum);
+            emitter.onComplete();
+        }			
+		});
+		
+		completable.subscribeOn(Schedulers.computation())
+        .subscribe(new CompletableObserver() {
+            @Override
+            public void onSubscribe(Disposable d) {} // 아무것도 하지 않음 
+            @Override
+            public void onError(Throwable e) { System.out.println("ERROR: " + e.getMessage()); }
+            @Override
+            public void onComplete() { System.out.println("COMPLETE!"); }
+		    });
+    ```
+  - 람다를 사용할 수 있다.
+    ```java
+    Completable completable = Completable.create(emitter -> {
+        int sum = 0;
+        for(int i = 0; i < 100; i++) { sum += i; }
+        System.out.println("합계: " + sum);
+        emitter.onComplete();
+    });
+		
+		completable.subscribeOn(Schedulers.computation())
+        .subscribe(
+            () -> System.out.println("COMPLETE"), 
+            error -> System.out.println("ERROR: " + error.getMessage())
+		);
+    ```
+  
 #### 출처
 
 - Kevin의 RxJava 강의
