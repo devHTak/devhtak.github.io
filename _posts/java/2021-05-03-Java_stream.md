@@ -49,7 +49,6 @@ category: Java Study
 
 - parallel stream을 활용하면 병렬 스트림을 쉽게 생성할 수 있다.
 - 내부적으로 Java 7 부터 도입된 Fork / Join Framework를 사용할 수 있다.
-- 
 
 #### 생성
 
