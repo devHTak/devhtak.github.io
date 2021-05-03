@@ -264,6 +264,56 @@ category: Java Study
   - forEach는 요소를 돌면서 실행하는 최종 작업
   - peek와는 중간 작업과 최종 작업의 차이가 있다.
 
+#### Strean 동작 순서
+
+```java
+List<String> list = Arrays.asList("Jpa", "Hello", "Spring", "RxJava");
+		
+list.stream().filter((data) -> {
+	System.out.println("FILTER: " + data);
+	return data.contains("a");
+}).map((data) -> {
+	System.out.println("MAP: " + data);
+	return data.toUpperCase();
+}).forEach(System.out::println);
+```
+```
+// 출력
+FILTER: Jpa
+MAP: Jpa
+JPA
+FILTER: Hello
+FILTER: Spring
+FILTER: RxJava
+MAP: RxJava
+RXJAVA
+```
+- 모든 결과가 첫번째 filter를 수행하고 다음 map으로 넘어가는 구조가 아닌 한 요소가 모든 파이프라인을 거쳐 결과를 만들고 다음 요소로 넘어간다.
+
+- 성능 향상
+  - 파이프라인을 통해 수직적으로 진행하기 때문에 모든 요소에 map을 하는 것이 아닌, filter를 수행 후 map을 실행한다.
+  - map의 호출 빈도가 낮춰진다.
+  - 이와 같은 불필요한 연산을 막아주는 것이 skip, filter, distinct 등이 있다.
+
+#### 스트림 특징
+
+- 스트림 재사용
+  ```java
+  List<String> toDoList = list.stream()
+   		.filter(data -> data.contains("a"))
+		.map(data -> data.toUpperCase())
+		.collect(Collectors.toList());
+
+  Optional<String> firstToDo = toDoList.stream().findFirst();
+  Optional<String> anyToDo = toDoList.stream().findAny();
+  ```
+
+  - 받은 결과를 필요할 때마다 stream으로 다시 변경하여 선택할 수 있다.
+
+- 지연 처리
+  - stream을 결과를 만드는 작업이 있을 때 작업을 수행한다.
+
+
 #### 출처
 
 - https://futurecreator.github.io/2018/08/26/java-8-streams/
