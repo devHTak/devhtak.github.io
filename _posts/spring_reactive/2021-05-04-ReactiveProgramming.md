@@ -26,6 +26,8 @@
     - Subscription: 전달 받은 데이터의 개수를 요청하고 구독을 해지한다.
     - Processor: Publisher, Subscribe의 기능이 모두 있다.
 
+#### Publisher와 Subscriber 간의 프로세스 흐름
+
 - Publisher와 Subscriber 간의 프로세스 흐름
 
   ![image](https://user-images.githubusercontent.com/42403023/116811901-aeb50b80-ab86-11eb-8984-19a466d30fd8.png)
@@ -86,135 +88,6 @@
 |Subscription으로 전달 받는 데이터 개수를 제어할 수 있다.|배압 기능이 없기 때문에 데이터 개수를 제어할 수 없다.|
 |Subscriptoin으로 구독을 해지한다.|Disposable으로 구독을 해지한다.|
 
-- Flowable과 Observable의 결정적 차이. 배압 이란?
-
-  ![image](https://user-images.githubusercontent.com/42403023/116812383-7a8f1a00-ab89-11eb-805c-ef65643ef325.png)
-  
-  - 예제
-    ```java
-    public static void main(String[] args) throws InterruptedException {
-        Flowable.interval(1L, TimeUnit.MILLISECONDS)
-            .doOnNext(data -> System.out.println("doOnNext: " + data))
-            .observeOn(Schedulers.computation())
-            .subscribe(data -> {
-                System.out.println("# 소비자 처리 대기중");
-                TimeUnit.SECONDS.sleep(1);
-                System.out.println("subscribe: " + data);
-            }, 
-            error -> System.out.println(error), 
-            () -> System.out.println("Logger.oc()"));
-
-        Thread.sleep(2000L);
-    }
-    ```
-    - doOnNext: lambda 파라미터가 호출될 때 조치할 수 있도록 publisher를 수정한다.
-    - observerOn: 게시자를 수정하여 지정된 파라미터(scheduler)에서 버퍼 사이즈만큼 슬롯의 제한된 버퍼를 사용하여 비동기식으로 방출 및 알림을 수행합니다.
-    - subscribe: 게시자를 구독하고 발행하는 항목과 발행하는 오류 또는 완료 알림을 처리하기위한 콜백을 제공합니다. 
-    - 1부터 계속 publisher가 데이터를 요청하는데 처리하지를 못하고 대기한다. 128번째에 MissingBackpressureException(Can't deliver value 128 due to lack of requests)이 발생한다.
-  
-  - Flowable에서 데이터를 통지하는 속도가 Subscriber에서 통지된 데이터를 전달받아 처리하는 속도보다 빠를 때 밸런스를 맞추기 위해 데이터 통지량을 제어하는 기능을 말한다.
-  - RxJava에서 BackpressureStrategy를 통해 Flowable이 통지 대기 중인 데이터를 어떻게 다룰지에 대한 배압 전략을 제공
-  - Missing 전략
-    - 배압을 적용하지 않는다.
-    - 나중에 onBackpressureXXX()로 배압 적용을 할 수 있다.
-  - Error 전략
-    - 통지된 데이터가 버퍼의 크기를 초과하면 MissinbBackpressureException 에러를 통지한다.
-    - 즉, 소비자가 생산자의 통지 속도를 따라 잡지 못할 때 발생
-  - Buffer 전략: DROP_LATEST
-    - 버퍼가 가득 찬 시점에 버퍼내에서 가장 최근에 버퍼로 들어온 데이터를 DROP한다.
-    - DROP 된 빈자리에 버퍼 밖에서 대기하던 데이터를 채운다.
-      ```java
-      public static void main(String[] args) throws InterruptedException {
-          System.out.println("# start: " + LocalDateTime.now());
-
-          Flowable.interval(300L, TimeUnit.MILLISECONDS)
-              .doOnNext(data -> System.out.println("#doOnNext: " + data))
-              .onBackpressureBuffer(
-                    2,
-                    ()-> System.out.println("overflow!"),
-                    BackpressureOverflowStrategy.DROP_LATEST)
-              .doOnNext(data -> System.out.println("onBackpressureBuffer doOnNext(): " + data))
-              .observeOn(Schedulers.computation(), false, 1)
-              .subscribe(data -> {
-                  TimeUnit.SECONDS.sleep(1);
-                  System.out.println("SUBSCRIBE: " + data);
-              }, error -> {
-                  System.out.println("ERROR: " + error);
-              });
-
-          TimeUnit.SECONDS.sleep(2);
-          System.out.println("# end: " + LocalDateTime.now());
-      }
-      ```
-  - BUFFER 전략: DROP_OLDEST
-    - 버퍼가 가득찬 시점에 버퍼내에서 가장 오래전에(먼저) 버퍼로 들어온 데이터를 DROP 한다.
-    - DROP 된 빈자리에는 버퍼 밖에서 대기하던 데이터를 채운다.
-      ```java
-      public static void main(String[] args) throws InterruptedException {
-          System.out.println(Thread.currentThread().getName() +  " # start: " + LocalDateTime.now());
-
-          Flowable.interval(300L, TimeUnit.MILLISECONDS)
-              .doOnNext(data -> System.out.println(Thread.currentThread().getName() + " #doOnNext: " + data))
-              .onBackpressureBuffer(
-                    2,
-                    ()-> System.out.println("overflow!"),
-                    BackpressureOverflowStrategy.DROP_OLDEST)
-              .doOnNext(data -> System.out.println(Thread.currentThread().getName() +  " onBackpressureBuffer doOnNext(): " + data))
-              .observeOn(Schedulers.computation(), false, 1)
-              .subscribe(data -> {
-                  TimeUnit.SECONDS.sleep(1);
-                  System.out.println(Thread.currentThread().getName() +  " SUBSCRIBE: " + data);
-              }, error -> {
-                  System.out.println(Thread.currentThread().getName() +  " ERROR: " + error);
-              });
-
-          TimeUnit.SECONDS.sleep(2);
-          System.out.println(Thread.currentThread().getName() +  " # end: " + LocalDateTime.now());
-      }
-      ```
-  - DROP 전략
-    - 버퍼에 데이터가 모두 채워진 상태가 되면 이후에 생성되는 데이터를 버리고(DROP), 버퍼가 비워지는 시점에 DROP 되지 않은 데이터부터 다시 버퍼에 담는다.
-      ```java
-      public static void main(String[] args) throws InterruptedException {
-          System.out.println(Thread.currentThread().getName() +  " # start: " + LocalDateTime.now());
-
-          Flowable.interval(300L, TimeUnit.MILLISECONDS)
-              .doOnNext(data -> System.out.println(Thread.currentThread().getName() + " #doOnNext: " + data))
-              .onBackpressureDrop(dropData -> System.out.println("drop: " + dropData))
-              .observeOn(Schedulers.computation(), false, 1)
-              .subscribe(data -> {
-                  TimeUnit.SECONDS.sleep(1);
-                  System.out.println(Thread.currentThread().getName() +  " SUBSCRIBE: " + data);
-              }, error -> {
-                  System.out.println(Thread.currentThread().getName() +  " ERROR: " + error);
-              });
-
-          TimeUnit.SECONDS.sleep(3);
-          System.out.println(Thread.currentThread().getName() +  " # end: " + LocalDateTime.now());
-      }
-      ```
-  - LATEST 전략
-    - 버퍼에 데이터가 모두 채워진 상태가 되면 버퍼가 비워질 때까지 통지된 데이터는 버퍼 밖에서 대기하여 버퍼가 비워지는 시점에 가장 나중(최근)에 통지된 데이터부터 버퍼에 담는다.
-      ```java
-      public static void main(String[] args) throws InterruptedException {
-          System.out.println(Thread.currentThread().getName() +  " # start: " + LocalDateTime.now());
-
-          Flowable.interval(300L, TimeUnit.MILLISECONDS)
-              .doOnNext(data -> System.out.println(Thread.currentThread().getName() + " #doOnNext: " + data))
-              .onBackpressureLatest()
-              .observeOn(Schedulers.computation(), false, 1)
-              .subscribe(data -> {
-                  TimeUnit.SECONDS.sleep(1);
-                  System.out.println(Thread.currentThread().getName() +  " SUBSCRIBE: " + data);
-              }, error -> {
-                  System.out.println(Thread.currentThread().getName() +  " ERROR: " + error);
-              });
-
-          TimeUnit.SECONDS.sleep(3);
-          System.out.println(Thread.currentThread().getName() +  " # end: " + LocalDateTime.now());
-      }
-      ```
-  - 
 - Flowable
   ```java 
   public abstract class Flowable<T> implements Publisher<T> {
@@ -317,7 +190,142 @@
     }
     ```
 
-- Single
+#### Flowable과 Observable의 결정적 차이. 배압 이란?
+
+  ![image](https://user-images.githubusercontent.com/42403023/116812383-7a8f1a00-ab89-11eb-805c-ef65643ef325.png)
+  
+  - 예제
+    ```java
+    public static void main(String[] args) throws InterruptedException {
+        Flowable.interval(1L, TimeUnit.MILLISECONDS)
+            .doOnNext(data -> System.out.println("doOnNext: " + data))
+            .observeOn(Schedulers.computation())
+            .subscribe(data -> {
+                System.out.println("# 소비자 처리 대기중");
+                TimeUnit.SECONDS.sleep(1);
+                System.out.println("subscribe: " + data);
+            }, 
+            error -> System.out.println(error), 
+            () -> System.out.println("Logger.oc()"));
+
+        Thread.sleep(2000L);
+    }
+    ```
+    - doOnNext: lambda 파라미터가 호출될 때 조치할 수 있도록 publisher를 수정한다.
+    - observerOn: 게시자를 수정하여 지정된 파라미터(scheduler)에서 버퍼 사이즈만큼 슬롯의 제한된 버퍼를 사용하여 비동기식으로 방출 및 알림을 수행합니다.
+    - subscribe: 게시자를 구독하고 발행하는 항목과 발행하는 오류 또는 완료 알림을 처리하기위한 콜백을 제공합니다. 
+    - 1부터 계속 publisher가 데이터를 요청하는데 처리하지를 못하고 대기한다. 128번째에 MissingBackpressureException(Can't deliver value 128 due to lack of requests)이 발생한다.
+  
+  - Flowable에서 데이터를 통지하는 속도가 Subscriber에서 통지된 데이터를 전달받아 처리하는 속도보다 빠를 때 밸런스를 맞추기 위해 데이터 통지량을 제어하는 기능을 말한다.
+  - RxJava에서 BackpressureStrategy를 통해 Flowable이 통지 대기 중인 데이터를 어떻게 다룰지에 대한 배압 전략을 제공
+
+#### 배압 전략 
+- Missing 전략
+  - 배압을 적용하지 않는다.
+  - 나중에 onBackpressureXXX()로 배압 적용을 할 수 있다.
+
+- Error 전략
+  - 통지된 데이터가 버퍼의 크기를 초과하면 MissinbBackpressureException 에러를 통지한다.
+  - 즉, 소비자가 생산자의 통지 속도를 따라 잡지 못할 때 발생
+
+- Buffer 전략: DROP_LATEST
+  - 버퍼가 가득 찬 시점에 버퍼내에서 가장 최근에 버퍼로 들어온 데이터를 DROP한다.
+  - DROP 된 빈자리에 버퍼 밖에서 대기하던 데이터를 채운다.
+    ```java
+    public static void main(String[] args) throws InterruptedException {
+        System.out.println("# start: " + LocalDateTime.now());
+
+        Flowable.interval(300L, TimeUnit.MILLISECONDS)
+            .doOnNext(data -> System.out.println("#doOnNext: " + data))
+            .onBackpressureBuffer(
+                  2,
+                  ()-> System.out.println("overflow!"),
+                  BackpressureOverflowStrategy.DROP_LATEST)
+            .doOnNext(data -> System.out.println("onBackpressureBuffer doOnNext(): " + data))
+            .observeOn(Schedulers.computation(), false, 1)
+            .subscribe(data -> {
+                TimeUnit.SECONDS.sleep(1);
+                System.out.println("SUBSCRIBE: " + data);
+            }, error -> {
+                System.out.println("ERROR: " + error);
+            });
+        TimeUnit.SECONDS.sleep(2);
+        System.out.println("# end: " + LocalDateTime.now());
+    }
+    ```
+
+- BUFFER 전략: DROP_OLDEST
+  - 버퍼가 가득찬 시점에 버퍼내에서 가장 오래전에(먼저) 버퍼로 들어온 데이터를 DROP 한다.
+  - DROP 된 빈자리에는 버퍼 밖에서 대기하던 데이터를 채운다.
+      ```java
+      public static void main(String[] args) throws InterruptedException {
+          System.out.println(Thread.currentThread().getName() +  " # start: " + LocalDateTime.now());
+
+          Flowable.interval(300L, TimeUnit.MILLISECONDS)
+              .doOnNext(data -> System.out.println(Thread.currentThread().getName() + " #doOnNext: " + data))
+              .onBackpressureBuffer(
+                    2,
+                    ()-> System.out.println("overflow!"),
+                    BackpressureOverflowStrategy.DROP_OLDEST)
+              .doOnNext(data -> System.out.println(Thread.currentThread().getName() +  " onBackpressureBuffer doOnNext(): " + data))
+              .observeOn(Schedulers.computation(), false, 1)
+              .subscribe(data -> {
+                  TimeUnit.SECONDS.sleep(1);
+                  System.out.println(Thread.currentThread().getName() +  " SUBSCRIBE: " + data);
+              }, error -> {
+                  System.out.println(Thread.currentThread().getName() +  " ERROR: " + error);
+              });
+
+          TimeUnit.SECONDS.sleep(2);
+          System.out.println(Thread.currentThread().getName() +  " # end: " + LocalDateTime.now());
+      }
+      ```
+- DROP 전략
+  - 버퍼에 데이터가 모두 채워진 상태가 되면 이후에 생성되는 데이터를 버리고(DROP), 버퍼가 비워지는 시점에 DROP 되지 않은 데이터부터 다시 버퍼에 담는다.
+      ```java
+      public static void main(String[] args) throws InterruptedException {
+          System.out.println(Thread.currentThread().getName() +  " # start: " + LocalDateTime.now());
+
+          Flowable.interval(300L, TimeUnit.MILLISECONDS)
+              .doOnNext(data -> System.out.println(Thread.currentThread().getName() + " #doOnNext: " + data))
+              .onBackpressureDrop(dropData -> System.out.println("drop: " + dropData))
+              .observeOn(Schedulers.computation(), false, 1)
+              .subscribe(data -> {
+                  TimeUnit.SECONDS.sleep(1);
+                  System.out.println(Thread.currentThread().getName() +  " SUBSCRIBE: " + data);
+              }, error -> {
+                  System.out.println(Thread.currentThread().getName() +  " ERROR: " + error);
+              });
+
+          TimeUnit.SECONDS.sleep(3);
+          System.out.println(Thread.currentThread().getName() +  " # end: " + LocalDateTime.now());
+      }
+      ```
+- LATEST 전략
+  - 버퍼에 데이터가 모두 채워진 상태가 되면 버퍼가 비워질 때까지 통지된 데이터는 버퍼 밖에서 대기하여 버퍼가 비워지는 시점에 가장 나중(최근)에 통지된 데이터부터 버퍼에 담는다.
+      ```java
+      public static void main(String[] args) throws InterruptedException {
+          System.out.println(Thread.currentThread().getName() +  " # start: " + LocalDateTime.now());
+
+          Flowable.interval(300L, TimeUnit.MILLISECONDS)
+              .doOnNext(data -> System.out.println(Thread.currentThread().getName() + " #doOnNext: " + data))
+              .onBackpressureLatest()
+              .observeOn(Schedulers.computation(), false, 1)
+              .subscribe(data -> {
+                  TimeUnit.SECONDS.sleep(1);
+                  System.out.println(Thread.currentThread().getName() +  " SUBSCRIBE: " + data);
+              }, error -> {
+                  System.out.println(Thread.currentThread().getName() +  " ERROR: " + error);
+              });
+
+          TimeUnit.SECONDS.sleep(3);
+          System.out.println(Thread.currentThread().getName() +  " # end: " + LocalDateTime.now());
+      }
+      ```
+
+#### 다양한 데이터 스트림
+
+- Single (onSucess, onError)
   - 데이터를 1건만 통지하거나 에러를 통지한다.
   - 데이터 통지 자체가 완료를 의미하기 때문에 완료 통지는 하지 않는다.
   - 데이터를 1건만 통지하므로 데이터 개수를 요청할 필요가 없다.
@@ -332,25 +340,26 @@
             // TODO Auto-generated method stub
             emitter.onSuccess(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
         }			
-		});
-		
-		single.subscribe(new SingleObserver<String>() {
+    });
+    	
+    single.subscribe(new SingleObserver<String>() {
         @Override
         public void onSubscribe(Disposable d) {} // 아무것도 하지 않음 
         @Override
         public void onSuccess(String t) {System.out.println("SUCCESS: " + t);}
         @Override
         public void onError(Throwable e) { System.out.println("ERROR: " + e.getMessage()); }			
-		});
+    });
     ```
   - 람다도 가능하다.    
     ```java
-    Single<String> single = Single.create(emitter -> emitter.onSuccess(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)));
+    Single<String> single = Single.create(emitter ->
+        emitter.onSuccess(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)));
 		
-		single.subscribe(
+    single.subscribe(
         data -> System.out.println("SUCCESS: " + t),
         error -> System.out.println("ERROR: " + e.getMessage())
-		);
+    );
     ```
   - just 사용
     ```java
@@ -361,7 +370,7 @@
         );
     ```
     
-- Maybe 
+- Maybe (onSucess, onCompletable, onError)
   - 데이터를 1건만 통지하거나 1건도 통지하지 않고 완료 또는 에러를 통지한다.
   - 데이터 통지 자체가 완료를 의미하기 때문에 완료 통지는 하지 않는다.
   - 단, 데이터를 1건도 통지하지 않고 처리가 종료될 경우에는 완료 통지를 한다.
@@ -374,9 +383,9 @@
             // TODO Auto-generated method stub
             emitter.onComplete();
         }			
-		});
+    });
 		
-		maybe.subscribe(new MaybeObserver<String>() {
+    maybe.subscribe(new MaybeObserver<String>() {
         @Override
         public void onSubscribe(Disposable d) {} // 아무것도 하지 않음 
         @Override
@@ -385,17 +394,17 @@
         public void onError(Throwable e) { System.out.println("ERROR: " + e.getMessage()); }
         @Override
         public void onComplete() { System.out.println("COMPLETE!"); }
-		});
+    });
     ```
   - 람다를 사용할 수 있다.
     ```java
     Maybe<String> maybe = Maybe.create(emitter -> emitter.onComplete());
 		
-		maybe.subscribe(
+    maybe.subscribe(
         data -> System.out.println("SUCCESS: " + t),
         error -> System.out.println("ERROR: " + error.getMessage()),
         () -> System.out.println("COMPLETE")
-		);
+    );
     ```
   - just 사용
     - 1건을 보내어 onSuccess를 호출하였다.
@@ -428,7 +437,7 @@
           );
     ```
     
-- Completable
+- Completable (onCompletable, onError)
   - 데이터 생산자이지만 데이터를 1건도 통지하지 않고 완료 또는 에러를 통지한다.
   - 데이터 통지의 역할 대신에 Completable 내에서 특정 작업을 수행한 후, 해당 처리가 끝났음을 통지하는 역할을 한다.
   - Completable의 대표적인 소비자는 CompletableObserver이다.
@@ -443,9 +452,9 @@
             System.out.println("합계: " + sum);
             emitter.onComplete();
         }			
-		});
+    });
 		
-		completable.subscribeOn(Schedulers.computation())
+    completable.subscribeOn(Schedulers.computation())
         .subscribe(new CompletableObserver() {
             @Override
             public void onSubscribe(Disposable d) {} // 아무것도 하지 않음 
@@ -453,7 +462,7 @@
             public void onError(Throwable e) { System.out.println("ERROR: " + e.getMessage()); }
             @Override
             public void onComplete() { System.out.println("COMPLETE!"); }
-		    });
+    });
     ```
   - 람다를 사용할 수 있다.
     ```java
@@ -464,11 +473,11 @@
         emitter.onComplete();
     });
 		
-		completable.subscribeOn(Schedulers.computation())
+    completable.subscribeOn(Schedulers.computation())
         .subscribe(
             () -> System.out.println("COMPLETE"), 
             error -> System.out.println("ERROR: " + error.getMessage())
-		);
+        );
     ```
   
 #### 출처
