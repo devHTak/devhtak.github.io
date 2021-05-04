@@ -251,9 +251,9 @@ category: Java Study
   |toSet()|Set으로 반환|
   |joining()|스트림에서 작업한 결과를 하나의 스트링으로 이어 붙일 수 있다. delimeter, prefix, suffix를 인자로 받는다|
   |averageInt()|숫자 값(Integer value)의 평균(arithmetic mean)을 구할 수 있다.
-  |summingIng()|숫자 값의 합을 나타낸다. mapToInt 등을 활용하면 더 쉽게 사용할 수 있다|
-  |summarizingInt()|만약 합계와 평균 모두 필요하다면 스트림을 두 번 생성해야 할까요? 이런 정보를 한번에 얻을 수 있는 방법이다.|
-  |groupingBy()|특정 조건으로 요소들을 그룹지을 수 있습니다. 여기서 받는 인자는 함수형 인터페이스 Function 입니다.|
+  |summingInt()|숫자 값의 합을 나타낸다. mapToInt 등을 활용하면 더 쉽게 사용할 수 있다|
+  |summarizingInt()|만약 합계와 평균 등이 필요할 경우 한번에 얻을 수 있는 방법. IntSummaryStatistics{count=5, sum=86, min=13, average=17.20000, max23} 형태의 객체를 리턴받는다.|
+  |groupingBy()|특정 조건으로 요소들을 그룹지을 수 있습니다. 여기서 받는 인자는 함수형 인터페이스 Function 이다.|
   |partitioningBy()|partitioningBy 은 함수형 인터페이스 Predicate 를 받습니다. Predicate 는 인자를 받아서 boolean 값을 리턴합니다. true, false로 그루핑된다.|
   |collectingAndThen()|특정 타입으로 결과를 collect 한 이후에 추가 작업이 필요한 경우에 사용할 수 있다. |
   |of()|직접 collector 를 만들어 사용. accumulator 와 combiner 는 reduce 에서 살펴본 내용과 동일합니다.|
@@ -314,10 +314,13 @@ RXJAVA
   ```
 
   - 받은 결과를 필요할 때마다 stream으로 다시 변경하여 선택할 수 있다.
+  - 반환된 Stream을 받은 인스턴스에 경우 재사용할 수 없다. 여러번 결과를 반환할 때 오류가 발생한다.
 
 - 지연 처리
   - stream을 결과를 만드는 작업이 있을 때 작업을 수행한다.
 
+- Null-safe 스트림 생성
+  - Optional을 이용하여 null에 안전한(Null-safe) 스트림을 생성할 수 있다.
 
 #### 출처
 
