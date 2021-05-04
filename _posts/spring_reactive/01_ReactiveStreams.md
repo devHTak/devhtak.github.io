@@ -529,5 +529,8 @@ paradigm concerned with data streams and the propagation of change.
 
 - Kevin의 RxJava 강의
 
-- 참고: [Java] Reactive Stream 이란? 
+- 참고: \[Java] Reactive Stream 이란? 
   (URL: https://sabarada.tistory.com/98)
+  
+- 참고: \[Reactive] Reactive Programming 과 Reactive Stream
+  (URL: https://sightstudio.tistory.com/14)
