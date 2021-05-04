@@ -1,6 +1,6 @@
 ---
 layout: post
-title: RxJava, Publisher 와 Observer
+title: RxJava, Publisher 와 Subscriber
 summary: The Java
 author: devhtak
 date: '2021-05-04 21:41:00 +0900'
