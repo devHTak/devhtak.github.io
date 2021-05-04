@@ -23,10 +23,61 @@ paradigm concerned with data streams and the propagation of change.
   ```
   - 명령형은 for, if문등을 활용하여 구체적인 알고리즘을 명시
 
-- 리액티브의 개념이 적용된 예
-  - PUSH 방식: 데이터의 변화가 발생했을 때 변경이 발생한 곳에서 데이터를 보내주는 방식
-    - 리액티브 방식
-  - PULL 방식: 변경된 데이터가 있는지 요청을 보내 질의하고 변경된 데이터를 가져오는 방식
+#### Reactive Programming 등장 배경
+
+- 전통적인 아키텍처에서는 동기 블로킹방식을 사용하였다.
+  - (동기 블로킹 방식) 하나의 요청에 대해 하나의 스레드를 통해 처리하며 모든 데이터를 가져와서 처리할 때까지 해당 스레드를 블로킹한다.
+  - 멀티스레드의 문제점을 해결할 수 있다.
+    - Thread Pool 최적화
+    - Thread Context-Switching 발생
+      ```
+      Thread Context-Switching과 Process Context-Switching의 차이점
+      쓰레드에 경우 프로세스의 자원을 공유하여 사용하기 때문에 프로세스가 변하지 않는 이상 데이터가 그대로 남아있기 때문에 그대로 가져다 사용
+      프로세스가 변경되면 메모리 정보가 지워지기 때문에 데이터 접근하는 데 오래걸린다.
+      ```
+      
+- Reactive Stream에서의 데이터 처리 방식은 1thread에 여러 요청을 처리할 수 있다.
+
+#### Reactive Programming 기반 기술
+
+- Observer Pattern
+  - 한 객체의 상태가 바뀌면 그 객체에 의존하는 다른 객체들한테 연락을 하고, 자동으로 내용이 갱신되는 방식에 디자인패턴
+  - push 방식: 데이터의 변화가 발생했을 때 변경이 발생한 곳에서 데이터를 보내주는 방식
+
+- Iterator Pattern
+  - 컬렉션 구현 방법을 노출시키지 않으면서 컬렉션 안에 들어있는 모든 엘리먼트에 접근할 수 있는 방식을 구현한 패턴
+  - pull 방식: 변경된 데이터가 있는지 요청을 보내 질의하고 변경된 데이터를 가져오는 방식
+
+#### Reactive Stream
+
+- non-blocking backPressure(배압) 을 이용하여 비동기 서비스를 할 때 기본이 되는 스펙
+- java의 RxJava, Spring의 WebFlux의 Core에 있는 Project Reactor 프로젝트 모두 해당 스펙을 따르고 있다.
+- java 1.9 버전에 추가된 Flow 역시 reactive stream 스펙을 채택하여 사용하고 있다.
+   
+- blocking과 non-blocking
+  - blocking: 자신의 수행 결과가 끝날 때 까지 제어권을 갖고 있는 것을 의미
+  - non-blocking: 자신이 호출되었을 때 제어권을 바로 자신을 호출한 쪽으로 넘기며, 자신을 호출한 쪽에서 다른 일을 할 수 있도록 하는 것을 의미
+   
+- BackPressure(배압)
+  - 한 컴포넌트가 부하를 이겨내기 힘들 때, 시스템 전체가 합리적인 방법으로 대응해야 한다. 
+  - 과부하 상태의 컴포넌트에서 치명적인 장애가 발생하거나 제어 없이 메시지를 유실해서는 안 된다. 
+  - 컴포넌트가 대처할 수 없고 장애가 발생해선 안 되기 때문에 컴포넌트는 상류 컴포넌트들에 자신이 과부하 상태라는 것을 알려 부하를 줄이도록 해야 한다. 
+  - 이러한 배압은 시스템이 부하로 인해 무너지지 않고 정상적으로 응답할 수 있게 하는 중요한 피드백 방법이다.
+  - 배압은 사용자에게까지 전달되어 응답성이 떨어질 수 있지만, 이 메커니즘은 부하에 대한 시스템의 복원력을 보장하고 시스템 자체가 부하를 분산할 다른 자원을 제공할 수 있는지 정보를 제공할 것이다.
+  - Observer 패턴과 Iterator 패턴을 결합하여 사용
+    - 처리할 수 있는 양만큼 가져와 처리한다.
+
+- Reactive Streams
+  - 리액티브 프로그래밍 라이브러리의 표준 사양
+    - https://github.com/reactive-streams/reactive-streams-jvm
+  - 리액티브 프로그래밍에 대한 인터페이스만 제공한다.
+  - RxJava는 Reactive Streams의 인터페이스들을 구현한 구현체이다.
+  - Reactive Streams는 Publisher, Subscriber, Subscription, Processor 라는 4개의 인터페이스를 제공한다.
+    - Publisher: 데이터를 생성하고 통지한다.
+    - Subscriber: 통지된 데이터를 전달받아 처리한다.
+    - Subscription: 전달 받은 데이터의 개수를 요청하고 구독을 해지한다.
+    - Processor: Publisher, Subscribe의 기능이 모두 있다.
+
 
 #### 마블 다이어그램
 
@@ -534,3 +585,6 @@ paradigm concerned with data streams and the propagation of change.
   
 - 참고: \[Reactive] Reactive Programming 과 Reactive Stream
   (URL: https://sightstudio.tistory.com/14)
+  
+- 참고: Reactive Stream - Observer, Iterator, Reactive Stream
+  (URL: https://phantasmicmeans.tistory.com/entry/Observer-Iterator-Reactive-Stream)
