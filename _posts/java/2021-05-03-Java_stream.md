@@ -269,7 +269,7 @@ category: Java Study
   - forEach는 요소를 돌면서 실행하는 최종 작업
   - peek와는 중간 작업과 최종 작업의 차이가 있다.
 
-#### Strean 동작 순서
+#### Stream 동작 순서
 
 ```java
 List<String> list = Arrays.asList("Jpa", "Hello", "Spring", "RxJava");
