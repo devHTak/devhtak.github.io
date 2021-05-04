@@ -1,3 +1,12 @@
+---
+layout: post
+title: RxJava, Publisher 와 Observer
+summary: The Java
+author: devhtak
+date: '2021-05-04 21:41:00 +0900'
+category: RxJava
+---
+
 #### Reactive stream
    
 - non-blocking backPressure(배압) 을 이용하여 비동기 서비스를 할 때 기본이 되는 스펙
