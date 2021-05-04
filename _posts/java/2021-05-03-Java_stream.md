@@ -223,9 +223,14 @@ category: Java Study
   // 3개 (combiner)
   <U> U reduce(U identity, BiFunction<U, ? super T, U> accumulator, BinaryOperator<U> combiner);
   ```
-  - accumulator: 각 요소를 처리하는 계산 로직, 각 요소가 올 때마다 중간 결과를 생성하는 로직
-  - identity: 계산을 위한 초기값으로 스트림이 비워서 계산할 내용이 없더라도 이 값은 리턴
-  - combiner: 병렬(parallel) 스트림을 나눠 계산한 결과를 하나로 합치는 동작하는 로직 / 병렬스트림이 아닌경우 실행되지 않는다
+  - stream의 데이터를 변환하지 않고, 더하거나 빼는 등의 연산을 수행하여 하나의 값을 만들 때 reduce를 사용
+    - accumulator에 파라미터로는 (total, n) 값이 나온다.
+    - identity: 초기값
+    - combinar: 병렬처리에서 사용
+  - 파라미터
+    - accumulator: 각 요소를 처리하는 계산 로직, 각 요소가 올 때마다 중간 결과를 생성하는 로직
+    - identity: 계산을 위한 초기값으로 스트림이 비워서 계산할 내용이 없더라도 이 값은 리턴
+    - combiner: 병렬(parallel) 스트림을 나눠 계산한 결과를 하나로 합치는 동작하는 로직 / 병렬스트림이 아닌경우 실행되지 않는다
   - 예제
     ```java
     int reducedParams = Stream.of(1, 2, 3)
