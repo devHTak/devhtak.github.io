@@ -237,6 +237,8 @@ category: RxJava
   ```
   - 0.3, 0.6, 0.9 초까지는 건너뛴 후, 1.2초부터 3 데이터가 출력된다.
 
+- 추가: takeWhile, skipUntil, skipLast
+
 #### 출처
 
 - Kevin의 알기쉬운 RxJava 1부
