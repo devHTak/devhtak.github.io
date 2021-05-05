@@ -153,6 +153,90 @@ category: RxJava
 
   - Future 학습
 
+#### 데이터 필터링 연산자
+
+- filter
+  - 전달받은 데이터가 조건에 맞는지 확인한 후 결과가 true인 데이터만 통지한다.
+  - filter라는 단어의 산전적인 의미가 무언가를 걸러낸다는 의미
+  - 파라미터로 받는 Predicate 함수형 인터페이스에서 조건을 확인
+
+  ```java
+  Observable.fromIterable(SampleData.carList)
+      .filter(car -> car.getCarMaker() == CarMaker.CHEVOLET)
+      .subscribe(System.out::println);
+  ```
+  
+- distinct
+  - 이미 통지된 동일한 데이터가 있다면 이후의 동일한 데이터는 통지하지 않는다.
+  - distinct의 사전적 의미는 명확하게 구별되는 이라는 뜻을 포함하고 있다.
+
+  ```java
+  Observable.fromArray(SimpleData.carMakersDuplicated)
+      .distinct(Car::getCarMaker)
+      .subscribe(System.out::println);
+  ```
+    - distinct 내에 람다를 입력할 수 있는데, 입력한 값에 중복을 확인한다.
+
+- take
+  - 파라미터로 지정한 개수나 기간이 될 때까지 데이터를 통지한다.
+  - 지정한 범위가 통지 데이터보다 클 경우 데이터를 모두 통지하고 완료한다.
+  ```java
+  Observable.just("a", "b", "c", "d")
+      .take(2)
+      .subscribe(System.out::println);
+      
+  Observable.interval(1000L, TimeUnit.MILLISECONDS)
+      .take(3500L, TimeUnit.MILLISECONDS)
+      .subscribe(System.out::println);
+  Thread.sleep(3500L);
+  ```
+    - a, b 만 전달한다
+    - 시간을 지정할 수 있다.
+
+- takeUntil 첫번째 유형
+  - 파라미터로 지정한 조건이 true가 될 때까지 데이터를 계속 통지한다.
+  - true가 된 데이터까지 전송한 후에 완료한다.
+  ```java
+  Observable.fromIterable(SampleData.carList)
+      .takeUntil(car -> car.getName().equals("트랙스"))
+      .subscribe(System.out::println);
+  ```
+    - 데이터 중 트랙스 데이터가 있을 때까지 데이터가 전송된다.
+    - 말리부, K3, Q3, 트랙스 출력
+
+- takeUntil 두번째 유형
+
+  ![image](https://user-images.githubusercontent.com/42403023/117156331-859bb180-adf8-11eb-9d9a-b9adf221ae5c.png)
+
+  - 파라미터로 지정한 Observable이 최초 데이터를 통지할 때까지 데이터를 계속 통지한다.
+  ```java
+  Observable.interval(1000L, TimeUnit.MILLISECONDS)
+      .takeUntil(Observable.timer(5500L, TimeUnit.MILLISECONDS)
+      .subscribe(System.out::println);
+  Thread.sleep(5500L);
+  ```
+    - 새로운 Observable에 timer를 5500로 세팅했기 때문에 5초까지 데이터가 전송된다.
+    - 5.5초에 파라미터로 넘긴 Observable에 데이터가 전송되기 때문에 완료된다.
+
+- skip 첫번째 유형
+  - 파라미터로 지정한 숫자만큼 데이터를 건너뛴 후 나머지 데이터를 통지한다.
+  ```java
+  Observable.range(1, 15)
+      .skip(3)
+      .subscribe(System.out::println);
+  ```
+  - 1, 2, 3은 skip하고 4부터 출력된다.
+
+- skip 두번째 유형
+  - 파라미터로 지정한 시간만큼 데이터를 건너뛴 후 지정한 시간 이 후에 나머지 데이터를 통지한다.
+  ```java
+  Observable.interval(300L, TimeUnit.MILLISECONDS)
+      .skip(1000L, TimeUnit.MILLISECONDS)
+      .subscribe(System.out::println);
+  Thread.sleep(5500L);
+  ```
+  - 0.3, 0.6, 0.9 초까지는 건너뛴 후, 1.2초부터 3 데이터가 출력된다.
+
 #### 출처
 
 - Kevin의 알기쉬운 RxJava 1부
