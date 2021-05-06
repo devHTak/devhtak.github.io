@@ -357,10 +357,14 @@ category: RxJava
     ```java
     Single<Map<String, String>> single = 
         Observable.just("a-Alpha", "b-Beta", "c-Charlie", "e-Echo")
-            .toMap(data -> data.split("-")[0]); // 반환값이 key가 된다.
+            .toMap(
+	        data -> data.split("-")[0],  // 반환값이 key가 된다.
+		data -> data.split("-")[1]   // 반환값이 value가 된다.
+            );
     single.subscribe(System.out::println);    
     ```
-    - a: a-Alpha .. 식의 key, value 형태를 갖게 된다.
+    - a: Alpha .. 식의 key, value 형태의 Map을 한번에 전송한다.
+    - toMap의 key만 파라미터로 넣을 수 있다. (key or key, value) 
 
 #### 출처
 
