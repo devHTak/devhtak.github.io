@@ -1,6 +1,6 @@
 ---
 layout: post
-title: RxJava, Publisher 와 Subscriber
+title: RxJava, 다양한 Reactive Stream 객체
 summary: The Java
 author: devhtak
 date: '2021-05-04 21:41:00 +0900'
