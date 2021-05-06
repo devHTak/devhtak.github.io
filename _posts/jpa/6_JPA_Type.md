@@ -213,7 +213,7 @@ category: JPA
       if(this == o) return true;
       if(o == null || getClass() != o.getClass()) return false;
       Address address = (Address)o;
-      return Object.equals(city, address.getCity()) & Object.equals(street, address.getStreet()) && Object.equals(zipCode, address.getZipCode());
+      return Objects.equals(city, address.getCity()) && Objects.equals(street, address.getStreet()) && Objects.equals(zipCode, address.getZipCode());
   }
 
   @Override
