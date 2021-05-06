@@ -239,6 +239,81 @@ category: RxJava
 
 - 추가: takeWhile, skipUntil, skipLast
 
+#### 데이터 변환 연산자
+
+- map
+  - 원본 Observable 에서 통지하는 데이터를 원하는 값으로 변환 후 통지한다.
+  - 변환 전, 후 데이터 타입은 달라도 상관없다.
+  - null을 반환하면 NullpointException이 발생하므로 데이터 하나를 반드시 반환해야 한다.
+  - 예제
+    ```java
+    List<Integer> oddList = Arrays.asList(1, 3, 5, 7);
+    Observable.fromIterable(oddList)
+	.map(data -> data + 1)
+	.subscribe(System.out::println);
+    ```
+
+- flatMap 첫번째 유형
+  - 원본 데이터를 원하는 값으로 변환 후 통지하는 것은 map과 같다
+  - map이 1대 1 변환인 것과 달리 flatMap은 1대 다 변환이므로 데이터 한개로 여러 데이터를 통지할 수 있다.
+  - map은 변환된 데이터를 반환하지만 flatMap은 변환된 여러개의 데이터를 담고 있는 새로운 Observable을 반환
+  - 예제
+    ```java
+    Observable.just("Hello")
+	.flatMap(hello -> Observable.just("Java", "JPA", "RxJava", "Spring").map(lang -> hello + " " + lang))
+	.subscribe(System.out::println);
+    ```
+
+- flatMap 두번째 유형
+  - 원본 데이터와 변환된 데이터를 조합하여 새로운 데이터를 통지
+  - 즉, Observable에 원본 + 변환 = 최종 데이터를 실어서 반환
+  - 예제
+    ```java
+    Observable.range(2, 1)
+        .flatMap(
+            data -> Observable.range(1, 9),
+            (source, transform) -> {
+	        return source + " * " + transform + " = " + (source*transform);
+            }
+    )
+    .subscribe(System.out::println);
+    ```
+    
+- concatMap
+  - flatMap과 마찬가지로 받은 데이터를 변환하여 새로운 Observable로 반환
+  - 반환된 새로운 Observable을 하나씩 순서대로 실행하는 것이 flatMap과 다르다.
+  - 즉, 데이터의 처리 순서는 보장하지만 처리중인 Observable의 처리가 끝나야 다음 Observable이 실행되므로 처리 성능에 영향을 줄 수 있다.
+  - 예제
+    ```java
+    Observable.interval(100L, TimeUnit.MILLISECONDS)
+        .take(4)
+        .skip(2)
+        .concatMap(num -> Observable.interval(200L, TimeUnit.MILLISECONDS).take(10).skip(1)
+            .map(row -> num + " * " + row + " = " + (row*num)))
+        .subscribe(System.out::println, error->{}, ()-> System.out.println("OnComplete"));
+
+    Thread.sleep(5000L);
+    ```
+    - concatMap을 사용하면 concatMap 안에 Observable에서 보내는 순서를 보장한다.
+    - flatMap을 사용하면 flatMap 안에 Observable에서 보내는 순서를 보장하지 않는다.
+
+- switchMap
+  - concatMap과 마찬가지로 받은 데이터를 변환하여 새로운 Observable로 반환
+  - concatMap과 다른 점은 switchMap은 순서를 보장하지만 새로운 데이터가 통지되면 현재 처리중이던 작업을 바로 중단한다.
+  - 예제
+    ```java
+    Observable.interval(100L, TimeUnit.MILLISECONDS)
+        .take(4)
+        .skip(2)
+        .switchMap(num -> Observable.interval(200L, TimeUnit.MILLISECONDS).take(10).skip(1)
+            .map(row -> num + " * " + row + " = " + (row*num)))
+        .subscribe(System.out::println, error->{}, ()-> System.out.println("OnComplete"));
+
+    Thread.sleep(5000L);
+    ```
+    - 2단은 출력되지 않고, 3단은 출력된다.
+    - 2단 출력될 시점에 3단관련 데이터를 전송하여 중단되었다.
+
 #### 출처
 
 - Kevin의 알기쉬운 RxJava 1부
