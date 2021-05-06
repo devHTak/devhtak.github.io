@@ -314,6 +314,54 @@ category: RxJava
     - 2단은 출력되지 않고, 3단은 출력된다.
     - 2단 출력될 시점에 3단관련 데이터를 전송하여 중단되었다.
 
+- groupBy
+  - 하나의 Observable을 여러개의 새로운 GroupedByObservable로 만든다.
+  - 원본 Observable의 데이터를 그룹별로 묶는다기보다는 각각의 데이터들이 그룹에 해당하는 Key를 가지게 된다.
+  - GropuedByObsrevable은 getKey()를 통해 구분된 그룹을 알 수 있게 해준다.
+  - 예제
+    ```java
+    Observable<GroupedObservable<CarMaker, Car>> observable = 
+        Observable.fromIterable(SampleData.carList).groupBy(car -> car.getCarMaker());
+
+    observable.subscribe(groupedObservable -> gropuedObservable
+        .filter(data -> gropuedObservable.getKey().equals(CarMaker.CHEVOLET)
+        .subscribe(data -> {
+            System.out.println(groupedObservable.getKey() + " " + data); // key가 Carmaker()가 된다
+    ));
+    ```
+
+- toList
+  - 통지되는 데이터를 모두 List에 담아 통지한다.
+  - 원본 Observable에서 완료 통지를 받는 즉시 리스트를 통지한다.
+  - 통지되는 데이터는 원본 데이터를 담은 리스트 하나이므로 Single로 반환된다.
+  - 예시
+    ```java
+    Single<List<Integer>> single = Observable.just(1, 3, 5, 7, 9).toList();
+    
+    single.subscribe(System.out::println);
+    ```
+    ```java
+    Observable.fromIterable(SampleData.carList)
+        .toList()
+	.subscribe(System.out::println);
+    ```
+    - 1, 3, 5, 7, 9가 리스트로 한번만 전송된다.
+    - carList가 하나씩 전송되는 것이 아닌 리스트로 한번만 전송된다.
+
+- toMap
+  - 통지되는 데이터를 모두 Map에 담아 통지한다.
+  - 원본 Observable에서 완료 통지를 받는 즉시 Map을 통지한다.
+  - 이미 사용중인 key(키)를 또 생성하면 기존에 있던 key(키)와 value(값)을 덮어쓴다.
+  - 통지되는 데이터는 원본 데이터를 담은 Map하나이므로 Single로 반환된다.
+  - 예시
+    ```java
+    Single<Map<String, String>> single = 
+        Observable.just("a-Alpha", "b-Beta", "c-Charlie", "e-Echo")
+            .toMap(data -> data.split("-")[0]); // 반환값이 key가 된다.
+    single.subscribe(System.out::println);    
+    ```
+    - a: a-Alpha .. 식의 key, value 형태를 갖게 된다.
+
 #### 출처
 
 - Kevin의 알기쉬운 RxJava 1부
