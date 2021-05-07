@@ -229,3 +229,7 @@ CascadeType.ALL + orphanRemovel=true
 - 두 옵션을 모두 활성화 하면 부모 엔티티를 통해서 자식의 생명
 - 주기를 관리할 수 있음
 - 도메인 주도 설계(DDD)의 Aggregate Root개념을 구현할 때 유용
+
+#### 출처
+
+김영한님의 자바 ORM 표준 JPA 프로그래밍 - 기본편 강의
