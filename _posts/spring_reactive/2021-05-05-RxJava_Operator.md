@@ -459,6 +459,137 @@ category: RxJava
     - 1.4s에 observable2에는 1이 마지막으로 도착하고,  observable1에는 1이 마지막으로 도착했다.
     - ... 이런 방식으로 계속 출력되는 것
 
+#### 에러 처리 연산자
+
+- RxJava에서는 Try-Catch를 할 수 있다.
+  ```java
+  try {
+      Observable.just(2)
+          .map(num -> num / 0)
+	  .subscribe(System.out::println);
+  } catch(Exception e) {
+      System.out.println("에러 처리 필요: " + e.getMessage()); // 출력되지 않는다.
+  }
+  ```
+  - divide zero로 오류가 발생할 수 있지만, catch 문을 타지 않는다.
+  - console에 찍힌 오류문을 확인해보면 subscribe에 onError 문을 작성하지 않았다는 내용이 적혀 있다.
+
+- RxJava에서는 onError를 작성하여야 한다.
+  ```java
+  Observable.just(5)
+      .flatMap(num -> {
+          return Observable.interval(200L, TimeUnit.MILLISECONDS)
+              .doOnNext(data-> System.out.println("do on next: " + data))
+              .take(5)
+              .map(i -> num / i);
+      }) 
+      .subscribe( 
+              data -> System.out.println("on next: " + data),
+              error -> System.out.println("error: " + error),
+              () -> System.out.println("on complete!"));
+  Thread.sleep(1000L);
+  ```
+  - do on next에서 0이 통지한다. map에서 divide zero exception이 발생하고, subscribe에서 error를 타고 종료한다.
+
+- onErrorReturn
+  - 에러가 발생했을 때 에러를 의미하는 데이터로 대체할 수 있다.
+  - onErrorReturn()을 호출하면 onError 이벤트는 발생하지 않는다.
+  - 예제
+    ```java
+    Observable.just(5)
+    .flatMap(num -> {
+        return Observable.interval(200L, TimeUnit.MILLISECONDS)
+            .take(5)
+            .map(i -> num / i)
+            .onErrorReturn(exception -> {
+                if(exception instanceof ArithmeticException)
+                    System.out.println("ArithmeticException: " + exception.getMessage());
+                return -1L;
+            });
+    }) 
+    .subscribe( 
+            data -> System.out.println("on next: " + data),
+            error -> System.out.println("error: " + error),
+            () -> System.out.println("on complete!"));
+    Thread.sleep(1000L);
+    ```
+    ```
+    // 출력
+    ArithmeticException: / by zero
+    on next: -1
+    on complete!
+    ```
+
+- onErrorResumeNext
+  - 에러가 발생했을 때 에러를 의미하는 Observable로 대체할 수 있다.
+  - Observable로 대체할 수 있으므로 데이터 교체와 더불어 에러 처리를 위한 추가 작업을 할 수 있다.
+  - 예제
+    ```java
+    Observable.just(5)
+        .flatMap(num -> {
+            return Observable.interval(200L, TimeUnit.MILLISECONDS)
+                .take(5)
+                .map(i -> num / i)
+                .onErrorResumeNext(exception -> {
+                    System.out.println("EXCEPTION: " + exception.getMessage());
+                    return Observable.interval(200L, TimeUnit.MILLISECONDS)
+                        .take(5).skip(1).map(i -> num / i);
+                });
+        }) 
+        .subscribe(data -> System.out.println("on next: " + data));
+    Thread.sleep(2000L);
+    ```
+    ```
+    // 출력
+    EXCEPTION: / by zero
+    on next: 5
+    on next: 2
+    on next: 1
+    on next: 1
+    ```
+    - Exception이 발생하여도 onErrorResumeNext에서 전달한 Observable에 데이터가 전송된다.
+
+- retry
+  - 데이터 통지 중 에러가 발생했을 때, 데이터 통지를 재시도한다.
+  - 즉, onError 이벤트가 발생하면 subscribe()를 다시 호출하여 재구독한다.
+  - 예제
+    ```java
+    Observable.just(5)
+        .flatMap(num -> {
+            return Observable.interval(200L, TimeUnit.MILLISECONDS)
+                .map(i -> {
+                    long result;
+                    try {
+                        result = num / i;
+                    } catch(Exception e) {
+                        System.out.println("EXCEPTION: " + e.getMessage());
+                        throw e;
+                    }
+                    return result;
+                })
+                .retry(5)
+                .onErrorReturn(throwable -> -1L);
+        }) 
+        .subscribe(
+            data -> System.out.println("on next: " + data),
+            error -> System.out.println("error: " + error),
+            () -> System.out.println("on complete!"));
+    Thread.sleep(2000L);
+    ```
+    ```
+    // 출력
+    EXCEPTION: / by zero
+    EXCEPTION: / by zero
+    EXCEPTION: / by zero
+    EXCEPTION: / by zero
+    EXCEPTION: / by zero
+    EXCEPTION: / by zero
+    on next: -1
+    on complete!
+    ```
+    - EXCEPTION이 발생한 후 retry를 5번 반복하여 발생한다.
+    - 시도한 후에 onErrorReturn을 통해 -1을 전송한다.
+
 #### 출처
 
 - Kevin의 알기쉬운 RxJava 1부
