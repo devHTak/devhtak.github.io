@@ -172,8 +172,6 @@ public class Member {
   - @Id
   - @GeneratedValue
 
-- 
-
 - 기본키 매핑 방법
   - 직접 할당: @Id 만 사용
   - 자동 생성: @GeneratedValue
