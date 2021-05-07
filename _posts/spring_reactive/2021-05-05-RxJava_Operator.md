@@ -366,6 +366,31 @@ category: RxJava
     - a: Alpha .. 식의 key, value 형태의 Map을 한번에 전송한다.
     - toMap의 key만 파라미터로 넣을 수 있다. (key or key, value) 
 
+#### 데이터 결합 연산자
+
+- merge
+  - 다수의 Observable에서 통지된 데이터를 받아 다시 하나의 Observable로 통지한다.
+  - 통지 시점이 빠른 Observable의 데이터부터 순차적으로 통지되고 통지 시점이 같을 경우에는 merge() 함수의 파라미터로 먼저 지정된 Observable 데이터로부터 통지된다.
+  - 예시
+  
+    |-|0.2s|0.4s|0.6s|0.8s|1s|1.2s|1.4s|1.6s|1.8s|2s|
+    |---|---|---|---|---|---|---|---|---|---|---|
+    |Observable1|0|1|2|3|4|-|-|-|-|-|
+    |Observable2|-|1000|-|1001|-|1002|-|1003|-|1004|
+    |Observable|0|1,1000|2,|3,1001|4|1002|-|1003|1004|
+    
+    ```java
+    Observable<Long> observable1 = Observable.interval(200L, TimeUnit.MILLISECONDS)
+        .take(5);
+    Observable<Long> observable2 = Observable.interval(400L, TimeUnit.MILLISECONDS)
+        .take(5)
+        .map(data -> data + 1000);
+    Observable.merge(observable1, observable2)
+        .subscribe(System.out::println);
+    Thread.sleep(4000);
+    ````
+    
+
 #### 출처
 
 - Kevin의 알기쉬운 RxJava 1부
