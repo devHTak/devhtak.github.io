@@ -377,7 +377,7 @@ category: RxJava
     |---|---|---|---|---|---|---|---|---|---|---|
     |Observable1|0|1|2|3|4|-|-|-|-|-|
     |Observable2|-|1000|-|1001|-|1002|-|1003|-|1004|
-    |Observable|0|1,1000|2,|3,1001|4|1002|-|1003|1004|
+    |Observable|0|1,1000|2,|3,1001|4|1002|-|1003|-|1004|
     
     ```java
     Observable<Long> observable1 = Observable.interval(200L, TimeUnit.MILLISECONDS)
@@ -390,6 +390,74 @@ category: RxJava
     Thread.sleep(4000);
     ````
     
+- concat
+  - 다수의 Observable에서 통지된 데이터를 받아 다시 하나의 Observable로 통지
+  - 하나의 Observable에서 통지가 끝나면 다음 Observable에서 연이어 통지가 된다.
+  - 각 Observable의 통지시점과 상관없이 concat() 함수의 파라미터로 먼저 입력된 Observable의 데이터부터 모두 통지된 후, 다음 Observable의 데이터가 통지된다.
+  - 예시
+    ```java
+    Observable<Long> observable1 = Observable.interval(500L, TimeUnit.MILLISECONDS)
+        .take(4);
+    Observable<Long> observable2 = Observable.interval(300L, TimeUnit.MILLISECONDS)
+        .take(5)
+        .map(data -> data + 1000);
+    Observable.concat(observable1, observable2)
+        .subscribe(System.out::println);
+    Thread.sleep(3500L);	
+    ```
+    - observable2가 먼저 통지되지만 observable1이 먼저 파라미터로 입력되었기 때문에 observable1이 먼저 통지된다.
+    - 0, 1, 2, 3, 1000, 1001, 1002, 1003 순으로 입력된다.
+    - concat에 파라미터로 List와 같은 Collection도 가능하다
+
+- zip
+  - 다수의 Observable에서 통지된 데이터를 받아 다시 하나의 Observable로 통지
+  - 각 Observable에서 통지된 데이터가 모두 모이면 각 Observable에서 동일한 index의 데이터로 새로운 데이터를 생성한 후 통지한다.
+  - 통지하는 데이터 개수가 가장 적은 Observable의 통지 시점에 완료 통지 시점을 맞춘다.
+  - 예시
+    ```java
+    Observable<Long> observable1 = Observable.interval(200L, TimeUnit.MILLISECONDS)
+        .take(4);
+
+    Observable<Long> observable2 = Observable.interval(400L, TimeUnit.MILLISECONDS)
+        .take(6)
+        .map(data -> data + 1000);
+
+    Observable.zip(observable1, observable2, (data1, data2) -> data1 + data2)
+        .subscribe(System.out::println);
+
+    Thread.sleep(3500L);
+    ```
+    - 4개만 출력된다. observable1에 개수가 적기 때문에
+    - 1000, 1002, 1004, 1006 이 출력된다.
+    
+- combineLatest
+  - 다수의 Observable에서 통지된 데이터를 받아 다시 하나의 Observable로 통지
+  - 각 Observable에서 데이터를 통지할 때마다 모든 Observable에서 마지막으로 통지한 각 데이터를 함수형 인터페이스에 전달하고, 새로운 데이터를 생성해 통지한다.
+  - 예제
+    ```java
+    Observable<Long> observable1 = Observable.interval(500L, TimeUnit.MILLISECONDS)
+        .take(4);
+    Observable<Long> observable2 = Observable.interval(700L, TimeUnit.MILLISECONDS)
+        .take(4);
+    Observable.combineLatest(observable1, observable2,
+            (data1, data2) -> "data1: " + data1 +", data2: " + data2)
+        .subscribe(System.out::println);
+    Thread.sleep(3500L);
+    ```
+    ```
+    // 출력
+    data1: 0, data2: 0
+    data1: 1, data2: 0
+    data1: 1, data2: 1
+    data1: 2, data2: 1
+    data1: 3, data2: 1
+    data1: 3, data2: 2
+    data1: 3, data2: 3
+    ```
+    - 0.7s에 observable2에는 0이 마지막으로 도착하고,  observable1에는 0이 마지막으로 도착했다.
+    - 1.0s에 observable1에는 1이 마지막으로 도착하고,  observable2에는 0이 마지막으로 도착했다.
+    - 1.4s에 observable2에는 1이 마지막으로 도착하고,  observable1에는 1이 마지막으로 도착했다.
+    - ... 이런 방식으로 계속 출력되는 것
 
 #### 출처
 
