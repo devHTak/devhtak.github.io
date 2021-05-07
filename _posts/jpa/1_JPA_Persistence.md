@@ -23,7 +23,7 @@ category: JPA
 
 - JPA 동작
   - 저장
-    - DAO에서 EntityManager의 Persiste 를 실행한다.
+    - DAO에서 EntityManager의 Persist 를 실행한다.
     - JPA는 Persist에 맞게 Entity 분석, Insert SQL 생성, JDBC API 사용 후, 객체와 DB 간의 페러다임 불일치를 해결한다.
     - JDBC API는 DB에 Insert 쿼리를 실행한다.
     
