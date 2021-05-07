@@ -342,3 +342,7 @@ public class Member {
     - 연결 테이블이 단순히 연결만 하고 끝나지 않는다.
     - 여러 컬럼이 포함될 수 있기 때문에 다대다 관계를 일대다, 다대일 관계로 풀어 사용하자
     - @ManyToMany -> @OneToMany, @ManyToOne
+
+#### 참고
+
+김영한님의 자바 ORM 표준 JPA 프로그래밍 - 기본편 강의
