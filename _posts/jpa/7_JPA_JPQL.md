@@ -312,6 +312,387 @@ category: JPA
     select function('group_concat', i.name) from Item i
     ```
 
+#### 경로 표현식
+
+- 점(.)을 찍어 객체 그래프를 탐색하는 것
+  ```
+  SELECT m.username // -> 상태 필드
+  FROM Member m
+      join m.team t // -> 단일 값 연관 필드
+      join m.orders o // -> 컬렉션 값 연관 필드
+  WHERE t.name='팀A'
+  ```
+  
+- 경로 표현식 용어 정리
+  - 상태 필드(state field): 단순히 값을 저장하기 위한 필드(ex m.username)
+  - 연관 필드(association field): 연관관계를 위한 필드
+    - 단일 값 연관 필드: @ManyToOne, @OneToOne, 대상이 엔티티(ex. m.team)
+    - 컬렉션 값 연관 필드: @OneToMany, @ManyToMany, 대상이 컬렉션(ex. m.orders)
+
+- 경로 표현식 특징
+  - 상태 필드(state field): 경로 탐색의 끝, 탐색 X
+  - 단일 값 연관 경로: 묵시적 내부 조인 발생, 탐색 O
+    ```
+    // JPQL
+    SELECT m.team.name FROM Member m
+    // QUERY
+    SELECT team.id, team.name FROM Member INNER JOINT Team ON Member.team_id=Team.id
+    ```
+    - m.team에 경우 추가로 계속 탐색이 가능하다.    
+  - 컬렉션 값 연관 경로: 묵시적 내부 조인 발색, 탐색 X
+    - FROM 절에서 명시적 조인을 통해 별칭을 얻으면 별칭을 통해 탐색 가능
+      ```
+      // JPQL
+      SELECT t.members FROM Team t
+      // QUERY
+      SELECT member.id, member.username FROM Team team INNER JOIN Member ON team.id=Member.team_id
+      ```
+      - 컬렉션이기 때문에 인덱스 접근 등이 안된다. 즉, 탐색이 되지 않는다.
+      - size와 같은 컬렉션 함수를 사용할 수 있다.
+        ```
+        // JPQL
+        SELECT t.members.size FROM Team t
+        // QUERY
+        SELECT (SELECT COUNT(m.id) FROM Member m WHERE t.id=m.team_id) FROM Team t
+        ```
+  - 묵시적 내부 조인이 발생하지 않도록 조심해야 한다. 조인이 발생하는 상황 파악이 어렵고 조인은 SQL 튜닝에 중요 포인트가 된다.
+    - 항상 내부 조인이 발생하며, 컬렉션은 경로 탐색의 끝이된다. 명시적 조인을 통해 별칭을 얻어야 추가 탐색이 가능하다.
+    - 경로 탐색은 주로 SELECT, WHERE 절에서 사용하지만 묵시적 조인으로 인해 SQL의 FROM(JOIN) 절에 영향을 준다.
+    - 가급적 묵시적 조인 대신 명시적 조인을 사용하자
+
+- 명시적 조인과 묵시적 조인
+  - 명시적 조인: join 키워드 직접 사용
+    - SELECT m FROM Member join m.team t
+  - 묵시적 조인: 경로 표현식에 의해 묵시적으로 SQL 조인 발생 (내부 조인만 가능)
+    - SELECT m.team FROM Member m
+
+#### Fetch JOIN
+
+- Fetch JOIN
+  - SQL 조인 종류가 아니다.
+  - JPQL에서 성능 최적화를 위해 제공하는 기능
+  - 연관된 엔티티나 컬렉션을 SQL 한 번에 함께 조회하는 기능
+  - join fetch 명령어 사용
+  - Fetch join ::= \[LEFT \[OUTER] | INNER] JOIN FETCH 조인 경로
+
+- 엔티티 페치 조인
+  - SQL 한번에 회원을 조회하면서 연관된 팀도 함께 조회
+  - SQL을 보면 회원 뿐 아니라 팀도 함께 SELECT
+  ```
+  // JPQL
+  SELECT m FROM Member m JOIN FETCH m.team
+  // SQL
+  SELECT m.*, t.* FROM Member m JOIN Team t ON m.team_id = t.id
+  ```
+
+- 페치 조인 예지
+  - fetch 조인을 사용하지 않은 경우
+    ```java
+    String sql = "SELECT a FROM Account a";
+    List<Account> accounts = em.createQuery(sql, Account.class)
+        .getResultList();
+
+    for(Account account: accounts) {
+        System.out.println(account.getName() +" " + account.getTeam().getName());
+    }
+    // AccountA, 팀A(SQL)
+    // AccountB, 팀A(1차 캐시)
+    // AccountC, 팀B(SQL)
+    ```
+    - 쿼리
+      ```
+      select
+        account0_.id as id1_0_,
+        account0_.age as age2_0_,
+        account0_.name as name3_0_,
+        account0_.team_id as team_id4_0_ 
+      from
+        account account0_
+      ```
+      - Account만 가져온다. (FetchType이 LAZY이다)
+      - Account에 Team을 사용하기 위해서는 다시 가져와야 하며 1차 캐시에 있는 경우 1차캐시를 사용한다.
+      
+  - fetch 조인을 사용한 경우
+    ```java
+    tring sql = "SELECT a FROM Account a JOIN FETCH a.team";
+    List<Account> accounts = em.createQuery(sql, Account.class)
+        .getResultList();
+
+    for(Account account: accounts) {
+      Team team = account.getTeam();
+      System.out.println(account.getName() +" " + team.getName());
+    }
+    ```
+    - 쿼리
+      ```
+      select
+        account0_.id as id1_0_0_,
+        team1_.id as id1_14_1_,
+        account0_.age as age2_0_0_,
+        account0_.name as name3_0_0_,
+        account0_.team_id as team_id4_0_0_,
+        team1_.name as name2_14_1_ 
+      from
+        account account0_ 
+      inner join
+        team team1_ 
+            on account0_.team_id=team1_.id
+      ```
+      - Account와 연관된 Team까지 다 가져온다.
+ 
+- 컬렉션 페치 조인
+  - 컬렉션 패치 조인은 일대다 관계에 컬렉션을 페치 조인할 때 사용된다.
+    ```
+    // JPQL
+    SELECT t
+    FROM Team t JOIN FETCH t.members
+    WHERE t.name='TeamA'
+    // SQL
+    SELECT t.*, m.*
+    FROM Team t
+    INNER JOIN Member m ON t.id = m.team_id
+    WHERE t.name='TeamA'
+    ```
+    
+- JPQL의 Distinct
+  - SQL의 DISTINCT는 중복된 결과를 제거하는 명령
+    - SQL의 distinct 키워드는 모든 column이 동일해야 가능하다.
+  - JPQL의 DISTINCT는 2가지 기능을 제공한다.
+    - SQL의 DISTINCT를 추가
+    - 애플리케이션에서 엔티티 중복 제거
+  - 예시
+    - 하나의 Team에 2명의 Account가 있다.
+    - Team과 Member를 조회하는 경우
+      ```java
+      String sql = "SELECT t FROM Team t JOIN FETCH t.accounts";
+      List<Team> teams = em.createQuery(sql, Team.class)
+          .getResultList();
+
+      for(Team team: teams) {
+          System.out.print(team.getName()+"'s members: ");
+          for(Account account: team.getAccounts()) {
+              System.out.print(account.getName() + " ");
+          }
+          System.out.println();
+      }
+      ```
+      ```
+      //출력
+      TeamA's members: AccountA AccountB 
+      TeamA's members: AccountA AccountB 
+      TeamB's members: AccountC
+      ```
+      - AccountA와 AccountB가 TeamA에 있기 때문에 중복되어 나온다.
+        - SQL에서는 Team1 | Account1, Team1 | Account2 2개의 row로 나오지만,
+        - JPA에서 객체로 관리하는 경우 List를 조회할 수 있기 때문에 같은 결과로 보이게 된다.
+      - 이를 해결하기 위해 JPQL에서 DISTINCT는 엔티티 중복 제거 기능을 추가했다
+    - DISTINCT 추가
+      ```java
+      String sql = "SELECT distinct t FROM Team t JOIN FETCH t.accounts";
+      List<Team> teams = em.createQuery(sql, Team.class)
+          .getResultList();
+
+      for(Team team: teams) {
+          System.out.print(team.getName()+"'s members: ");
+          for(Account account: team.getAccounts()) {
+              System.out.print(account.getName() + " ");
+          }
+          System.out.println();
+      }
+      ```
+      ```
+      // 출력
+      TeamA's members: AccountA AccountB 
+      TeamB's members: AccountC 
+      ```
+      - 중복되는 TeamA가 사라졌다.
+
+- 페치 조인과 일반 조인의 차이
+  - 일반 조인 실행 시 연관된 엔티티를 함께 조회하지 않음
+  - 일반 조인 예시
+    - Team과 Account를 조인했지만, Team의 컬럼만 가져온다.
+    - JPQL
+      ```
+      SELECT t
+      FROM Team t JOIN t.Account a
+      WHERE t.name='TeamA'
+      ```
+    - SQL
+      ```
+      SELECT T.*
+      FROM TEAM T INNER JOIN ACCOUNT A ON T.ID=A.TEAM_ID
+      WHERE T.NAME='TeamA'
+      ```
+  - JPQL은 결과를 반환할 때 연관관계 고려하지 않는다.
+  - 단지 SELECT 절에 지정한 엔티티만 조회할 뿐이다.
+  - 여기서는 팀 엔티티만 조회하고, 회원 엔티티는 조회하지 않는다.
+  - 페치 조인 예시
+    - Team만 조회하였지만 연관된 Account도 조회된다.
+    - JPQL
+      ```
+      SELECT t
+      FROM Team t JOIN FETCH t.Account a
+      WHERE t.name='TeamA'
+      ```
+    - SQL
+      ```
+      SELECT T.*, A.*
+      FROM TEAM T INNER JOIN ACCOUNT A ON T.ID=A.TEAM_ID
+      WHERE T.NAME='TeamA'
+      ```
+  - 페치 조인을 사용할 때만 연관된 엔티티도 함께 즉시 로딩으로 조회
+  - 페치 조인은 객체 그래프를 SQL 한번에 조회하는 개념
+
+- 페치 조인의 한계
+  - 페치 조인 대상에는 별칭을 줄 수 없다. 
+    - 하이버네이트는 가능, 가급적 사용하지 않는 것이 좋다.
+    - F 
+  - 둘 이상의 컬렉션은 페치 조인 할 수 없다. 
+  - 컬렉션을 페치 조인하면 페이징 API(setFirstResult, setMaxResults)를 사용할 수 없다. 
+    - 일대일, 다대일 같은 단일 값 연관 필드들은 페치 조인해도 페이징 가능
+    - 하이버네이트는 경고 로그를 남기고 메모리에서 페이징(매우 위험)
+      - 대량의 데이터에 경우 메모리에 모든 데이터가 남고, 거기에서 페이징 처리를 하기 때문에 문제가 발생할 수 있다.
+    - @BatchSize 로 해결
+      - size를 지정하여 설정한 size만큼 데이터를 가져온다.
+      - 많은 양의 전체 데이터를 가져오지 않기 때문에 페이징 처리가 가능해진다.
+
+- 페치 조인의 특징
+  - 연관된 엔티티들을 SQL 한 번으로 조회 - 성능 최적화
+  - 엔티티에 직접 적용하는 글로벌 로딩 전략보다 우선함
+    - @OneToMany(fetch = FetchType.LAZY) //글로벌 로딩 전략
+  - 실무에서 글로벌 로딩 전략은 모두 지연 로딩
+  - 최적화가 필요한 곳은 페치 조인 적용
+
+#### 다형성 쿼리
+
+- TYPE 키워드 예시
+  - Item을 상속받는 Album, Movie, Book이 있다.
+  - Item 중에 Book, Movie를 조회
+    ```
+    // JPQL
+    SELECT i FROM Item i
+    WHERE TYPE(i) IN (Book, Movie)
+    // SQL
+    SELECT i.* FROM Item i
+    WHERE i.DTYPE in ('B', 'M')
+    ```
+
+- TREAT 키워드
+  - 자바의 타입 캐스팅과 유사
+  - 상속 구조에서 부모 타입을 특정 자식 타입으로 다룰 때 사용
+  - FROM, WHERE, SELECT 사용
+  - 예시
+    - 부모인 Item과 자식 Book이 있다.
+    - JPQL
+      ```
+      // JPQL
+      SELECT i FROM Item i
+      WHERE treat(i as Book).author = 'kim'
+      ```
+    - 단일 테이블(SINGLE_TABLE) 전략
+      ```
+      // SQL 
+      SELECT i.* FROM Item i
+      WHERE i.DTYPE='B' AND i.author='kim'      
+      ```
+    - JOIN 테이블 전략
+      ```
+      //SQL
+      SELECT product0_.*,
+          product0_1.*,
+          product0_2.*,
+          product0_3.*
+      from
+          product product0_ 
+      left outer join
+          album product0_1_ 
+              on product0_.id=product0_1_.id 
+      inner join
+          book product0_2_ 
+              on product0_.id=product0_2_.id 
+      left outer join
+          movie product0_3_ 
+              on product0_.id=product0_3_.id 
+      where
+          product0_2_.author='Kim'
+      ```
+    - 클래스 별 테이블(TABLE_PER_CLASS) 전략
+      ```
+      select
+          product0_.*
+          from
+              ( select
+                  id,
+                  created_by,
+                  created_date,
+                  modified_by,
+                  modified_date,
+                  name,
+                  price,
+                  null as artist,
+                  null as author,
+                  null as isbn,
+                  null as actor,
+                  null as director,
+                  0 as clazz_ 
+              from
+                  product 
+              union
+              all select
+                  id,
+                  created_by,
+                  created_date,
+                  modified_by,
+                  modified_date,
+                  name,
+                  price,
+                  artist,
+                  null as author,
+                  null as isbn,
+                  null as actor,
+                  null as director,
+                  1 as clazz_ 
+              from
+                  album 
+              union
+              all select
+                  id,
+                  created_by,
+                  created_date,
+                  modified_by,
+                  modified_date,
+                  name,
+                  price,
+                  null as artist,
+                  author,
+                  isbn,
+                  null as actor,
+                  null as director,
+                  2 as clazz_ 
+              from
+                  book 
+              union
+              all select
+                  id,
+                  created_by,
+                  created_date,
+                  modified_by,
+                  modified_date,
+                  name,
+                  price,
+                  null as artist,
+                  null as author,
+                  null as isbn,
+                  actor,
+                  director,
+                  3 as clazz_ 
+              from
+                  movie 
+          ) product0_ 
+      where
+          product0_.author='Kim'
+      ```
+
 #### 출처
 
 김영한님의 자바 ORM 표준 JPA 프로그래밍 - 기본편 강의
