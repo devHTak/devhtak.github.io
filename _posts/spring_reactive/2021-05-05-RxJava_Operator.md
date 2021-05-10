@@ -552,43 +552,359 @@ category: RxJava
 - retry
   - 데이터 통지 중 에러가 발생했을 때, 데이터 통지를 재시도한다.
   - 즉, onError 이벤트가 발생하면 subscribe()를 다시 호출하여 재구독한다.
+  - 에러가 발생한 시점에 통지에 실패한 데이터만 다시 통지되는 것이 아니라 처음부터 다시 통지된다.
   - 예제
     ```java
-    Observable.just(5)
-        .flatMap(num -> {
-            return Observable.interval(200L, TimeUnit.MILLISECONDS)
-                .map(i -> {
-                    long result;
-                    try {
-                        result = num / i;
-                    } catch(Exception e) {
-                        System.out.println("EXCEPTION: " + e.getMessage());
-                        throw e;
-                    }
-                    return result;
-                })
-                .retry(5)
-                .onErrorReturn(throwable -> -1L);
-        }) 
+    Observable.just(10, 12, 15, 16)
+        .zipWith(Observable.just(1, 2, 0, 4), (a, b) -> {
+            int result;
+            try {
+                result = a / b;
+                return result;
+            } catch(ArithmeticException e) {
+                System.out.println(e.getMessage());
+                throw e;
+            }
+        })
+        .retry(3)
+        .onErrorReturn(throwable -> -1)
         .subscribe(
-            data -> System.out.println("on next: " + data),
-            error -> System.out.println("error: " + error),
-            () -> System.out.println("on complete!"));
-    Thread.sleep(2000L);
+            data -> System.out.println("ON_NEXT: " + data),
+            error -> System.out.println("ON_ERROR: " + error),
+            ()-> System.out.println("ON_COMPLETE")
+    );
     ```
     ```
     // 출력
-    EXCEPTION: / by zero
-    EXCEPTION: / by zero
-    EXCEPTION: / by zero
-    EXCEPTION: / by zero
-    EXCEPTION: / by zero
-    EXCEPTION: / by zero
-    on next: -1
-    on complete!
+    ON_NEXT: 10
+    ON_NEXT: 6
+    / by zero
+    ...
+    // 3번 반복
+    ...
+    ON_NEXT: -1
+    ON_COMPLETE
     ```
-    - EXCEPTION이 발생한 후 retry를 5번 반복하여 발생한다.
+    - EXCEPTION이 발생한 후 retry를 3번 반복하여 발생한다.
     - 시도한 후에 onErrorReturn을 통해 -1을 전송한다.
+    - Exception이 발생한 시점부터 다시 값을 보내는 것이 아닌, 처음부터 값을 전송한다.
+
+#### 유틸리티 연산자
+
+- delay 첫번째 유형
+  - 생산자가 데이터를 생성 및 통지를 하지만 설정한 시간만큼 소비자쪽으로의 데이터 전달을 지연시킨다.
+  - 예시
+    ```java
+    Observable.just(1, 3, 4, 5)
+        .doOnNext(data -> System.out.println("DO ON NEXT: " + data))
+        .delay(2000L, TimeUnit.MILLISECONDS)
+        .subscribe(data -> System.out.println("ON NEXT: " + data));
+
+    Thread.sleep(2500L);
+    ```
+    - 2초 정도 delay가 지난 후에 ON NEXT에 수신된다.
+
+- delay 두번째 유형
+  - 파라미터로 생성되는 Observable이 데이터를 통지할 때까지 각각의 원본 데이터의 통지를 지연시킨다.
+  - 예시
+    ```java
+    Observable.just(1, 3, 5, 7)
+        .delay(item -> {
+            Thread.sleep(1000L);
+            return Observable.just(item);
+        }).subscribe(data-> System.out.println("ON NEXT: " + data));
+    ```
+
+- delaySubscription
+  - 생산자가 데이터의 생성 및 동지 자체를 설정한 시간만큼 지연시킨다.
+  - 즉, 소비자가 구독을 해도 구독 시점 자체가 지연된다.
+  - delay에 경우 구독 즉시 호출되지만, 구독 시점은 delay 시간 후에 진행된다.
+  - delaySubscription에 경우 delay 시간 후에 호출되고 바로 구독된다.
+  - 예시
+    ```java
+    Observable.just(1, 3, 4, 5)
+        .doOnNext(data -> System.out.println("DO ON NEXT: " + data))
+        .delaySubscription(2000L, TimeUnit.MILLISECONDS)
+        .subscribe(data -> System.out.println("ON NEXT: " + data));
+
+    Thread.sleep(2500L);
+    ```
+
+- timeout
+  - 각각의 데이터 통지 시, 지정된 시간안에 통지가 되지 않으면 에러를 통지한다.
+    - Timeout 시간 안에 1번에 호출이 발생해야 한다.
+  - 에러 통지 시 전달되는 에러 객체는 TimeoutException이다.
+  - 예시
+    ```java
+    Observable.range(1, 5)
+        .map(num -> {
+            long time = 1000L;
+            if(num == 4) {
+                time = 1500L;
+            }
+            Thread.sleep(time);
+            return num;
+        })
+        .timeout(1200L, TimeUnit.MILLISECONDS)
+        .subscribe(
+            data -> System.out.println("ON_NEXT: " + data),
+            error -> System.out.println("ON_ERROR: " + error)
+        );
+    ```
+    ```
+    // 출력
+    ON_NEXT: 1
+    ON_NEXT: 2
+    ON_NEXT: 3
+    ON_ERROR: java.util.concurrent.TimeoutException:
+    ```
+    - 1, 2, 3 을 진행할 때에는 1초 간격으로 값을 던졌기 때문에 1.2초 내에 timeout 시간 안에 동작되었다.
+    - 4를 전송할 차례에서는 1.2초 이내에 진행되지 않아 오류가 발생된다.
+
+- timeInterval
+  - 각각의 데이터가 통지되는 데 걸린 시간을 통지한다.
+  - 통지된 데이터와 데이터가 통지되는 데 걸린 시간을 소비자쪽에서 모두 처리할 수 있다.
+  - 예시
+    ```java
+    Observable.just(1, 3, 5, 7, 9)
+        .delay(item -> {
+            Thread.sleep((int)(Math.random()*1000));
+            return Observable.just(item);
+        })
+        .timeInterval()
+        .subscribe(timed -> System.out.println("통지 걸린 시간:" + timed.time() +", 데이터: " + timed));
+    ```
+    - 보내준 객체로 value, interval time 등을 알 수 있다.
+    - 출력
+      ```
+      통지 걸린 시간:148, 데이터: Timed[time=148, unit=MILLISECONDS, value=1]
+      통지 걸린 시간:11, 데이터: Timed[time=11, unit=MILLISECONDS, value=3]
+      통지 걸린 시간:197, 데이터: Timed[time=197, unit=MILLISECONDS, value=5]
+      통지 걸린 시간:222, 데이터: Timed[time=222, unit=MILLISECONDS, value=7]
+      통지 걸린 시간:109, 데이터: Timed[time=109, unit=MILLISECONDS, value=9]
+      ```      
+
+- materialize / dematerialize
+  - materialize: 통지된 데이터와 통지된 데이터의 통지 타입 자체를 Notification 객체에 담고 이 Notification 객체를 통지한다.
+    - 즉, 통지 데이터의 메타 데이터를 포함하여 통지한다고 볼 수있다.
+  - dematerialize: 통지된 Notification 객체를 원래의 통지 데이터로 변환하여 통지한다.
+  - materialize 예시
+    ```java
+    Observable.just(1, 2, 3)
+        .materialize()
+        .subscribe(notification-> {
+            String notificationType = 
+                notification.isOnNext() ? "onNext()" : 
+                    (notification.isOnError() ? "onError()" : "onComplete()");
+            System.out.println("notification 타입: " + notificationType);
+            System.out.println("on next: " + notification.getValue());
+        });
+    ```
+    ```
+    // 출력
+    notification 타입: onNext()
+    on next: 1
+    notification 타입: onNext()
+    on next: 2
+    notification 타입: onNext()
+    on next: 3
+    notification 타입: onNext()
+    notification 타입: onComplete()
+    on next: null
+    ```
+    
+#### 조건과 불린 연산자
+
+- all
+  - 통지되는 모든 데이터가 설정한 조건에 맞는지를 판단한다.
+  - 결과 값을 한번만 토지하면 되기때문에 true/false 값을 Single로 반환한다.
+  - 통지된 데이터가 조건에 맞지 않는다면 이후 데이터는 구독 해지되어 통지되지 않는다.
+  - 예시
+    ```java
+    Observable.just(1, 3, 5, 7, 8, 10)
+        .doOnNext(num -> System.out.println("Do on next: " + num))
+        .all(num -> num < 6)
+        .subscribe(data -> System.out.println("Do on next: " + data));
+    ```
+    ```
+    Do on next: 1
+    Do on next: 3
+    Do on next: 5
+    Do on next: 7
+    on next: false
+    ```
+    - false 조건이 나올 때까지는 정상 전달된다.
+    - false가 되면 Single<Boolean> 타입으로 전송된다. 
+
+- amb
+  - 여러 개의 Observable 중 최초 통지 시점이 가장 빠른 Observable의 데이터만 통지되고, 나머비 Observable은 무시된다.
+  - 즉, 가장 먼저 통지를 시작한 Observable의 데이터만 통지된다.
+  - 예시
+    ```java
+    List<Observable<Integer>> observables = Arrays.asList(
+        Observable.just(1, 3, 5, 7)
+            .delay(100L, TimeUnit.MILLISECONDS).doOnComplete(()->System.out.println("completeA")),
+        Observable.just(2, 4, 6, 8)
+            .delay(200L, TimeUnit.MILLISECONDS).doOnComplete(()->System.out.println("completeB")),
+        Observable.just(10, 11, 12, 13)
+            .delay(300L, TimeUnit.MILLISECONDS).doOnComplete(()->System.out.println("completeC"))	
+    );
+
+    Observable.amb(observables)
+        .doOnComplete(()-> System.out.println("COMPLETE"))
+        .subscribe(data->System.out.println("NEXT: " + data));
+    Thread.sleep(1000L);
+    ```
+    ```
+    // 출력
+    NEXT: 1
+    NEXT: 3
+    NEXT: 5
+    NEXT: 7
+    completeA
+    COMPLETE
+    ```
+    - 가장 먼저 도착한 홀수 데이터를 갖는 Observable만 통지된다.	
+
+- contains
+  - 파라미터의 데이터가 Observable에 포함되어 있는지를 판단한다.
+  - 결과값을 한번만 통지하면 되기 때문에 t/f 값은 Single로 반환한다.
+  - 결과 통지 시점은 Observable에 포함된 데이터를 통지하거나 완료를 통지할 때이다
+  - 예시
+    ```java
+    Observable.just(1, 3, 5, 7)
+        .doOnNext(data -> System.out.println("next: " + data))
+        .contains(3)
+        .subscribe(data -> System.out.println("ON NEXT: " + data))
+    ```
+    ```
+    //출력
+    next: 1
+    next: 3
+    ON NEXT: true
+    ```
+    - contains에 부합되는 3이 통지된 후에 true를 리턴하고 종료된다.
+    
+    ```java
+    Observable.just(1, 2, 5, 7)
+        .doOnNext(data -> System.out.println("next: " + data))
+        .contains(3)
+        .subscribe(data -> System.out.println("ON NEXT: " + data));
+    ```
+    
+    ```
+    // 출력
+    next: 1
+    next: 2
+    next: 5
+    next: 7
+    ON NEXT: false
+    ```
+    
+    - 전체를 통지 받은 후 포함되어 있지 않다면 false를 Single 타입으로 보낸다.
+
+- defaultIfEmpty
+  - 통지할 데이터가 없을 경우 파라미터로 입력된 값을 통지한다.
+  - 즉, 연산자 이름 의미 그대로 Observable에 통지할 데이터가 없이 비어 있는 상태일 때 디폴트 값을 통지한다.
+  - 예시
+    ```java
+    Observable.just(1, 2, 3, 4, 5) 
+        .filter(num -> num > 10)
+        .defaultIfEmpty(10)
+        .subscribe(System.out::println);
+    ```
+    - 10이 출력된다.
+
+- sequenceEqual
+  - 두 Observable이 동일한 순서로 동일한 갯수의 같은 데이터를 통지하는지 판단한다.
+  - 통지 시점과 무관하게 데이터의 정합성만 판단하므로 통지 시점이 다르더라도 조건이 맞는다면 true를 통지한다.
+  - 예시
+    ```java
+    Observable<Integer> observable1 = Observable.just(1, 3, 5, 7, 9)
+        .subscribeOn(Schedulers.computation())
+        .delay(num -> {
+            Thread.sleep(500L);
+            return Observable.just(num);
+        }).doOnNext(num -> System.out.println("observable1: " + num));
+
+    Observable<Integer> observable2 = Observable.just(1, 3, 5, 6, 9)
+        .subscribeOn(Schedulers.computation())
+        .delay(num -> {
+            Thread.sleep(700L);
+            return Observable.just(num);
+        }).doOnNext(num -> System.out.println("observable2: " + num));
+
+    Observable.sequenceEqual(observable1, observable2)
+        .subscribe(data-> System.out.println("ON NEXT: " + data));
+    Thread.sleep(6000L);
+    ```
+    - 7과 6이 다르기 때문에 false를 반환한다.
+
+
+#### 데이터 집계 연산자
+
+- count
+  - Observable이 통지한 데이터의 총 개수를 통지한다.
+  - 총 개수만 통지하면 되므로 결과값은 Single로 반환한다.
+  - 데이터의 총 개수를 통지하는 시점은 완료 통지를 받은 시점이다.
+  - 여러 Observable을 사용하면 모든 Observable의 데이터 개수를 확인한다. 
+  - 예시
+    ```java
+    Observable.concat(Arrays.asList(
+            Observable.just(1, 3, 5, 7, 9),
+            Observable.just(2, 4, 6, 8),
+            Observable.just(10, 11, 12)
+        ))
+        .count()
+        .subscribe(data-> System.out.println("ON NEXT: " + data));
+    ```
+    - 12가 출력된다.
+        
+- reduce
+  - Observable이 통지한 데이터를 이용하여 어떤 결과를 일정한 방식으로 합성한 후, 최종 결과 반환
+  - Observable이 통지한 데이터가 숫자일 경우 파라미터로 지정한 함수형 인터페이스에 정의된 계산 방식으로 값을 집계할 수 있다.
+  - 예시
+    ```java
+    Observable.range(1, 10)
+        .doOnNext(System.out::println)
+        .reduce((x, y) -> x + y)
+        .subscribe(data -> System.out.println("누적 합계: " + data));
+    ```
+    - x가 totalNum으로 누적합을 나타내며, y는 현재 받는 데이터의 값을 나타낸다.
+    ```java
+    Observable.range(1, 10)
+        .doOnNext(System.out::println)
+        .reduce(10, (x, y) -> x + y)
+        .subscribe(data -> System.out.println("누적 합계: " + data));
+    ```
+    - 10이 초기값으로 입력되며 65가 출력된다.
+    ```java
+    Observable.just("a", "b", "c")
+        .doOnNext(System.out::println)
+        .reduce((x, y) -> "(" + x + "," + y + ")" )
+        .subscribe(data -> System.out.println("ON NEXT: " + data));
+    ```
+    - 문자열에 경우 string 또한 중첩되어 출력된다.
+    - ON NEXT: ((a,b),c)이 출력된다.
+    
+- scan
+  - reduce와 같은 방식으로 생성하지만 차이점이 있다.
+  - 차이점은 reduce는 마지막 최종 값만 보여주지만, scan에 경우 과정을 확인할 수 있다.
+  - 예시
+    ```java
+    Observable.just("a", "b", "c")
+        .scan((x, y) -> "(" + x + "," + y + ")" )
+        .subscribe(data -> System.out.println("ON NEXT: " + data));
+    ```
+    ```
+    // 출력
+    ON NEXT: a
+    ON NEXT: (a,b)
+    ON NEXT: ((a,b),c)
+    ```
+    - 문자열에 경우 string 또한 중첩되어 출력된다.
+    - doOnNext를 출력하지 않았지만 출력되는 결과를 계속 확인할 수 있다.
+
 
 #### 출처
 
