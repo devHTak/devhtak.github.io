@@ -137,6 +137,66 @@ category: RxJava
 
 - 구독 시점에 이미 통지된 데이터가 있다면 이미 통지된 데이터 중에서 최근 통지된 데이터를 지정한 개수만크 전달 받은 후, 구독 이 후에 통지된 데이터를 전달 받는다.
 - 이미 처리가 완료된 이후에 구독하더라도 지정한 개수 만큼의 최근 통지된 데이터를 전달 받는다.
+- 예시
+  ```java
+  ReplaySubject<Integer> subject = ReplaySubject.create();
+  		
+  subject.onNext(3000);
+  subject.onNext(2500);
+  
+  subject.subscribe(price -> System.out.println("# 소비자1: " + price));
+  subject.onNext(3500);
+  subject.subscribe(price -> System.out.println("# 소비자2: " + price));
+  subject.onNext(3300);
+  
+  subject.onComplete();
+  subject.subscribe(price -> System.out.println("# 소비자3: " + price));
+  ```
+  ```
+  // 출력
+  # 소비자1: 3000
+  # 소비자1: 2500
+  # 소비자1: 3500
+  # 소비자2: 3000
+  # 소비자2: 2500
+  # 소비자2: 3500
+  # 소비자1: 3300
+  # 소비자2: 3300
+  # 소비자3: 3000
+  # 소비자3: 2500
+  # 소비자3: 3500
+  # 소비자3: 3300
+  ```
+  - 소비자1, 2, 3에 경우 모든 데이터를 받을 수 있다.
+  - 소비자3은 구독 완료 후에도 계속 데이터를 받는 것을 확인할 수 있다.
+
+- 예시: 지정한 사이즈만큼 입력을 받는다.
+  ```java
+  ReplaySubject<Integer> subject = ReplaySubject.createWithSize(2);
+  subject.onNext(3000);
+  subject.onNext(2500);
+  
+  subject.subscribe(price -> System.out.println("# 소비자1: " + price));
+  subject.onNext(3500);
+  subject.subscribe(price -> System.out.println("# 소비자2: " + price));
+  subject.onNext(3300);
+  subject.onComplete();
+  subject.subscribe(price -> System.out.println("# 소비자3: " + price));
+  ```
+  ```
+  // 출력
+  # 소비자1: 3000
+  # 소비자1: 2500
+  # 소비자1: 3500
+  # 소비자2: 2500
+  # 소비자2: 3500
+  # 소비자1: 3300
+  # 소비자2: 3300
+  # 소비자3: 3500
+  # 소비자3: 3300
+  ```
+  - 사이즈를 2로 설정하였기 때문에 구독할 때 보낸 데이터 중 최신 2개를 수신할 수 있다.
+  - 구독자 3에 경우 완료 통지 후 구독을 진행하였어도 최신 2개의 데이터를 수신한다.
 
 #### 출처
 
