@@ -197,14 +197,72 @@ category: RxJava
 - Schedulers.trampoline()
   - 현재 실행되고 있는 쓰레드에 큐(Queue)를 생성하여 처리할 작업들을 큐에 넣고 순서대로 처리한다.
     - FIFO
+  - 예시
+    ```java
+    Observable<String> observable = Observable.just("1", "2", "3", "4", "5");
+		
+    observable.subscribeOn(Schedulers.trampoline())
+        .map(data-> "## " + data + " ##")
+        .subscribe(data -> System.out.println(Thread.currentThread().getName() + ", ON NEXT: " + data));
+
+    observable.subscribeOn(Schedulers.trampoline())
+        .map(data-> "$$ " + data + " $$")
+        .subscribe(data -> System.out.println(Thread.currentThread().getName() + ", ON NEXT: " + data));
+    ```
+    ```
+    // 출력
+    main, ON NEXT: ## 1 ##
+    main, ON NEXT: ## 2 ##
+    main, ON NEXT: ## 3 ##
+    main, ON NEXT: ## 4 ##
+    main, ON NEXT: ## 5 ##
+    main, ON NEXT: $$ 1 $$
+    main, ON NEXT: $$ 2 $$
+    main, ON NEXT: $$ 3 $$
+    main, ON NEXT: $$ 4 $$
+    main, ON NEXT: $$ 5 $$
+    ```
+    - trampoline은 새로운 스레드를 생성하지 않고 main 스레드로 실행한다.
 
 - Schedulers.single()
   - 단일 쓰레드를 생성하여 처리 작업을 진행한다
   - 여러번 구독해도 공통으로 사용한다.
+  - 예시
+    ```java
+    Observable<String> observable = Observable.just("1", "2", "3", "4", "5");
+		
+    observable.subscribeOn(Schedulers.single())
+        .map(data-> "## " + data + " ##")
+        .subscribe(data -> System.out.println(Thread.currentThread().getName() + ", ON NEXT: " + data));
+
+    observable.subscribeOn(Schedulers.single())
+        .map(data-> "$$ " + data + " $$")
+        .subscribe(data -> System.out.println(Thread.currentThread().getName() + ", ON NEXT: " + data));
+
+    Thread.sleep(1000L);
+    ```
+    ```
+    // 출력
+    RxSingleScheduler-1, ON NEXT: ## 1 ##
+    RxSingleScheduler-1, ON NEXT: ## 2 ##
+    RxSingleScheduler-1, ON NEXT: ## 3 ##
+    RxSingleScheduler-1, ON NEXT: ## 4 ##
+    RxSingleScheduler-1, ON NEXT: ## 5 ##
+    RxSingleScheduler-1, ON NEXT: $$ 1 $$
+    RxSingleScheduler-1, ON NEXT: $$ 2 $$
+    RxSingleScheduler-1, ON NEXT: $$ 3 $$
+    RxSingleScheduler-1, ON NEXT: $$ 4 $$
+    RxSingleScheduler-1, ON NEXT: $$ 5 $$
+    ```
+    - single은 하나의 새로운 thread를 생성하여 사용한다.
 
 - Schedulers.from(executor)
   - Executor를 사용해서 생성한 쓰레드를 사용한다.
   - RxJava의 Scheduler와 Executor의 동작 방식이 다르므로 자주 사용되지 않음.
+
+#### 정리
+
+- 다양한 Scheduler 함수가 존재하지만, 주로 Schedulers.io(), Schedulers.computation() 을 사용한다.
 
 #### 출처
 
