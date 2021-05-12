@@ -46,6 +46,7 @@ paradigm concerned with data streams and the propagation of change.
       ```
       
 - Reactive Stream에서의 데이터 처리 방식은 1thread에 여러 요청을 처리할 수 있다.
+  - Context Switching을 줄일 수 있고 여러 요청을 한번에 처리할 수 있다.
 
 #### Reactive Programming 기반 기술
 
