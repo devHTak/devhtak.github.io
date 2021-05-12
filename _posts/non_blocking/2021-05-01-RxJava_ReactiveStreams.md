@@ -52,10 +52,29 @@ paradigm concerned with data streams and the propagation of change.
 - Observer Pattern
   - 한 객체의 상태가 바뀌면 그 객체에 의존하는 다른 객체들한테 연락을 하고, 자동으로 내용이 갱신되는 방식에 디자인패턴
   - push 방식: 데이터의 변화가 발생했을 때 변경이 발생한 곳에서 데이터를 보내주는 방식
+  - Observable은 하나 또는 여러개의 Observer를 가지며 Observable은 notifyObservers 메소드를 호출함으로 변화를 Observer들에게 알려준다고 한다
 
 - Iterator Pattern
   - 컬렉션 구현 방법을 노출시키지 않으면서 컬렉션 안에 들어있는 모든 엘리먼트에 접근할 수 있는 방식을 구현한 패턴
   - pull 방식: 변경된 데이터가 있는지 요청을 보내 질의하고 변경된 데이터를 가져오는 방식
+  - Iterable interface 구현체
+    ```java
+    // for-each
+    List<Integer> list = Arrays.asList(1, 2, 3, 4, 5);
+    for(Integeri: list) {}
+    
+    // iterable
+    Iterable<Integer> iterable = Arrays.asList(1, 2, 3, 4, 5);
+    for(Iterator it = iterable.iterator(); it.hasNext();) {}
+    ```
+    - 컬렉션은 Iterable 인터페이스를 구현하기 떄문에 for-each가 가능하다.
+    - Iterable을 받으면 Iterator에 next(), hasNext() 등의 메소드를 사용할 수 있다.
+  - Iterable은 Iterator를 통해 데이터를 꺼내오고, Iterator의 next()를 통해 데이터를 가져온다
+
+- Reactive Programming은 Observer Pattern + Iterator Pattern
+  - Iterator로 스트림의 '끝'을 나타내고, Observer pattern의 async한 이벤트 실행을 결합하여 나타낸다.
+    - Iterator의 next() -> Observable onNext(), hasNext() -> onComplete(), error에 대한 처리로 onError()를 제공
+    - 데이터를 전송하는 방식은 Observer 패턴을 사용한다.
 
 #### Reactive Stream
 
