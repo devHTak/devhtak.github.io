@@ -22,6 +22,7 @@ paradigm concerned with data streams and the propagation of change.
   int sum1 = numbers.stream().filter(number -> number > 6 && (number % 2 != 0)).mapToInt(number -> number).sum();
   System.out.println("선언형 프로그래밍 사용: " + sum1);
   
+  // 명령형 프로그래밍 
   int sum2 = 0;
   for(Integer i : numbers) {
       if(i > 6 && (i % 2 != 0)) {
