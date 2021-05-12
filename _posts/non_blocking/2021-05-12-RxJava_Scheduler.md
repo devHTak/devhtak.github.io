@@ -51,14 +51,14 @@ category: RxJava
     ```java
     File[] files = new File("src/main/java/com/example").listFiles();
 		
-		Observable.fromArray(files)
+    Observable.fromArray(files)
         .doOnNext(data-> System.out.println(Thread.currentThread().getName() + ", ON NEXT: " + data))
         .filter(data -> data.isDirectory())
         .map(dir -> dir.getName())
         .subscribeOn(Schedulers.io())
         .subscribe(data -> System.out.println(Thread.currentThread().getName() + ", SUBSCRIBE: " + data));
 
-		Thread.sleep(1000L);
+    Thread.sleep(1000L);
     ```
     ```
     // 출력
@@ -68,7 +68,7 @@ category: RxJava
     RxCachedThreadScheduler-1, ON NEXT: src\main\java\com\example\subject
     RxCachedThreadScheduler-1, SUBSCRIBE: subject
     ```
-    - 같은 스레드로 진행하였다.
+    - Publisher에서 생성한 데이터를 넘길 때 새로운 스레드(RxCachedThreadScheduler-1)을 생성하여 제공
     - file io가 있기 때문에 해당 스케줄러를 사용했다.
     
 - Schedulers.computation()
@@ -79,7 +79,7 @@ category: RxJava
     ```java
     File[] files = new File("src/main/java/com/example").listFiles();
 		
-		Observable.fromArray(files)
+    Observable.fromArray(files)
         .doOnNext(data-> System.out.println(Thread.currentThread().getName() + ", ON NEXT: " + data))
         .subscribeOn(Schedulers.io())
         .observeOn(Schedulers.computation())
@@ -87,7 +87,7 @@ category: RxJava
         .map(dir -> dir.getName())
         .subscribe(data -> System.out.println(Thread.currentThread().getName() + ", SUBSCRIBE: " + data));
 		
-		Thread.sleep(1000L);
+    Thread.sleep(1000L);
     ```
     ```
     // 출력
@@ -99,12 +99,13 @@ category: RxJava
     ```
     - subscribe에는 IO로 observe에 경우 computation으로 지정하였다.
     - 다른 Thread가 생성되어 사용된 것을 확인할 수 있다.
+      - RxCachedThreadScheduler-1, RxComputationThreadPool-1
 
   - 예시 2
     ```java
     File[] files = new File("src/main/java/com/example").listFiles();
 		
-		Observable.fromArray(files)
+    Observable.fromArray(files)
         .doOnNext(data-> System.out.println(Thread.currentThread().getName() + ", #데이터 통지"))
         .subscribeOn(Schedulers.io())
         .observeOn(Schedulers.computation())
@@ -115,7 +116,7 @@ category: RxJava
         .observeOn(Schedulers.computation())
         .subscribe(data -> System.out.println(Thread.currentThread().getName() + ", SUBSCRIBE: " + data));
 
-		Thread.sleep(1000L);
+    Thread.sleep(1000L);
     ```
     ```
     // 출력
@@ -135,21 +136,19 @@ category: RxJava
   - 예시
     ```java
     Observable<Integer> observable1 = Observable.just(1, 3, 5, 7);
-		Observable<Integer> observable2 = Observable.just(2, 4, 6, 8);
-		Observable<Integer> observable3 = Observable.just(10, 20, 30, 40);
-		Observable<Integer> observable4 = Observable.range(1, 24);
+    Observable<Integer> observable2 = Observable.just(2, 4, 6, 8);
+    Observable<Integer> observable3 = Observable.just(10, 20, 30, 40);
+    Observable<Integer> observable4 = Observable.range(1, 24);
 		
-		Observable source = Observable.zip(observable1, observable2, observable3, observable4,
-				  (data1, data2, data3, hour) -> hour +"시: " + Collections.max(Arrays.asList(data1, data2, data3)));
+    Observable source = Observable.zip(observable1, observable2, observable3, observable4,
+        (data1, data2, data3, hour) -> hour +"시: " + Collections.max(Arrays.asList(data1, data2, data3)));
 		
-		source.subscribeOn(Schedulers.computation())
-			  .subscribe(data-> System.out.println(Thread.currentThread().getName() + ", #First: " + data));
-			
-			
-		source.subscribeOn(Schedulers.computation())
-			  .subscribe(data-> System.out.println(Thread.currentThread().getName() + ", #Second: " + data));
+    source.subscribeOn(Schedulers.computation())
+        .subscribe(data-> System.out.println(Thread.currentThread().getName() + ", #First: " + data));
+    source.subscribeOn(Schedulers.computation())
+        .subscribe(data-> System.out.println(Thread.currentThread().getName() + ", #Second: " + data));
 		
-		Thread.sleep(1000L);
+    Thread.sleep(1000L);
     ```
     ```
     // 출력
@@ -171,15 +170,15 @@ category: RxJava
     ```java
     Observable<String> observable = Observable.just("1", "2", "3", "4", "5");
 		
-		observable.subscribeOn(Schedulers.newThread())
+    observable.subscribeOn(Schedulers.newThread())
         .map(data -> "## " + data + " ##")
         .subscribe(data -> System.out.println(Thread.currentThread().getName() + " : " + data));
 		
-		observable.subscribeOn(Schedulers.newThread())
+    observable.subscribeOn(Schedulers.newThread())
         .map(data -> "## " + data + " ##")
         .subscribe(data -> System.out.println(Thread.currentThread().getName() + " : " + data));
 		
-		Thread.sleep(300L);
+    Thread.sleep(300L);
     ```
     ```
     // 출력
