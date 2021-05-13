@@ -64,7 +64,7 @@ category: Spring
   - 의존한다는 말은, 서로 다른 객체간에 레퍼런스 참조가 되어 있다는 의미
   - 이때, A->B에 의존관계에 있을 때 B객체에 변경사항이 A 객체에게 영향을 끼치는 구조
   - 예시
-    ```
+    ```java
     public class Orders {
         private Discount discount = new FixedDiscount();
         private int totalPrice;
