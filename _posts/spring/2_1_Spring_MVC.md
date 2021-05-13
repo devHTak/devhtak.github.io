@@ -297,5 +297,16 @@ public class SpringMemberControllerV2 {
         @RequestMapping(method = RequestMethod.GET)
         ```
         - RequestMapping에 method를 Get으로 사용하는 것
+
+#### @SpringBootApplication
+
+- Spring Boot 프로젝트를 생성하면 최초 패키지 및에 @SpringBootApplication 애노테이션이 있는 클래스가 자동 생성된다.
+- @SpringBootApplication은 3개의 Annotation 이상을 가진 복합 Annotation이다.
+  - @SpringBootConfiguration
+    - 빈 등록
+  - @CopmonentScan
+    - 하위 패키지에 @Component를 조회하여 빈 등록
+  - @EnableAutoConfiguration
+    - @EnableAutoConfiguration에 의해 spring.factories 안에 들어있는 수많은 자동 설정들이 조건에 따라 적용이 되어 수 많은 Bean들이 생성되고, 스프링 부트 어플리케이션이 실행되는 것이다
       
 ** 출처: 스프링 MVC - 백엔드 웹 개발 핵심 기술
