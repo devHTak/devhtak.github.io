@@ -342,7 +342,7 @@ public class RequestHeaderController {
     - @RequestParam Map
       - Map(key=value)
     - @RequestParam MultiValueMap
-      - MultiValueMap(key=[value1, value2, ...] ex) (key=userIds, value=[id1, id2])
+      - MultiValueMap(key=\[value1, value2, ...] ex) (key=userIds, value=\[id1, id2])
 
 - @ModelAttribute
   
