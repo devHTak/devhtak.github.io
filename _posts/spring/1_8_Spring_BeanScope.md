@@ -27,7 +27,7 @@ category: Spring
     
     ```java
     @Scope("prototype")
-    @Scomponent
+    @Component
     public class PrototypeBean() {}
     ```
     
