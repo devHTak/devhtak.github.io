@@ -230,7 +230,7 @@ category: Java Study
 - Lock과 Condition을 이용한 동기화
   - jdk 1.5부터 추과된 java.util.concurrent.locks 패키지를 통해 동기화할 수 있다.
   - Lock 클래스
-    - ReentrantReadWriteLock: 재진입이 가능한 lock. 가장 일반적인 배타 lock
+    - ReentrantLock: 재진입이 가능한 lock. 가장 일반적인 배타 lock
     - ReendtrantReadWriteLock: 읽기에는 공유적이고, 쓰기에는 배타적인 lock
     - StampedLock: ReendtrantReadWriteLock에 낙관적인 lock을 추가
     
