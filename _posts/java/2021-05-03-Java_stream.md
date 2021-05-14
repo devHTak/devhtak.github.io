@@ -85,7 +85,7 @@ category: Java Study
     Stream<String> generateStream = Stream.generate(()-> "a").limit(5);
     ```
   
-- Stream.iterator()
+- Stream.iterate()
   - 초기 값과 해당 값을 다루는 람다를 이용하여 스트림에 들어갈 요소를 만든다.
   - limit을 통해 특정 사이즈를 제한해야 한다.
     ```java
