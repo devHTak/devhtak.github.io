@@ -352,7 +352,7 @@ category: Test
     given(studyRepository.save(study)).willReturn(study);
     // when(studyRepository.save(study)).thenReturn(study);
     ```
-  - Verify -> Then
+  - Then -> Verify
     ```java    
     then(memberService).should(times(1)).notify(study);
     // verify(memberService, times(1)).notify(study);
