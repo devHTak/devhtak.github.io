@@ -162,6 +162,7 @@ category: Java Study
 - synchronized 블록, 1.5부터 java.util.concurrent.locks와 java.util.concurrent.aotmic 패키지를 통해 다양한 방식으로 동기화를 구현할 수 있도록 지원하고 있다.
 
 - synchronized 동기화
+  - 객체 암시적 잠금
   - synchronized 동기화 방법
     - 메서드 전체를 임계영역으로 지정: ex)public synchronized void methodName() {...}
       - 쓰레드는 synchronized 메서드가 호출된 시점부터 해당 메서드가 포함된 객체의 lock을 얻어 작업을 수행하다가 메서드가 종료되면 lock을 반환한다.
@@ -170,65 +171,66 @@ category: Java Study
       - synchronized 블럭의 영역 안으로 들어가면서부터 쓰레드는 지정된 객체의 lock을 얻게 되고, 이 블럭을 벗어나면 lock을 반납한다.
     - 두 방법 모두 lock의 획득과 반납이 자동적으로 이뤄지므로 임게영역만 설정해주면 된다.
      
-  ```java
-  public class Account {
-      private int balance = 1000;
-      public int getBalance() {
-          return this.balance;
-      }
-      public synchronized void withdraw(int money) {
-          if(this.balance >= money) {
-              try {
-                  Thread.sleep(1000);
-              } catch(InterruptedException e) {}
+      ```java
+      public class Account {
+          private int balance = 1000;
+          public int getBalance() {
+              return this.balance;
+          }
+          public synchronized void withdraw(int money) {
+              if(this.balance >= money) {
+                  try {
+                      Thread.sleep(1000);
+                  } catch(InterruptedException e) {}
 
-              balance -= money;
+                  balance -= money;
+              }
           }
       }
-  }
-  ```
-  ```java
-  public class RunnableExample implements Runnable{
-      private String name;
-      private Account account = new Account();
+      ```
+      ```java
+      public class RunnableExample implements Runnable{
+          private String name;
+          private Account account = new Account();
 
-      public RunnableExample(String name) {
-          this.name = name;
-      }
+          public RunnableExample(String name) {
+              this.name = name;
+          }
 
-      @Override
-      public void run() {
-          // TODO Auto-generated method stub
-          while(account.getBalance() > 0) {
-              int money = (int)(Math.random() * 3) * 100;
-              account.withdraw(money);
-              System.out.println(this.name + " balance: " + account.getBalance() );
+          @Override
+          public void run() {
+              // TODO Auto-generated method stub
+              while(account.getBalance() > 0) {
+                  int money = (int)(Math.random() * 3) * 100;
+                  account.withdraw(money);
+                  System.out.println(this.name + " balance: " + account.getBalance() );
+              }
           }
       }
-  }
-  ```
-  ```java
-  public static void main(String[] args) {
-      Thread thread1 = new Thread(new RunnableExample("First"));
-      Thread thread2 = new Thread(new RunnableExample("Second"));
-      Thread thread3 = new Thread(new RunnableExample("Third"));
+      ```
+      ```java
+      public static void main(String[] args) {
+          Thread thread1 = new Thread(new RunnableExample("First"));
+          Thread thread2 = new Thread(new RunnableExample("Second"));
+          Thread thread3 = new Thread(new RunnableExample("Third"));
 
-      thread1.start();
-      thread2.start();
-      thread3.start();
-	}
-  ```
+          thread1.start();
+          thread2.start();
+          thread3.start();
+      }
+      ```
 
-- wait() 과 notify()
-  - 동기화된 임계 영역의 코드를 수행하다가 작업을 더 이상 진행할 상황이 아니면 일단 wait()를 호출하여 쓰레드가 락을 반납하고 기다리게 한다.
-  - wait()은 notify() 또는 notifyAll()이 호출될 때까지 기다리지만, 매개변수가 있는 wait()은 지정된 시간동안 기다린다.
-  - Object에 정의되어 있으며 synchronized 블록 내에서만 사용할 수 있으며 보다 효율적인 동기화를 가능하게 한다.
-  - 기아 현상과 경쟁상태
-    - wait()중인 쓰레드가 notify()를 못받고 오랫동안 기다리는 현상을 기아 현상이라고 한다.
-    - 이를 막기 위해 notify() 대신 notifyAll()을 사용해야 한다.
+  - wait() 과 notify()
+    - 동기화된 임계 영역의 코드를 수행하다가 작업을 더 이상 진행할 상황이 아니면 일단 wait()를 호출하여 쓰레드가 락을 반납하고 기다리게 한다.
+    - wait()은 notify() 또는 notifyAll()이 호출될 때까지 기다리지만, 매개변수가 있는 wait()은 지정된 시간동안 기다린다.
+    - Object에 정의되어 있으며 synchronized 블록 내에서만 사용할 수 있으며 보다 효율적인 동기화를 가능하게 한다.
+    - 기아 현상과 경쟁상태
+      - wait()중인 쓰레드가 notify()를 못받고 오랫동안 기다리는 현상을 기아 현상이라고 한다.
+      - 이를 막기 위해 notify() 대신 notifyAll()을 사용해야 한다.
     
 - Lock과 Condition을 이용한 동기화
   - jdk 1.5부터 추과된 java.util.concurrent.locks 패키지를 통해 동기화할 수 있다.
+  - 명시적 잠금
   - Lock 클래스
     - ReentrantLock: 재진입이 가능한 lock. 가장 일반적인 배타 lock
     - ReendtrantReadWriteLock: 읽기에는 공유적이고, 쓰기에는 배타적인 lock
@@ -236,6 +238,7 @@ category: Java Study
     
 - ReentrantLock
   - ReentrantLock은 가장 일반적인 lock이다.
+  - synchronized와 동일한 의미를 갖는다.
   - ‘reentrant(재진입할 수 있는)’이라는 단어가 앞에 붙은 이유는 wait() & notify()처럼, 특정 조건에서 lock을 풀고 나중에 다시 lock을 얻어 이후의 작업을 수행할 수 있기 때문이다.
   - 생성자
     ```java
@@ -281,6 +284,7 @@ category: Java Study
   
 - ReentrantReadWriteLock
   - ReentrantReadWriteLock은 읽기를 위한 lock과 쓰기를 위한 lock을 제공한다. 
+  - ReentrantReadWriteLock은 동시에 읽으려는 스레드는 허용하지만, 읽기 vs 쓰기, 쓰기 vs 쓰기의 경우는 차단
   - ReentrantLock은 배타적인 lock이라서 무조건 lock이 있어야만 임계 영역의 코드를 수행할 수 있지만, ReentrantReadWriteLock은 읽기 lock이 걸려있으면, 다른 쓰레드가 읽기 lock을 중복해서 걸고 읽기를 수행할 수 있다. 
   - 읽기는 내용을 변경하지 않으므로 동시에 여러 쓰레드가 읽어도 문제가 되지 않는다. 그러나 읽기 lock이 걸린 상태에서 쓰기 lock을 거는 것은 허용되지 않는다. 
   - 반대의 경우도 마찬가지다. 읽기를 할 때는 읽기 lock을 걸고, 쓰기 할 때는 쓰기 lock을 거는 것일 뿐 lock을 거는 방법은 같다.
