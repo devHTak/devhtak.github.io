@@ -148,11 +148,11 @@ category: Java Study
 	        {"kim", "taeng"}, {"mad", "play"},
 	        {"kim", "mad"}, {"taeng", "play"}};
 	        
-	  Arrays.stream(namesArray)
-	    	.flatMap(innerArray -> Arrays.stream(innerArray))
-	    	.filter(data -> data.length() > 3)
-	    	.collect(Collectors.toSet()).forEach(System.out::println); // play, taeng
-    ``
+    Arrays.stream(namesArray)
+        .flatMap(innerArray -> Arrays.stream(innerArray))
+        .filter(data -> data.length() > 3)
+        .collect(Collectors.toSet()).forEach(System.out::println); // play, taeng
+    ```
     
 - map과 flatMap 차이
   - map은 입력한 원소를 그대로 스트림으로 반환
