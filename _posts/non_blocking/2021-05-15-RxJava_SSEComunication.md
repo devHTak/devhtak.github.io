@@ -38,7 +38,7 @@ category: RxJava
   - 클라이언트는 서버에 SSE 통신 연결 요청을 보내고, 서버 측은 SSE 통신 연결을 맺는다.
   - 요청을 받은 RestController는 Sensor에게 데이터 구독 요청을 보내고 통지를 받는다.
   - 온/습도 데이터를 받은 RestController는 SSE Emitter에게 데이터를 전달한다.
-  - SSE Emiter는 클라이언트 측에 데이터를 전송하고 클라이언트 측에 온/습도 데이터를 표시한다.
+  - SSE Emitter는 클라이언트 측에 데이터를 전송하고 클라이언트 측에 온/습도 데이터를 표시한다.
 
 - 참고: IoT 프로젝트가 아니므로 Sensor 부분은 임의의 데이터를 전송하도록 했다.
 
