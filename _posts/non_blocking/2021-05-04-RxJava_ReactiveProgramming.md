@@ -220,9 +220,9 @@ category: RxJava
         Thread.sleep(2000L);
     }
     ```
-    - doOnNext: lambda 파라미터가 호출될 때 조치할 수 있도록 publisher를 수정한다.
-    - observerOn: 게시자를 수정하여 지정된 파라미터(scheduler)에서 버퍼 사이즈만큼 슬롯의 제한된 버퍼를 사용하여 비동기식으로 방출 및 알림을 수행합니다.
-    - subscribe: 게시자를 구독하고 발행하는 항목과 발행하는 오류 또는 완료 알림을 처리하기위한 콜백을 제공합니다. 
+    - doOnNext: 데이터를 전송할 때 해당 전달한 함수가 실행된다.
+    - observerOn(Schedulers.computation()): 게시자를 수정하여 지정된 파라미터(scheduler)에서 버퍼 사이즈만큼 슬롯의 제한된 버퍼를 사용하여 비동기식으로 방출 및 알림을 수행합니다.
+    - subscribe: 게시자를 구독하고 발행하는 항목과 발행하는 오류 또는 완료 알림을 처리하기위한 콜백을 제공합니다. (onNext, onError, onComplete)
     - 1부터 계속 publisher가 데이터를 요청하는데 처리하지를 못하고 대기한다. 128번째에 MissingBackpressureException(Can't deliver value 128 due to lack of requests)이 발생한다.
   
   - Flowable에서 데이터를 통지하는 속도가 Subscriber에서 통지된 데이터를 전달받아 처리하는 속도보다 빠를 때 밸런스를 맞추기 위해 데이터 통지량을 제어하는 기능을 말한다.
