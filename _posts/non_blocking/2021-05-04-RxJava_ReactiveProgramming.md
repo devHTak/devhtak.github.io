@@ -240,6 +240,10 @@ category: RxJava
 - Buffer 전략: DROP_LATEST
   - 버퍼가 가득 찬 시점에 버퍼내에서 가장 최근에 버퍼로 들어온 데이터를 DROP한다.
   - DROP 된 빈자리에 버퍼 밖에서 대기하던 데이터를 채운다.
+
+    ![image](https://user-images.githubusercontent.com/42403023/118387966-7f110380-b65c-11eb-81c5-508df46e4143.png)	
+      - 11이 drop되고 13이 버퍼에 들어가게 된다.
+
     ```java
     public static void main(String[] args) throws InterruptedException {
         System.out.println("# start: " + LocalDateTime.now());
@@ -266,6 +270,11 @@ category: RxJava
 - BUFFER 전략: DROP_OLDEST
   - 버퍼가 가득찬 시점에 버퍼내에서 가장 오래전에(먼저) 버퍼로 들어온 데이터를 DROP 한다.
   - DROP 된 빈자리에는 버퍼 밖에서 대기하던 데이터를 채운다.
+
+    ![image](https://user-images.githubusercontent.com/42403023/118387998-a5cf3a00-b65c-11eb-8f7b-b6a65d86864c.png)
+
+      - 2가 drop되고 13이 buffer에 들어가게 된다.
+      
       ```java
       public static void main(String[] args) throws InterruptedException {
           System.out.println(Thread.currentThread().getName() +  " # start: " + LocalDateTime.now());
@@ -291,6 +300,11 @@ category: RxJava
       ```
 - DROP 전략
   - 버퍼에 데이터가 모두 채워진 상태가 되면 이후에 생성되는 데이터를 버리고(DROP), 버퍼가 비워지는 시점에 DROP 되지 않은 데이터부터 다시 버퍼에 담는다.
+  
+    ![image](https://user-images.githubusercontent.com/42403023/118388017-cf886100-b65c-11eb-8884-b6a536a5c9e1.png)
+
+      - 버퍼가 빌 때까지 13 이후 데이터는 drop된다.
+      
       ```java
       public static void main(String[] args) throws InterruptedException {
           System.out.println(Thread.currentThread().getName() +  " # start: " + LocalDateTime.now());
@@ -312,6 +326,12 @@ category: RxJava
       ```
 - LATEST 전략
   - 버퍼에 데이터가 모두 채워진 상태가 되면 버퍼가 비워질 때까지 통지된 데이터는 버퍼 밖에서 대기하여 버퍼가 비워지는 시점에 가장 나중(최근)에 통지된 데이터부터 버퍼에 담는다.
+  
+    ![image](https://user-images.githubusercontent.com/42403023/118388039-0199c300-b65d-11eb-969f-5f6a2a11b683.png)
+
+      - 버퍼가 빌때까지 쌓인 데이터는 버리고 그 다음 데이터 부터 쌓인다.
+      - 여기서는 20~29가 다 처리된 후에 들어오는 39부터 다시 버퍼에 쌓인다.
+      
       ```java
       public static void main(String[] args) throws InterruptedException {
           System.out.println(Thread.currentThread().getName() +  " # start: " + LocalDateTime.now());
