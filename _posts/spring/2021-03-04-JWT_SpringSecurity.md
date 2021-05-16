@@ -52,7 +52,6 @@ category: Spring
     - Interceptor: prevHandle, postHandle, afterCompletion으로 핸들러 앞에서 요청에 대한 처리를 해줄 수 있다.
     - Filter: DispatcherServlet 앞단에서 동작하여 요청에 대한 처리를 해줄 수 있다.
     - 둘의 가장 큰 차이는 Context(실행 영역)에 있다. Filter에 경우 Web Application 내에서 동작하기 때문에 Spring Context에 접근하기 어렴지만, Interceptor에 경우 Spring 영역 내에 있기 때문에 Spring Context에 접근하기 용이하다.
-
   - JwtFilter.java
     ```java
     public class JWTFilter extends GenericFilterBean {
