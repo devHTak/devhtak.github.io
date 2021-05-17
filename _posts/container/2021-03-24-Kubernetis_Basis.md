@@ -59,8 +59,9 @@ category: Container
     - 워커 노드: 실제 배포하고자 하는 애플리케이션의 실행을 담당한다.
     - 마스터 노드에 여러 워커 노드를 운영할 수 있다. 마스터 노드 또한 이중화할 수 있다.
     
-  ![kubernetes architecture](../images/docker/KubernetesArchitecture.PNG)
-  - 이미지 출처: https://medium.com/@chkrishna/kubernetes-architecture-f7ca63fff46e
+    ![image](https://user-images.githubusercontent.com/42403023/118449966-a6d09c00-b72e-11eb-8f8f-b9fdbefd1140.png)
+    
+    - 이미지 출처: https://medium.com/@chkrishna/kubernetes-architecture-f7ca63fff46e  
   
   - Kubernetes Control Plane (Masters)
     - Control Plane에서는 클러스터를 관리하고 클러스터의 기능
