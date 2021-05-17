@@ -9,9 +9,6 @@ category: Container
 
 #### 쿠버네티스 아키텍처
 
-![kubernetes architecture](../images/docker/KubernetesArchitecture.PNG)
-- 이미지 출처: https://medium.com/@chkrishna/kubernetes-architecture-f7ca63fff46e
-
 - Kubernetes Control Plain(Master)
   - Kube API Server
   - Kube Controller
