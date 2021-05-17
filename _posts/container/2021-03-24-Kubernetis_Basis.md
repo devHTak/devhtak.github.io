@@ -68,7 +68,7 @@ category: Container
     - 단일 마스터 노드에서 실행하거나 여러 노드로 분할되고 복제해 고가용성을 보장
     - 클러스터의 상태를 유지하고 제어하지만 애플리케이션을 실행하지 않는다.
     - 구성 요소
-      - kube-apiserver(쿠버네티스 API 서버): 사용자, Control Plain과 통신
+      - kube-apiserver(쿠버네티스 API 서버): 사용자, Control plane과 통신
       - kube-scheduler(스케줄러): 애플리케이션 예약(애플리케이션의 배포 가능한 각 구성 요소에 워커 노드를 할당)
       - Control-manager: 구성 요소 복제, 워커 노드 추적, 노드 장애 처리 등 클러스터 수준 기능을 실행
       - etcd(데이터 스토리지): 클러스터 구성을 지속적으로 저장하는 안정적인 분산
@@ -83,9 +83,9 @@ category: Container
 - 쿠버네티스에서 애플리케이션 실행
   - 개발자가 미리 만든 이미지를 이미지 레지스트리에 push한다.
   - 쿠버네티스에 올리길 원하면, yaml 또는 json으로 app descriptor를 작성한다.
-  - control plain(master)가 descriptor를 참조하여 worker node의 kublet에 이미지를 배치하도록 명령한다.
+  - control plane(master)가 descriptor를 참조하여 worker node의 kublet에 이미지를 배치하도록 명령한다.
   - 이 후 이미지 레지스트리에서 이미지를 worker node에 세팅한 후 실행한다.
-  - 개발자는 이미지를 만든 후 push하고 control plain에 descrption을 제출한다.
+  - 개발자는 이미지를 만든 후 push하고 control plane에 descrption을 제출한다.
 
 #### Ubuntu에 쿠버네티스 클러스터 구성
 
