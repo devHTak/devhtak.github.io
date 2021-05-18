@@ -259,7 +259,7 @@ category: Container
 - 일반적인 사용자와 마스터 노드, 워커 노드 연결관계
 
   - 실무에서 사용되는 환경
-    ![Master and Work](../images/docker/masterandworker.PNG)
+    ![Master and Work](../../images/docker/masterandworker.PNG)
 
   - 현재 설정한 환경
     - kubectl이 쿠버네티스 클러스터 밖에 있어서 제어하는 것이 아닌, master-virtualbox안에 있다.
