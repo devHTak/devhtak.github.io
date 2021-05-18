@@ -68,7 +68,7 @@ category: Container
 
 - Minikube Architecture
 
-  ![minikube architecture](../images/docker/minikube.PNG)
+  ![minikube architecture](../../images/docker/minikube.PNG)
   - 이미지 출처: https://blog.codonomics.com/2019/02/loadbalancer-support-with-minikube-for-k8s.html
 
   - ubuntu 내에 docker 를 만들었고, minikube 컨테이너를 생성했다.
