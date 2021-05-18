@@ -23,7 +23,7 @@ category: Container
   - 이미지 하나를 다운받더라도 여러 레이어가 다운받아지게 된다.
   - docker hub에 저장할 때 여러 레이어로 나누어 저장하기 때문이다.
   
-  ![docker lifecycle](../images/docker/layer.png)
+  ![docker lifecycle](../../images/docker/layer.png)
   - 왼쪽: 이미지 A를 사용하고 있을 때 이미지 B를 다운받으면 이미 레이어 A,B,C가 있기 때문에 레이어 D만 받는다.
   - 왼쪽: 이미지 A를 지운다 하더라도 이미지 B에서 A,B,C 레이어를 사용하고 있기 때문에 지워지지 않는다.
   - 오른쪽: 이미 존재하는 레이어 A,B는 새로 다운로드 받을 필요가 없다.
