@@ -17,7 +17,7 @@ category: Container
   - veth 인터페이스는 사용자가 직접 생성할 필요가 없으며, 컨테이너가 생성될 때 도커 엔진이 자동으로 생성한다.
   - 도커가 설치된 호스트에서 ifconfig, if addr 명령으로 확인할 수 있다.
 - veth 인터페이스 뿐 아니라 docker0라는 브릿지도 존재하여 각 veth 인터페이스와 바인딩 돼 호스트의 eth0 인터페이스와 이어주는 역할을 한다.
-![docker lifecycle](../images/docker/network.png)
+![docker lifecycle](../../images/docker/network.png)
 (출처: https://joont92.github.io/docker/network-%EA%B5%AC%EC%A1%B0/)
 
 #### 도커 네트워크 기능
