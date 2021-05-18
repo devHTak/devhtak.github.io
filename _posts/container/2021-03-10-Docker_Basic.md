@@ -40,7 +40,7 @@ category: Container
     - 컨테이너는 가상 머신을 사용해 각 마이크로서비스를 격리한다.
     - 컨에이너는 가상머신처럼 하드웨어를 전부 구현하지 않기 때문에 매우 빠른 실행 가능
     - 프로세스의 문제가 발생할 경우 컨테이너 전체를 조정해야 하기 때문에 컨테이너에 하나의 프로세스를 실행하도록 하는 것이 좋다.
-  ![vm vs docker](../images/docker/VmVsDocker.PNG)
+  ![vm vs docker](../../images/docker/VmVsDocker.PNG)
   
 - 도커는 클라우드 서비스 모델과 같이 사용 가능
   - 이미지: 필요한 프로그램과 라이브러리, 소스를 설치한 뒤 만든 하나의 파일
@@ -100,7 +100,7 @@ category: Container
 #### 도커 라이프사이클
 
 - 라이프 사이클 이해
-  ![docker lifecycle](../images/docker/lifecycle.png)
+  ![docker lifecycle](../../images/docker/lifecycle.png)
 
   |command|description|
   |---|---|
