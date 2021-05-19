@@ -42,6 +42,7 @@ category: Container
 - 포드의 IP가 변경될 때마다 재설정하지 않도록 해야 한다.
 
 ![image](https://user-images.githubusercontent.com/42403023/114118889-8e49b680-9924-11eb-885a-75aade732d7d.png)
+
 ** 이미지 출처: DevOps를 위한 Kubernetes 마스터 강의
 
 #### 서비스의 생성 방법
