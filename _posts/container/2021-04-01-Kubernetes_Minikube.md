@@ -259,7 +259,7 @@ category: Container
       ```
   
   - 동작 방식 이해
-    ![kubernetes architecture](../images/docker/kube.PNG)
+    ![kubernetes architecture](../../images/docker/kube.PNG)
     - 사실 실제로 포드도 직접 만들지 않음
     - kubectl create deploy 명령을 실행하면 디플로이먼트가 생성
     - 디플로이먼트가 실제 포드 객체를 생성
