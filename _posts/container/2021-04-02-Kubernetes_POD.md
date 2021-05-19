@@ -66,11 +66,16 @@ category: Container
       ports:
       - containerPort: 8080
   ```
+  - apiVersion: YAML 파일에서 정의한 오브젝트의 API 버전을 나타낸다.
+  - kind: 해당 리소스의 종류를 나타낸다.
+  - metadata: 라벨, 주석, 이름 등과 같은 리소스의 부가 정보를 입력
+  - spec: 리소스를 생성하기 위한 자세한 정보를 입력
 
 - yaml 파일로 deploy 생성하기
 
   ```
   server1@server1-VirtualBox:~/yaml$ kubectl create -f go-test.yaml
+  // server1@server1-VirtualBox:~/yaml$ kubectl apply -f go-test.yaml
   server1@server1-VirtualBox:~/yaml$ kubectl get pod -o yaml
   apiVersion: v1
   items:
@@ -417,6 +422,22 @@ category: Container
     periodSeconds: 10
   ```
 
+#### 포드와 도커 컨테이너
+
+- 포드를 사용하는 이유
+  - 여러 리눅스 네임스페이스를 공유하는 여러 컨테이너들을 추상화된 집합으로 사용하기 위해서이다.
+  - 네트워크를 생각해보면, 도커에 컨테이너는 같은 네트워크 네임스페이스를 컨테이너 간에 공유해 사용할 수 있도록 설정하기 때문에 여러 컨테이너가 동일한 네트워크 환경을 갖는다.
+  - 포드는 네트워크 뿐만 아니라 여러 네임스페이스를 공유하여 사용할 수 있다.
+
+#### 완전한 애플리케이션으로써의 포드
+
+- 실제 쿠버네티스 환경에서는 1개의 컨테이너로 구성된 포드를 사용하는 경우가 많다.
+- 하나의 포드는 하나의 완전한 애플리케이션이다.
+- 하지만 컨테이너가 실행되기 위해 부가적인 기능을 필요로 한다면?
+  - 사이드카(sidecar)포드에 정의된 부가적인 컨테이너를 포드내에 포함하여 생성할 수 있다.
+
 ** 참고: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 
 ** 참고: 데브옵스를 위한 쿠버네티스 마스터
+
+** 참고: 시작하세요 도커/쿠버네티스
