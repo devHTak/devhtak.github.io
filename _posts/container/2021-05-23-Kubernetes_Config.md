@@ -147,7 +147,7 @@ category: Container
     apiVersion: v1
     kind: Pod
     metadata:
-      name: dapi-test-pod
+      name: volumes-configmap
     spec:
       containers:
       - name: test-container
@@ -163,6 +163,14 @@ category: Container
           name: special-config
       restartPolicy: Never
     ```
+    - /etc/config에 special-config를 마운트하는 것
+    - special-config에 설정한 key를 이름으로 한 파일형태로 value가 내용으로 저장되어 있다.
+      ```
+      $ kubectl exec -it volumes-configmap -- bash
+      $ cd /etc/config
+      $ ls
+      SPECIAL_LEVEL  SPECIAL_TYPE
+      ```
 
 #### 출처
 
