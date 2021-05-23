@@ -233,6 +233,27 @@ category: Container
   $ echo YWRtaW4K | base64 --decode
   admin
   ```
+  
+#### 초기 명령어 및 아규먼트 전달과 실행
+
+- 초기 실행 시 명령어와 아규먼트를 전달
+  - Pod을 생성할 때 spec.container.command와 args에 실행하기 원하는 인자를 전달하면 컨테이너가 부팅된 뒤 실행
+  - pod-command-args.yaml
+    ```
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: command-demo
+      labels:
+        purpose: demonstrate-command
+    spec:
+      containers:
+      - name: command-demo-container
+        image: debian
+        command: ["printenv"]
+        args: ["HOSTNAME", "KUBERNETES_PORT"]
+      restartPolicy: OnnFailure
+    ```
 
 #### 출처
 
