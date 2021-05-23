@@ -172,6 +172,68 @@ category: Container
       SPECIAL_LEVEL  SPECIAL_TYPE
       ```
 
+#### Secret을 활용한 환경변수 설정
+
+- secret은 비밀번호, OAuth 토큰, SSH 키와 같은 민감한 정보를 encoding하여 저장한다.
+- base64로 encoding되어 있기 때문에 디코딩도 가능하기 때문에 공격자에게 혼란을 줄 뿐 보안이 완벽하진 않다.
+- 환경 변수를 Secret에 저장하는 방법
+  - kubectl 명령어로 secret 설정하는 방법
+    ```
+    $ echo -n 'admin' > ./username
+    $ echo -n '1q2w3e4r5t' > ./password
+    $ kubectl create secret generic db-user-pass --from-file=./username --from-file=./password
+    secret/db-user-pass created
+    $ kubectl get secret db-user-pass -o yaml
+    apiVersion: v1
+    data:
+      password: MXEydzNlNHI1dA==
+      username: YWRtaW4=
+    kind: Secret
+    metadata:
+      creationTimestamp: "2021-05-23T11:49:27Z"
+      name: db-user-pass
+      namespace: default
+      resourceVersion: "89868"
+      uid: dd38add1-ef0a-4087-a1f8-fcdd7efe9411
+    type: Opaque
+    ```
+    - echo -n 명령어를 실행하면 데이터가 개행문자(엔터)와 함께 출력
+    - 마지막 명령어를 실행하면 db-user-pass 유저가 생성
+    - secret에는 DB의 user와 password와 같이 민감한 파일들이 base64 인코딩돼서 저장
+    - 해당 값이 안전한 것은 아니지만 공격자에게 혼란을 줄 수 있다.
+  - Pod에 secret으로 key-value 설정
+    ```
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: envar-secret
+      labels:
+        purpose: demonstrate-envars
+    spec:
+      containers:
+      - name: envar-demo-container
+        image: gcr.io/google-samples/node-hello:1.0
+        env:
+        - name: user
+          valueFrom:
+            secretKeyRef:
+              name: db-user-pass
+              key: username
+        - name: pass
+          valueFrom:
+            secretKeyRef:
+              name: db-user-pass
+              key: password
+    ```
+
+- 수동으로 데이터를 만들어야 하는 경우에는 base64 인코딩을 수동으로 해주어야 한다.
+  ```
+  $ echo admin | base64
+  YWRtaW4K
+  $ echo YWRtaW4K | base64 --decode
+  admin
+  ```
+
 #### 출처
 
 - 데브옵스(DevOps)를 위한 쿠버네티스 마스터
