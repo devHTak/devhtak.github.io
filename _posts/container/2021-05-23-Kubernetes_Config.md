@@ -255,6 +255,17 @@ category: Container
       restartPolicy: OnnFailure
     ```
 
+- 환경 변수를 활용하여 출력할 때는 $를 사용하여 명령 내용 변경 가능
+  ```
+  # ...
+  env:
+  - name: MESSAGE
+    value: "hello world"
+  command: ["/bin/echo"]
+  args: ["$(MESSAGE)"]
+  #...
+  ```
+
 #### 출처
 
 - 데브옵스(DevOps)를 위한 쿠버네티스 마스터
