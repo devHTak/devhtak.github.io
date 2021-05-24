@@ -428,6 +428,83 @@ category: Container
     ```
     - 각각의 컨테이너마다 리소스를 지정할 수 있다.
 
+#### 컨테이너 리소스 제한 및 요구사항 설정
+
+- limitRagnes
+  - https://kubernetes.io/docs/concepts/policy/limit-range/
+  - 네임 스페이스에서 포드 또는 컨테이너별로 리소스를 제한하는 정책
+
+- 리미트 레인지의 기능
+  - 네임스페이스에서 포드나 컨테이너당 최소 및 최대 컴퓨팅 리소스 사용량 제한
+  - 네임스페이스에서 PersistentVolumeClaim 당 최소, 최대 스토리지 사용량 제한
+  - 네임스페이스에서 리소스에 대한 요청과 제한 사이의 비율 적용
+  - 네임스페이스에서 컴퓨팅 리소스에 대한 디폴트 requests/limit을 설정하고 런타임중에 컨테이너에 자동으로 입력
+
+- LimitRange 적용 방법
+  - Apiserver 옵션에 --enable-admission-plugins=LimitRange를 설정
+  - cloud에서는 Apiserver에 설정으로 할 수 있는지 확인해야 하며 vendor마다 하는 방법이 다르다.
+
+- 예제
+  - 각 컨테이너에 설정
+    ```
+    apiVersion: v1
+    type: LimitRange
+    metadata:
+      name: limit-mem-cpu-per-container
+    spec:
+      limits:
+      - max:
+          cpu: "800m"
+          memory: "1Gi"
+        min:
+          cpu: "100m"
+          memory: "99Mi"
+        default:
+          cpu: "700m"
+          memory: "900Mi"
+        defaultRequest:
+          cpu: "110m"
+          memory: "111Mi"
+        type: Container
+    ```
+    - type이 Container이면 각 컨테이너에 설정하는 것
+    - 제한하기 원하는 Namespace에 limitRange 리소스를 생성
+    - 리소스 조회
+      ```
+      $ kubectl describe limitrange -n namespace_name
+      ```
+
+  - 포드 수준의 리소스 제한
+    ```
+    apiVersion: v1
+    type: LimitRange
+    metadata:
+      name: limit-mem-cpu-per-pod
+    spec:
+      limits:
+      - max:
+          cpu: "800m"
+          memory: "1Gi"
+        type: Pod
+    ```
+    - type이 Pod이면 각 파드에 설정하는 것
+  - 스토리지 리소스 제한
+    ```
+    apiVersion: v1
+    type: LimitRange
+    metadata:
+      name: storage-limits
+    spec:
+      limits:
+      - type: PersistentVolumeClaim
+        max:
+          storage: 2Gi
+        min:
+          storage: 1Gi
+    ```
+    - type이 PVC이면 스토리지에 설정하는 것
+
+
 #### 출처
 
 - 데브옵스(DevOps)를 위한 쿠버네티스 마스터
