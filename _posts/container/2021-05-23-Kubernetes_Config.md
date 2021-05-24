@@ -266,6 +266,168 @@ category: Container
   #...
   ```
 
+#### 하나의 포드에 멀티 컨테이너
+
+- 하나의 포드에 다수의 컨테이너를 사용
+  - 하나의 포드를 사용하는 경우 같은 네트워크 인터페이스와 IPC, 볼륨등을 공유
+  - 이 포드는 효율적으로 통신하여 데이터의 지역성을 보장하고 여러 개의 응용프로그램이 결합된 형태로 하나의 포드를 구성할 수 있음
+  - 모니터링 서비스 등에서 사용한다.
+
+- 예제
+  - pod-multi-container.yaml
+    ```
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: two-containers
+    spec:
+      restartPolicy: Never
+      volumes:
+      - name: shared-data
+        emptyDir: {}
+      containers:
+      - name: nginx-container
+        image: nginx
+        volumeMounts:
+        - name: shared-data
+          mountPath: /usr/share/nginx/html
+      - name: debian-container
+        image: debian
+        volumeMounts:
+        - name: shared-data
+          mount-path: /pod-data
+        command: ["/bin/sh"]
+        args: ["-c", "echo Hello from the debian container > /pod-data/index.html"]
+    ```
+  - debian 컨테이너에서 실행한 /pod-data/index.html이 제대로 mount되어 있는지 확인
+    ```
+    $ kubectl exec -it two-containers -- cat /usr/share/nginx/html/index.html
+    Defaulted container "nginx-container" out of: nginx-container, debian-container
+    Hello from the debian container
+    ```
+
+#### init container
+
+- init container 특징
+  - 포드 컨테이너 실행 전에 초기화 역할을 하는 컨테이너
+  - 완전히 초기화가 진행된 다음에야 주 컨테이너를 실행
+  - init 컨테이너가 실패하면, 성공할 때까지 포드를 반복해서 실행
+    - restartPolicy: Never를 주면 재시작하지 않는다.
+
+- 예제
+  - init container 실행 후 실행되는 container
+    ```
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: myapp-pod
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp-container
+        image: busybox:1.28
+        command: ["sh", "-c", "echo The app is running! && sleep 3600"]
+      initContainers:
+      - name: init-myservice
+        image: busybox:1.28
+        command: ['sh', '-c', 'until nslookup myservice; do echo waiting for myservice; sleep 2; done;']
+      - name: init-mydb
+        image: busybox:1.28
+        command: ['sh', '-c', 'until nslookup mydb; do echo waiting for mydb; sleep 2; done;']
+    ```
+    - 해당 yaml은 mydb와 myservice가 탐지될 때까지 init 컨테이너가 멈추지 않고 돌아간다.
+  - init process를 끝낼 수 있는 종결자!
+    ```
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: myservice
+    spec:
+      ports:
+      - protocol: TCP
+        port: 80
+        targetPort: 9376
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: mydb
+    spec:
+      ports:
+      - protocol: TCP
+        port: 80
+        targetPort: 9377
+    ```
+    - status가 Init:0/2에서 Init:1/2, Init:2/2, PodInitializing, Running 순으로 변경된다.
+
+#### 시스템 리소스 요구사항과 제한 설정
+
+- 컨테이너에서 리소스 요구사항
+  - CPU와 메모리는 집합적으로 컴퓨팅 리소스 또는 리소스로 부른다.
+  - CPU 및 메모리는 각각 자원 유형을 지니며 자원 유형에는 기본 단위를 사용
+  - 리소스 요청 설정 방법
+    ```
+    > spec.containers[].resources.requests.cpu
+    > spec.containers[].resources.requests.memory
+    ```
+  - 리소스 제한 설정 방법
+    ```
+    > spec.containers[].resources.limits.cpu
+    > spec.containers[].resources.limits.memory
+    ```
+  - CPU는 코어 단위로 지저오디며 메모리는 바이트 단위로 지정
+  
+    |자원 유형|단위|
+    |---|---|
+    |CPU|m(millicpu),|
+    |Memory|--- Ti, Gi, Mi, Ki, T, G, M, K|
+    
+    - CPU 0.5가 있는 컨테이너는 CPU 1개를 요구하는 절반의 CPU
+    - CPU 0.1은 100m 와 동일한 기능
+    - K, M, G 의 단위는 1000씩 증가
+    - Ki, Mi, Gi의 단위는 1024씩 증가
+
+  - 환경에 따른 CPU의 의미
+    - 1 AWS vCPU
+    - 1 GCP Core
+    - 1 Azure vCore
+    - 1 IBM vCPU
+    - 1 하이퍼 스레딩 기능이 있는 베어 메탈 인텔 프로세서의 하이퍼 스레드
+
+- 예제
+  - pod-resource.yaml
+    ```
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: frontend
+    spec:
+      containers:
+      - name: db
+        image: mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: password
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "126Mi"
+            cpu: "500m"
+      - name: wordpress
+        image: wordpress
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "126Mi"
+            cpu: "500m"
+    ```
+    - 각각의 컨테이너마다 리소스를 지정할 수 있다.
+
 #### 출처
 
 - 데브옵스(DevOps)를 위한 쿠버네티스 마스터
