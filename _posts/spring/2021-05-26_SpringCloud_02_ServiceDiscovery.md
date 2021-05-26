@@ -194,7 +194,132 @@ category: Spring Cloud
   ```
   - 아직 등록된 인스턴스가 없다.
 
-#### 고급 컨피규레이션 설정  
+#### 고급 컨피규레이션 설정
+
+- 크게 3가지로 나뉜다.
+  - 서버
+    - 서버의 행동을 정의한다.
+    - eureka.server.* 를 접두어로 사용하는 모든 속성
+    - EurekaServerConfigBean 클래스를 참조한다.
+    - 참고 URL: https://github.com/spring-cloud/spring-cloud-netflix/blob/main/spring-cloud-netflix-eureka-server/src/main/java/org/springframework/cloud/netflix/eureka/server/EurekaServerConfigBean.java 
+  - 클라이언트
+    - 유레카 클라이언트에서 사용할 수 있는 두가지 속성 중 하나
+    - 클라이언트가 레지스트리에서 다른 서비스의 정보를 얻기 위해 질의하는 방법의 컨피규레이션을 담당
+    - eureka.client* 를 접두어로 사용하는 모든 속상
+    - 전체 속성 목록은 EurekaClientConfigBean 클래스를 참조한다.
+    - 참고 URL: https://github.com/spring-cloud/spring-cloud-netflix/blob/main/spring-cloud-netflix-eureka-client/src/main/java/org/springframework/cloud/netflix/eureka/EurekaClientConfigBean.java
+  - 인스턴스
+    - 포트나 이름 등의 현재 유레카 클라이언트의 행동을 재정의한다.
+    - eureka.instance.* 를 접두어로 사용하는 모든 속성을 포함한다.
+    - 전체 속성 목록은 EurekaInstanceConfigBean 클래스를 참조한다.
+    - 참고 URL: https://github.com/spring-cloud/spring-cloud-netflix/blob/main/spring-cloud-netflix-eureka-client/src/main/java/org/springframework/cloud/netflix/eureka/EurekaInstanceConfigBean.java
+
+#### 레지스트리 갱신하기
+
+- self-preservation mode를 비활성화 하여도 여전히 서버가 임대를 취소하는 것은 오래 걸린다.
+  - 첫번째 이유. 모든 클라이언트 서비스가 30초(default)마다 서버로 하트비트를 보낸다.
+    - eureka.instance.leaseRenewalIntervalInSeconds 속성
+    - 서버가 하트비트를 받지 못하면 레지스트리에서 인스턴스를 제거하기 전에 90초를 기다린다.
+  - 두번째 이유. 등록을 해제해서 인스턴스로 더 이상 트래픽이 가지 못하도록 차단할 수 있기 때문이다.
+    - eureka.instance.leaseExpirationDurationInSeconds 속성
+  - 해당 설정은 client에서 설정하며, 초단위이다.
+  - 클라이언트 Configuration
+    ```
+    eureka:
+      instance:
+        lease-renewal-interval-in-seconds: 1
+        lease-expiration-duration-in-seconds: 2
+    ```
+  - 서버 Configuration
+    - 서버 측에서도 변경을 해줘야 한다. 
+    - 이유는 Evict(퇴거) 이라는 백그라운드 태스크 때문이다.
+      - 이것이 하는 일은 클라이언트로부터 하트비트가 계속 수신 되는지 점검하는 일이다.
+      - 기본값으러 60초마다 실행되기 때문에 클라이언트에서 설정했던 위에 두 값을 작은 값으로 설정해도 서비스 인스턴스를 제거하는 데 최악의 경우 60초가 걸린다.
+      - eureka.server.evictionIntervalTimerInMs 속성으로 설정 가능하며 millisecond 단위다.
+        ```
+        eureka:
+          server:
+            enable-self-preservation: false
+            eviction-interval-timer-in-ms: 3000
+	```
+- 이런 속성을 조작하여 임대 만료 제거 절차에 대한 유지 관리를 사용자가 정의할 수 있다.
+- 그러나 정의된 컨피규레이션이 시스템의 성능을 부족하게 만들지 않는 것도 중요하다.
+- 부하 분산, 게이트웨이, 서킷 브레이커 등이 해당 컨피규레이션 변경에 민감한 요소가 된다.
+
+#### 인스턴스 식별자 변경하기
+
+- Eureka에 등록된 인스턴스는 이름으로 묶여있다. 그러나 서버가 인식할 수 있는 유일한 ID를 보내야 한다.
+  ```
+  ${spring.cloud.client.hostname}:${spring.application.name}:${spring.application.instance_id:${server.port}}
+  ```
+- 예제
+  - VM 인자로 -DSEQUENCE_NO=[n]을 입력받아 Port와 InstanceId를 동적으로 설정하도록 한다.
+    ```
+    server:
+      port: 808${SEQUENCE_NO}
+    eureka:
+      instance:
+        instanceId: ${spring.application.name}-${SEQUENCE_NO}
+    ```
+    
+#### IP 주소 우선하기
+
+- 기본적으로 모든 인스턴스는 호스트명으로 등록된다.
+  - DNS가 있으면 매우 편리하지만, 마이크로 서비스 환경을 구성할 때 DNS가 없는 것이 일방적이다.
+  - 이 경우 모든 머신의 /etc/hosts 파일에 호스트명과 IP 주소를 추가하는 것 외에 방법이 없다.
+
+- 유레카 클라이언트에 eureka.isntance.preferIpAddress: true로 설정하자.
+  - 레지스트리의 모든 서비스 인스턴스는 유레카 대시보드에 호스트명을 담은 instanceId를 사용한다.
+  - 하지만 링크를 클릭하면 IP 주소 기반으로 리다이렉션된다.
+
+- 하지만 ip address를 우선하여도 문제가 발생한다.
+  - 바로 한대의 서버에 하나 이상의 네트워크 인터페이스가 있는 경우.
+  - 방법 1. application.yml 에 무시할 패턴의 목록을 정의 하면 된다.
+    ```
+    spring:
+      cloud:
+        inetutils:
+          ignored-interfaces: 
+          - eth1*
+  - 방법 2. application.yml 에 원하는 네트워크 주소를 정의하는 방법도 있다.
+    ```
+    spring:
+      cloud:
+        inetutils:
+          preferred-networks:
+          - 192.168
+    ```
+    
+#### 응답 캐시
+
+- 유레카 서버
+  - 기본적으로 응답을 캐시하며 30초마다 캐시 데이터를 지운다.
+    - /eureka/apps API를 통해 확인할 수 있다.
+    - 클라이언트를 등록한 다음에는 바로 조회되지 않는다.
+    - 30초 후에야 조회된다.
+  - 캐시의 타임아웃은 reponseCacheUpdateIntervalMs 속성으로 재정의 가능하다.
+    ```
+    eureka:
+      server:
+        response-cache-update-interval-ms: 3000
+    ```
+  - 유레카 대시보드에 등록된 인스턴스가 표시될 때에는 캐시가 없다. REST API와 반대로 응답 캐시를 사용하지 않는다.
+
+- 유레카 클라이언트
+  - 클라이언트 측에서도 유레카 레지스트리를 캐싱을 한다.
+  - 서버에서 변경해도 클라이언트에서 갱신되는 데에는 시간이 걸린다.
+    - 서버의 레지스트리는 30초마다 실행되는 백그라운드 태스크에 의해 비동기로 갱신이 되기 때문이다.
+    - registryFetchIntervalSeconds 속성으로 변경 가능하다.
+    - shouldDisableDelta 속성을 통해 마지막으로 시도한 값에서 변경된 내용만 가져오도록 할 수 있다.
+    - shouldDisableDelta을 false로 지정할 수 있지만 이것은 대역폭 낭비다.
+      ```
+      eureka:
+        client:
+          registryFetchIntervalSeconds: 3
+          shouldDisableDelta: true
+      ```
+
+#### 클라이언트와 서버간의 보안 통신하기
 
 #### 출처
 
