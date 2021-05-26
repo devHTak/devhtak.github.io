@@ -119,9 +119,9 @@ category: Spring Cloud
   - pom.xml에 actuator를 추가하자
     ```
     <dependency>
-		    <groupId>org.springframework.boot</groupId>
-		    <artifactId>spring-boot-starter-actuator</artifactId>
-		</dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
     ```
   - actuator 세팅 및 user/password 보안을 해제한다.
     ```
@@ -188,6 +188,7 @@ category: Spring Cloud
 
   }
   ```
+  
   ```
   request: GET /ping
   response: []
@@ -281,6 +282,7 @@ category: Spring Cloud
         inetutils:
           ignored-interfaces: 
           - eth1*
+    ```
   - 방법 2. application.yml 에 원하는 네트워크 주소를 정의하는 방법도 있다.
     ```
     spring:
