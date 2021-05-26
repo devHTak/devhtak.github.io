@@ -111,3 +111,92 @@ category: Spring Cloud
   ```
 
 - localhost:8761/eureka/apps 에서 등록 확인
+
+#### 종료 시 등록 해제
+
+- 중단된 이벤트를 가로채거나 이벤트를 서버에 보내기 위해 우아하게 멈춰야 한다.
+- 가장 좋은 방법은 spring actuator(spring-boot-starter-actuator)를 사용하는 것
+  - pom.xml에 actuator를 추가하자
+    ```
+    <dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+    ```
+  - actuator 세팅 및 user/password 보안을 해제한다.
+    ```
+    management:
+      endpoint:
+        shutdown:
+          enabled: true # shutdown endpoint 활성화
+      endpoints:
+        web:
+          exposure:
+            include: shutdown,info
+    ```
+  - /shutdown API 메서드를 POST로 호출한다.
+    ```
+    request: Post http:localhost:8081/actuator/shutdown
+    response: {"message": "Shutting down, bye....}   
+    ```
+
+- 우아한 종료가 최선의 방법이지만 언제나 그렇듯이 항상 우아한 결과를 얻는 것은 아니다.
+  - 예를 들면, 서버 머신이 재시작하거나 애플리케이션 장애, 서버와 클라이언트 간의 네트워크 인터페이스 문제 등에 문제를 겪을 수 있다.
+  - 제대로 종료되지 않는 이유?
+    - 서버에서 클라이언트에게 주기적으로 heartbeat을 보내고, 클라이언트에서 받지 못하는 경우 제거한다.
+    - 하지만 네트워크 장애 등의 문제로 등록된 모든 서비스가 해제되는 것을 방지하기 위해 등록만료를 중단한다.
+    - 즉, 정해진 시간동안 제거하지 않고, 이를 Self-preservation mode(자기 보호 모드)라고 한다.
+    - 이를 해결하기 위해서는 아래와 같은 설정을 추가하면 된다.
+      ```
+      eureka:
+        server:
+          enableSelfPreservation: false
+      ```
+
+#### 프로그램 방식으로 디스커버리 클라이언트 사용하기
+
+- 클라이언트 애플리케이션이 시작된 후 유레카 서버로부터 등록된 서비스 목록을 가져온다.
+- API를 사용하여 가져오는 두가지 방식이 있다.
+  - com.netflix.discovery.EurekaClient
+    - 유레카 서버가 노출하는 모든 HTTP API를 구현한다.
+    - 유레카 API 영역에 설명돼 있다.
+  - org.springframework.cloud.client.discovery.DiscouveryClient
+    - 넷플릭스를 대체하는 Spring Cloud의 구현이다.
+    - 이것은 모든 Discovery Client 용으로 사용하는 간단한 범용 API이다.
+    - getServices와 getInstances의 두가지 메서드가 있다.
+
+- 예제
+  ```java
+  @RestController
+  public class ClientController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClientController.class);
+
+    @Autowired
+    private DiscoveryClient discoveryClient;
+
+    @GetMapping("/ping")
+    public List<ServiceInstance> getServiceInstances() {
+      List<ServiceInstance> instances = discoveryClient.getInstances("CLIENT_SERVICE");
+      LOGGER.info("INSTANCES: count={}", instances.size());
+
+      instances.stream().forEach(instance -> {
+        LOGGER.info("INSTANCE: id={}, port={}", instance.getServiceId(), instance.getPort());
+      });
+      return instances;
+    }
+
+  }
+  ```
+  ```
+  request: GET /ping
+  response: []
+  ```
+  - 아직 등록된 인스턴스가 없다.
+
+#### 고급 컨피규레이션 설정  
+
+#### 출처
+
+- 마스터링 스프링 클라우드 서적
+- 소스 코드: 
