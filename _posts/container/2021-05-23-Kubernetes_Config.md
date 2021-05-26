@@ -442,6 +442,15 @@ category: Container
 
 - LimitRange 적용 방법
   - Apiserver 옵션에 --enable-admission-plugins=LimitRange를 설정
+    ```
+    $ sudo vim /etc/kubernetes/manifests/kube-apiserver.yaml
+    # ...
+    spec:
+      containers:
+      - command:
+        - --enable-admission-plugins=NodeRestriction, LimitRange
+    # ...
+    ```
   - cloud에서는 Apiserver에 설정으로 할 수 있는지 확인해야 하며 vendor마다 하는 방법이 다르다.
 
 - 예제
@@ -504,6 +513,31 @@ category: Container
     ```
     - type이 PVC이면 스토리지에 설정하는 것
 
+#### 네임스페이스 별 리소스 총량 제한 방법: ResourceQuata
+
+- https://kubernetes.io/docs/tasks/administrater-cluster/manager-resources/quota-memory-cpu-namespace
+- 네임스페이스별 리소스 제한
+  - 제한하기 원하는 네임스페이스에 ResourceQuata 리소스 생성
+  - 모든 컨테이너에는 CPU, 메모리에 대한 최소 요구사항 및 제한 설정 필요
+
+- 예제
+  ```
+  apiVersion: v1
+  kind: ResourceQuata
+  metadata:
+    name: mem-cpu-demo
+  spec:
+    hard:
+      requests.cpu: '1'
+      requests.memory: 1Gi
+      limits.cpu: "2"
+      limits.memory: 2Gi
+  ```
+  - 네임스페이스 내의 모든 컨테이너의 합이 설정만큼 넘어서는 안된다.
+  - 리소스 조회
+    ```
+    $ kubectl describe resourcequota -n namespace
+    ```
 
 #### 출처
 
