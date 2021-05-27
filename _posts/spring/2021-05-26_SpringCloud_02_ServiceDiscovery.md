@@ -19,6 +19,29 @@ category: Spring Cloud
     - 클라이언트는 마이크로서비스 애플리케이션에 의존성을 포함해 사용
     - 클라이언트는 애플리케이션 시작 후 등록과 종료 전 등록 해제를 담당하고 유레카 서버로부터 주기적으로 최신 서비스 목록을 받아온다.
 
+- 유레카를 사용한 서비스 디스커버리
+  - 클라이언트와 서버로 구분
+  - 서비스 디스커버리 패턴이란?
+    - MSA와 같은 분산 환경은 서비스 간의 원격 호출로 구성이 된다.
+    - 클라우드 환경이 되면서 서비스가 동적으로 생성되거나, 컨테이너 기반의 배포로 인해 서비스의 IP가 동적으로 변경되는 일이 발생한다.
+    - 서비스 디스커버리란 클라이언트가 서비스를 호출할 때 서비스의 위치(IP, Port)를 알아낼 수 있는 기능 제공
+    - Service Registry에 제공할 Service에 IP를 저장하여 사용
+    
+      ![image](https://user-images.githubusercontent.com/42403023/119246284-5a1c1380-bbbb-11eb-8862-22fa9b819a2f.png)
+      
+      ** 이미지 출처: https://bcho.tistory.com/1252
+
+  - 클라이언트
+    - spring-cloud-starter-eureka를 추가하여 사용
+    - 클라이언트는 항상 애플리케이션의 일부로 원격의 디스커버리 서버에 연결하는 일을 담당한다.
+    - 연결 후에 서비스 이름과 네트워크 위치 정보를 등록 메시지로 전송
+    - 다른 마이크로서비스 API를 호출해야 할 경우 디스커버리 서버로부터 서비스 목록을 담은 최신 컨피규레이션을 수신한다.
+
+  - 서버
+    - spring-cloud-eureka-server를 추가하여 사용
+    - 독립적인 스프링 부트 애플리케이션
+    - 각 서버의 상태를 다른 서버에 복제해 가용성이 높다.
+
 - 배울 내용
   - 유레카 서버를 내장한 애플리케이션 배포하기
   - 클라이언트 측 애플리케이션에서 유레카 서버 연결하기
@@ -325,6 +348,120 @@ category: Spring Cloud
 
 #### 클라이언트와 서버간의 보안 통신하기
 
+- 유레카 서버는 모든 클라이언트의 연결을 인증하지 않는다.
+- 하지만 운영에서는 보안이 부족하면 문제가 될 수 있기 때문에 spring security를 활용하여 기본 인증을 사용하여 최소한의 보안을 적용하자
+
+- Eureka Server
+  - spring-security 의존성 추가
+    ```
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+    ```
+  
+  - application.yml에 컨피규레이션 설정
+    ```
+    spring:
+      security:
+        user:
+          name: admin
+          password: admin123
+    ```
+    - 기본 username과 password 생성
+  
+  - SecurityConfig.java 생성
+    ```
+    @Configuration
+    @EnableWebSecurity
+    public class SecurityConfig extends WebSecurityConfigurerAdapter {
+      @Autowired
+      private PasswordEncoder passwordEncoder;
+      
+      @Override
+      protected void configure(HttpSecurity http) throws Exception {
+        // TODO Auto-generated method stub
+        http.authorizeRequests().antMatchers("/login", "/logout", "favicon.ico").permitAll()
+			.and().authorizeRequests().anyRequest().authenticated()
+			.and().csrf().disable()
+			.and().formLogin()
+			.and().httpBasic();
+      }
+	
+      @Override
+      protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+	// TODO Auto-generated method stub
+	auth.inMemoryAuthentication()
+	  .withUser("admin")
+	  .password(passwordEncoder.encode("admin123"))
+	  .roles("SYSTEM");
+      }
+    }
+    ```
+    - client에서 연결할 때 username:password@url:port 방식으로 연결한다.
+    - formLogin을 해주었기 때문에 csrf를 disable 해주어야 가능하다.
+  
+  - Server로 접근하면 login form으로 이동한다.
+    - http://localhost:8761 -> redirect -> http://localhost:8761/login
+    
+- Eureka Client
+  - application.yml 파일에 다음 컨피규레이션 설정과 같이 URL 연결 주소에 자격증명을 제공하자
+    ```
+    eureka:
+      client:
+        fetch-registry: true
+        register-with-eureka: true
+        serviceUrl:
+          defaultZone: http://admin:admin123@localhost:8761/eureka/
+    ```
+    - 디스커버리 클라이언트와 서버 간에 인증서를 사용한 안전한 SSL 연결을 맺는 등 더 진보된 사용을 위해서는 DiscoveryClientOptinalArgs를 맞춤형으로 구현해야한다.
+
+#### 안전한 서비스 등록하기
+
+- 스프링 부트 애플리케이션에 SSL을 활성화하려면 사설 인증서를 생성해야 한다. JRE 폴더 아래 bin 폴더 안에 있는 keytool로 생성
+  ```
+  $ keytool -genkey -alias client -storetype PKCS12 -keyalg RSA -
+  $ keytool 2048 -keystore keystore.p12 -validity 3650
+  ```
+- 필요한 데이터를 입력하고 생성된 keystore 파일 keystore.p12를 애플리케이션의 src/main/resources 폴더에 복사한다. 다음으로 application.yml 파일의 컨피규레이션 속성을 사용해 스프링 부트의 HTTPS를 활성화 한다.
+  ```
+  server:
+    port: ${PORT:8081}
+    ssl:
+      key-store: classpath:keystore.p12
+      key-store-password: 123456
+      keyStoreType: PKCS12
+      keyAlias: client
+  ```
+- 애플리케이션을 시작한 후 안전한 https://localhost:8761/info에 접근할 수 있다. 또한 유레카 클라이언트 인스턴스의 컨피규레이션을 변경해야 한다.
+  ```
+  eureka:
+    instance:
+      securePortEnabled: true
+      nonSecurePortEnabled: false
+      statusPageUrl: https://${eureka.hostname}:${server.port}/info
+      healthCheckUrl: https://${eureka.hostname}:${server.port}/health
+      homePageUrl: https://${eureka.hostname}:${server.port}/
+  ```
+  
+#### 유레카 API
+
+- spring cloud netflix는 개발자가 유레카 API를 다룰 필요 없게 하는 자바로 작성된 클라이언트를 제공한다.
+- 스프링이 아닌 다른 프레임워크를 사용하는 경우 API를 직접 호출해야 하는 경우가 있다.
+- 난.. spring을 사용하기 때문에 pass??
+
+#### 복제와 고가용성
+
+- 서비스 장애를 대비하여 운영환경에서는 2개 이상의 디스커리 서버를 구성해야 한다.
+- 유레카는 리더쉽 선출이나 클러스터에 자동 참여와 같은 표준 클러스터링 메커니즘을 제공하지 않는다.
+  - 대신 동료간(peer-to-peer) 복제 모델에 기반한다.
+  - 이는 모든 서버가 현재 서버 노드에 구성된 모든 동료에게 데이터를 복제하고 하트비트를 보낸다는 것이다.
+  - 데이터를 저장한다는 목적에는 간단하면서도 효과적이지만 확장성 면에서는 모든 노드가 서버에 저장하는 모든 부하를 견뎌야 하는 단점이 있다.
+- 유레카 서버 2.0은 복제 메커니즘을 제공하기 위해 노력하고 있다.
+  - 복제 최적화와 더불어 등록된 목록의 모든 변경을 서버에서 클라이언트로 보내는 푸시 모델, 자동 확장된 서버, 대시보드와 같은 것이다.
+
+
+    
 #### 출처
 
 - 마스터링 스프링 클라우드 서적
