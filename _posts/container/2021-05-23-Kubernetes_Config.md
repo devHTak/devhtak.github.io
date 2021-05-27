@@ -88,7 +88,7 @@ category: Container
       $ kubectl get configmap map-name -o yaml
       apiVersion: v1
       data:
-        test: |
+        test:
           1234
       kind: ConfigMap
       [중략]
