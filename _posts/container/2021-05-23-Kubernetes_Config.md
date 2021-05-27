@@ -110,7 +110,7 @@ category: Container
     ```
     apiVersion: v1
     kind: ConfigMap
-    metadata
+    metadata:
       # The ConfigMap containing the value you want to assign to SPECIAL_LEVEL_KEY
       name: special-config
       # Specify the key associated with the value
@@ -119,7 +119,7 @@ category: Container
       special.how: very
     ---
     apiVersion: v1
-    kind: COnfigMap
+    kind: ConfigMap
     metadata:
       name: env-config
       namespace: default
