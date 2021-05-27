@@ -183,7 +183,7 @@ category: Spring Cloud
   - com.netflix.discovery.EurekaClient
     - 유레카 서버가 노출하는 모든 HTTP API를 구현한다.
     - 유레카 API 영역에 설명돼 있다.
-  - org.springframework.cloud.client.discovery.DiscouveryClient
+  - org.springframework.cloud.client.discovery.DiscoveryClient
     - 넷플릭스를 대체하는 Spring Cloud의 구현이다.
     - 이것은 모든 Discovery Client 용으로 사용하는 간단한 범용 API이다.
     - getServices와 getInstances의 두가지 메서드가 있다.
