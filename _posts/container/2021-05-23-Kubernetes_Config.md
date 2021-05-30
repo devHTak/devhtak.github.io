@@ -252,7 +252,7 @@ category: Container
         image: debian
         command: ["printenv"]
         args: ["HOSTNAME", "KUBERNETES_PORT"]
-      restartPolicy: OnnFailure
+      restartPolicy: OnFailure
     ```
 
 - 환경 변수를 활용하여 출력할 때는 $를 사용하여 명령 내용 변경 가능
