@@ -460,9 +460,193 @@ category: Spring Cloud
 - 유레카 서버 2.0은 복제 메커니즘을 제공하기 위해 노력하고 있다.
   - 복제 최적화와 더불어 등록된 목록의 모든 변경을 서버에서 클라이언트로 보내는 푸시 모델, 자동 확장된 서버, 대시보드와 같은 것이다.
 
+#### 예제 솔루션 아키텍처
 
-    
+- 게이트웨이 #1 (localhost:8765)
+- App #2(localhost:8082) <-> Eureka #2(localhost:8762)
+- App #3(localhost:8081) <-> Eureka #3(localhost:8761)
+- App #4(localhost:8083) <-> Eureka #4(localhost:8763)
+- 게이트웨이가 App #2, #3, #4를 balancing 한다.
+- App #2, #3, #4는 하나의 서비스에 대해 각기 다른 Zone에 등록된 Application instance 간의 부하 분산 테스트 예시이다.
+
+### 개발
+
+- Eureka Server
+  - Eureka Server에 필요한 모든 변경은 컨페규레이션 속성에 정의되어 있다.
+  - application.yml 파일에 디스커버리 서비스의 각 인스턴스 별로 세개의 다른 프로파일을 정의했다.
+  - Eureka Server를 실행할 때 -Dspring.profiles.active=peer\[n] VM 인자에 프로파일을 지정해 활성화해야 한다.
+    - n은 인스턴스 번호이다.
+  ```
+  spring:
+    profiles: peer1
+  eureka:
+    instance:
+      hostname: peer1
+      metadataMap:
+        zone: zone1
+    client:
+      serviceUrl:
+        defaultZone: http://localhost:8762/eureka,http://localhost:8763/eureka
+  server:
+    port: ${PORT:8761}
+  ---
+  spring:
+    profiles: peer2
+  eureka:
+    instance:
+      hostname: peer2
+      metadataMap:
+        zone: zone2
+    client:
+      serviceUrl:
+        defaultZone: http://localhost:8761/eureka,http://localhost:8763/eureka
+  server:
+    port: ${PORT:8762}
+  ---
+  spring:
+    profiles: peer3
+  eureka:
+    instance:
+      hostname: peer3
+      metadataMap:
+        zone: zone3
+    client:
+      serviceUrl:
+        defaultZone: http://localhost:8761/eureka,http://localhost:8762/eureka
+  server:
+    port: ${PORT:8763}
+  ```
+    - maven package하여 jar 파일 생성
+      - eclipse에서 package하는 법: pom.xml에서 우클릭 후 run 선택, maven build 선택 후 goal을 package 입력
+    - jar 파일 실행
+      ```
+      $ java -jar -Dspring.profiles.active=peer3 HaEurekaServer-0.0.1-SNAPSHOT.jar
+      ```
+      - peer1, peer2, peer3 실행
+
+- Eureka Client
+  - Server와 마찬가지로 -Dspring.profiles.active= zone\[n]을 추가한다.
+  - 모든 서비스를 로컬에서 실행하는 점을 고려해 -Xmx192m 인자를 설정하자.
+    - 스프링 클라우드 애플리케이션에 아무런 메모리 제한을 제공하지 않으면 시작할 때 heap으로 약 350MB를 사용하고 총 600MB 정도의 메모리를 사용한다.
+    - 로컬에서 어려움을 겪을 수 있다.
+  - application.yml
+    ```
+    spring:
+      profiles: zone1
+    eureka:
+      client:
+        service-url:
+          default-zone: http://localhost:8761/eureka,http://localhost:8762/eureka,http://localhost:8763/eureka
+    server:
+      port: ${PORT:8081}
+    ---
+    spring:
+      profiles: zone2
+    eureka:
+      client:
+        service-url:
+          default-zone: http://localhost:8761/eureka,http://localhost:8762/eureka,http://localhost:8763/eureka
+    server:
+      port: ${PORT:8082}
+    ---
+    spring:
+      profiles: zone3
+    eureka:
+      client:
+        service-url:
+          default-zone: http://localhost:8761/eureka,http://localhost:8762/eureka,http://localhost:8763/eureka
+    server:
+      port: ${PORT:8083}
+    ```
+  - 예제 컨트롤러 생성
+    ```java
+    @RestController
+    public class ClientController {
+	
+      @Value("${spring.profiles}")
+      private String zone;
+	
+      @GetMapping("/ping")
+      public String ping() {
+        return "I', in zone " + this.zone; 
+      }
+    }
+    ```
+    - maven package하여 jar 파일 생성
+      - eclipse에서 package하는 법: pom.xml에서 우클릭 후 run 선택, maven build 선택 후 goal을 package 입력
+    - jar 파일 실행
+      ```
+      $ java -jar -Dspring.profiles.active=zone1 -Xmx192m HaEurekaClient-0.0.1-SNAPSHOT.jar
+      ```
+      - zone1, zone2, zone3 실행
+      	```
+	request: localhost:8081/ping 
+	response: I'm in zone zone1
+	```
+
+#### 장애조치
+
+- 서비스 디스커버리 인스턴스 중 하나에 장애가 발생하면 어떻게 될까?
+  - 설정을 수정하였다.
+    ```
+    spring:
+      profiles: zone3
+    eureka:
+      client:
+        service-url:
+          default-zone: http://localhost:8761/eureka,http://localhost:8762/eureka,http://localhost:8763/eureka
+        register-with-eureka: false
+    server:
+      port: ${PORT:8083}
+    ```
+  - localhost:8765(gateway)을 호출하여도 서비스#3은 서비스가 비활성화 되었지만 서로 다른 두 개의 인스턴스가 여전히 서로 통신하고 있기 때문에 zone1, zone2와 연결하여 사용할 수 있다.
+
+#### 존
+
+- 유레카는 클러스터 환경에 유용한 존 메커니즘을 기본으로 제공한다.
+- 특이한 점은 단일 서비스 디스커버리 인스턴스에도 모든 클라이언트는 컨피규레이션 설정에 eureka.client.service-url.default-zone 속성을 설정해야 한다.
+- 예제
+  - 세개의 물리적으로 분리된 네트워크가 있거나 유입되는 요청을 처리하는 세개의 머신이 있다고 가정하자.
+  - 디스커버리 서비스는 여전히 논리적인 클러스터로 묶여 있으나 각 인스턴스는 분리된 존에 위치한다.
+  - zone에는 같은 gateway, app, eureka가 존재하여 같은 존에 있는 모든 클라이언트는 디스커버리 서버에 등록한다.
+  - 한 개의 주울 게이트웨이 인스턴스 대신 각 존에 하나씩 세개의 인스턴스를 띄웠다.
+  - 이제 게이트위에로 요청이 유입되면 클라이언트가 다른 존에 등록된 서비스를 호출하기 전에 같은 존에 있는 서비스를 우선 연결한다.
+  - zone1(Gateway1 / localhost:8765, App1 / localhost:8081, Eureka1 / localhost:8761)
+  - zone2(Gateway2 / localhost:8766, App1 / localhost:8082, Eureka1 / localhost:8762)
+  - zone3(Gateway3 / localhost:8767, App1 / localhost:8083, Eureka1 / localhost:8763)
+  
+- 하나의 서버를 사용하는 존
+  - 존 메커니즘은 클라이언트 측에서만 실현된다.
+  - 서비스 디스커버리 인스턴스는 어떤 존에도 할당되지 않는다.
+  - 하나의 디스커버리 서버로도 고가용성 모드에서의 메커니즘을 점검할 수 있다.
+  - zone1(Gateway1 / localhost:8765, App1 / localhost:8081, Eureka공통 / localhost:8761)
+  - zone2(Gateway2 / localhost:8766, App1 / localhost:8082, Eureka공통 / localhost:8761)
+  - zone3(Gateway3 / localhost:8767, App1 / localhost:8083, Eureka공통 / localhost:8761)
+  - 클라이언트 수정
+    ```
+    spring:
+      profiles: zone1
+    eureka:
+      instance:
+        metadata-map:
+	  zone: zone1 # 서비스가 등록된 zone의 이름을 설정
+      client:
+        service-url:
+          default-zone: http://localhost:8761/eureka
+        register-with-eureka: false
+	prefer-same-zone-eureka: true # 게이트웨이가 같은 존에 있는 클라이언트 애플리케이션 인스턴스를 선호하게 하려면 true로 설정
+    server:
+      port: ${PORT:8083}
+    ---
+    # zone2, zone3에도 같이 추가
+    ```
+    - eureka.instance.metadata-map 추가
+      - 해당 컨피그에 서비스가 등록된 zone의 이름을 설정하자.
+    - eureka.client.prefer-same-zone-eureka: true
+      - 게이트웨이가 같은 존에 있는 클라이언트 애플리케이션 인스턴스를 선호하게 하려면 true로 설정
+  - 만약 클라이언트 #1을 사용하지 못하더라고 다른 두 클라이언트 애플리케이션 인스턴스로 50/50 분산이 될것이다.
+
 #### 출처
 
 - 마스터링 스프링 클라우드 서적
-- 소스 코드: 
+- 소스 코드: https://github.com/devHTak/master-spring-cloud-copy
