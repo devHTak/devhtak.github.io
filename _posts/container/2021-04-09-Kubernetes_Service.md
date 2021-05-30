@@ -261,8 +261,10 @@ category: Container
       ```
       
   - Service와 Endpoints 연결 구조
+    
     ![image](https://user-images.githubusercontent.com/42403023/114120132-e1bd0400-9926-11eb-88a5-896ff6b98ac2.png)
-    **  이미지 출처: DevOps를 위한 Kubernetes 마스터 강의
+    
+    **  이미지 출처: DevOps를 위한 Kubernetes 마스터 강의 
     
 #### 서비스 노출하는 세가지 방법
 
