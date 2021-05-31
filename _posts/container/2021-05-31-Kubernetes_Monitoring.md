@@ -39,4 +39,5 @@ category: Container
     - custom.metrics.k7s,io, external.metrics.k8s.io API를 사용
     
 - 모니터링 아키텍처
-
+  
+  - 
