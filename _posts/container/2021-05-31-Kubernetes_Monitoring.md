@@ -154,6 +154,111 @@ category: Container
     - 파일명을 보면 POD, NS, Container 명 등에 정보로 이름이 구성되어 있다.
     - 파일 내부에 로그가 작성되어 있어 디버깅이 가능하다.
 
+#### Kube 대시보드 설치와 사용
+
+- Kubernetes Dashboard
+  - Kubernetes 클러스터 용 범용 웹 기반 UI
+  - 사용자는 클러스터에서 실행중인 응용 프로그램을 관리하고 문제를 해결, 클러스터 자체를 관리
+  - https://github.com/kubernetes/dashboard
+
+- 설치 방법
+  - https://github.com/kubernetes/dashboard
+  - 해당 명령어로 git에 올라온 yaml 파일을 바로 적용
+    ```
+    $ kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.2.0/aio/deploy/recommended.yaml
+    ```
+    - namespace가 kubernetes-dashboard에 있다.
+      ```
+      $ kubectl get all -n kubernetes-dashboard
+      NAME                                             READY   STATUS              RESTARTS   AGE
+      pod/dashboard-metrics-scraper-79c5968bdc-r9rdj   0/1     ContainerCreating   0          114s
+      pod/kubernetes-dashboard-9f9799597-q6h8c         0/1     ContainerCreating   0          114s
+
+      NAME                                TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+      service/dashboard-metrics-scraper   ClusterIP   10.100.133.193   <none>        8000/TCP   114s
+      service/kubernetes-dashboard        ClusterIP   10.109.60.178    <none>        443/TCP    115s
+
+      NAME                                        READY   UP-TO-DATE   AVAILABLE   AGE
+      deployment.apps/dashboard-metrics-scraper   0/1     1            0           114s
+      deployment.apps/kubernetes-dashboard        0/1     1            0           114s
+
+      NAME                                                   DESIRED   CURRENT   READY   AGE
+      replicaset.apps/dashboard-metrics-scraper-79c5968bdc   1         1         0       114s
+      replicaset.apps/kubernetes-dashboard-9f9799597         1         1         0       114s
+      ```
+    - service/kubernetes-dashboard 가 ClusterIP로 되어 있기 때문에 외부와 통신이 가능한 NodePort로 변경
+      ```
+      $ kubectl edit service/kubernetes-dashboard -n kubernetes-dashboard
+      type: CluterIP -> type: NodePort
+      $ kubectl get service kubernetes-dashboard -n kubernetes-dashboard
+      NAME                        TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)         AGE
+      kubernetes-dashboard        NodePort    10.109.60.178    <none>        443:31845/TCP   20m
+      ```
+    - 이제 http://\<master-ip>:31845
+      - master-ip 알아내는 방법
+        ```
+        $ kubectl cluster-info
+        Kubernetes control plane is running at https://192.168.49.2:8443
+        KubeDNS is running at https://192.168.49.2:8443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+        ```
+        - https://192.168.49.2:31845 로 접속
+        
+  - 외부로 443 포트 열고 접속
+
+- 대시보드를 실행하면 인증 화면이 뜬다.
+
+  ![image](https://user-images.githubusercontent.com/42403023/120251991-2c6f5280-c2be-11eb-8407-e2299b084b90.png)
+  
+- 토큰 사용하기
+
+  ```
+  $ kubectl get sa -n kubernetes-dashboard 
+  # sa : service account의 약자
+  NAME                   SECRETS   AGE
+  default                1         24m
+  kubernetes-dashboard   1         24m
+  $ kubectl get sa -n kubernetes-dashboard -o yaml
+  apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"ServiceAccount","metadata":{"annotations":{},"labels":{"k8s-app":"kubernetes-dashboard"},"name":"kubernetes-dashboard","namespace":"kubernetes-dashboard"}}
+    creationTimestamp: "2021-06-01T00:22:46Z"
+    labels:
+      k8s-app: kubernetes-dashboard
+    name: kubernetes-dashboard
+    namespace: kubernetes-dashboard
+    resourceVersion: "107883"
+    uid: 3f70ca0c-0639-40c2-9035-335f8456acbf
+  secrets:
+  - name: kubernetes-dashboard-token-5zghh
+  # secret에 저장되어 있다
+  $ kubectl get secret -n kubernetes-dashboard kubernetes-dashboard-token-5zghh -o yaml
+  # 토큰을 확인할 수 있다.
+  $ kubectl describe secret -n kubernetes-dashboard kubernetes-dashboard-token-5zghh
+  # 토큰을 확인할 수 있다.
+  ```
+
+- 권한 부여
+  ```
+  $ vi kube-dashboard-role-binding.yaml
+  apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRoleBinding
+  metadata:
+    name: kubernetes-dashboard-rolebinding
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: cluster-admin
+  subjects:
+  - kind: ServiceAccount
+    name: kubernetes-dashboard
+    namespace: kubernetes-dashboard
+  $ kubectl create -f kube-dashboard-role-binding.yaml
+  ```
+    - cluster-admin 권한을 kubernetes-dashboard 에게 주었다.
+    
 #### 출처
 
 - 데브옵스(DevOps)를 위한 쿠버네티스 마스터
