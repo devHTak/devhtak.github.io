@@ -18,11 +18,10 @@ category: Container
         $ kubectl top node
         $ kubectl top pod
         ```
-        
+      - top으로 볼 수 있는 것은 한계가 있다. (history 저장, UI 등)      
     - cAdvisor, 프로메테우스, EFK
+      - 해당 게시글에서는 작성하지 않을 예정으로 추후 추가적인 학습 필요
   
-  - top으로 볼 수 있는 것은 한계가 있다. (history 저장, UI 등)
-
 - 리소스 모니터링 도구
   - 쿠버네티스 클러스터 내의 애플리케이션 성능을 검사
   - 쿠버네티스는 각 레벨에서 애플리케이션의 리소스 사용량에 대한 상세 정보를 제공
@@ -68,6 +67,7 @@ category: Container
       - kubelet-insecure-tls
       - kubelet-preferred-address-types=InternalIP
       - 두개 옵션 추가 
+      
   - POD 확인
     ```
     server1@server1-VirtualBox:~/metrics-server$ kubectl get pod -n kube-system
