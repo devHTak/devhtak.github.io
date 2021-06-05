@@ -823,6 +823,9 @@ category: Container
   
 - Kiali를 활용하여 Istio 대시보드
   
+  - kiali 설치
+    - 참고: https://istio.io/latest/docs/ops/integrations/kiali/#installation
+  
   - istioctl의 dashboard 명령을 사용하면 다양한 서비스에 접근할 수 있다
     ```
     $ istioctl dashboard 
