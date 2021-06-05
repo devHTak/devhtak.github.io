@@ -7,12 +7,12 @@ date: '2021-06-05 14:41:00 +0900'
 category: msa
 ---
 
-#### 다양한 서비스 분리 기준
+### 다양한 서비스 분리 기준
 
 - Domain Driven Design
   - 서비스를 분해하는 방법 중 하나로 DDD 개념 이용
   - 논리 데이터 모델의 Subject Area 또는 그 하위 그룹 단위로 표현될 수 있음
-  - Main Model <<Context Map>> <-> Sub Model <<Bounded Context>> (-> Dependency <<Sharked Kernel>>)
+  - Main Model \[\[Context Map]] <-> Sub Model \[\[Bounded Context]] (-> Dependency \[\[Sharked Kernel]])
     - Bounded Context
       - 업무의 독립 단위
       - 업무적 연관성이 높은 기능/데이터를 하나의 Boundary로 구분
@@ -60,7 +60,7 @@ category: msa
     - 다른 팀에 독립적으로 작업하고 배포할 수 있어야 함
     - 다른 팀과 최소한의 협업을 통해 서비스를 개발하고 배포할 수 있어야 함
   
-#### 서비스 정의 절차
+### 서비스 정의 절차
   
 - 서비스 정의 Step은 서비스 크기의 타당서을 검증해 가는 과정
 
@@ -81,9 +81,44 @@ category: msa
   - 관련화면, Entity, 기능 등을 바탕으로 서비스 정의서 작성
   
 #### 후보 서비스 도출 절차
-  
+
+- 서비스 후보 Level 지정
+  - Stakeholder가 모여 MSA 목적 등을 검토
+  - 업무 기능 분해도 특정 Level을 후보 서비스로 지정
+  - Business Process Level 또는 업무 전문가에 의한 특정 Level 지정
+
+- 서비스 후보 Level 조정
+  - 조직, 배포 등의 관점을 고려하여 업무 기능 분해도 Level (서비스 후보 Level) 조정
+
+- 후보 서비스 도출
+  - 후보 서비스 목록 작성
+
 #### 후보 서비스 도출 기법
+
+- 기술이 아닌 Business 관점의 업무 기능 분해도에 Process를 수행하는 조직을 추가하여 서비스 도출에 활용
+- 기능 분해도의 특정 Level (예: Business Process) 이 후보 서비스로 적정한지 조직/역할자 관점에서 확인
+- 시스템 규모, 범위에 따라 기준 Level은 달라질 수 있음
+- Business Process Level 이 한 조직에서 수행하는 일이 아니라면 그 하위 Level을 후보 서비스로 정할 수 있음
+- Business Process Level 이 한 조직에서 수행하나 서비스로 정의하기 작다면 그 상위 Level로 정할 수 있음
   
+#### 후보 서비스 평가 절차
+
+- 평가항목 정의
+  - 기본 평가 항목 검토
+  - MSA 목적에 맞도록 평가 항목 재정의
+  - 비즈니스 요건에 따른 평가 항목 정의(예: 독립적인 배포, 트랜잭션 증가, 빠른 비즈니스 반영, 시스템 독립 성등)
   
+- 평가항목별 측정방법 도출
+  - 평가 항목 별 측정 방법 도출
+  - 업무 전문가, IT 담당자 등 과 측정 방법의 적정성 검토
   
+- 후보 서비스 평가 및 조정
+  - 평가 항목 별 측정
+  - 측정 결과를 토대로 후보 서비스 평가
+
+#### 후보 서비스 연관도 시뮬레이션
+
+#### 서비스 정의
+
+
   
