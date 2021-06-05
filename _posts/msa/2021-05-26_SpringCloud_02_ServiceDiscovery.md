@@ -4,7 +4,7 @@ title: 마스터 스프링 클라우드 - 04. Service Discovery
 summary: Spring Cloud
 author: devhtak
 date: '2021-05-26 14:41:00 +0900'
-category: Spring Cloud
+category: msa
 ---
 
 #### 들어가기
