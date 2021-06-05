@@ -4,7 +4,7 @@ title: 마스터 스프링 클라우드 - 05. 분산 컨피규레이션
 summary: Spring Cloud
 author: devhtak
 date: '2021-05-27 22:41:00 +0900'
-category: Spring Cloud
+category: msa
 ---
 
 #### 들어가기
