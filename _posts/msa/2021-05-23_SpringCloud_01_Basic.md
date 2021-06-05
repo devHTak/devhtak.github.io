@@ -4,7 +4,7 @@ title: 마스터 스프링 클라우드 - 03. 스프링 클라우드 개요
 summary: Spring Cloud
 author: devhtak
 date: '2021-05-23 14:41:00 +0900'
-category: Spring Cloud
+category: msa
 ---
 
 #### 기본부터 시작하기
