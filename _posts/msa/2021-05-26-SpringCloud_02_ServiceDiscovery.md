@@ -109,7 +109,7 @@ category: msa
   - @EnableDiscoverClient 활성화
     - 서버로부터 데이터를 가져와 캐싱하고 주기적으로 변경사항을 점검
     - spring-cloud-commons에 존재하여 컨설, 유레카, 주키퍼 등 다수의 클라이언트 구현체에서 사용
-    - @EnableEurecaClient는 spring-cloud-netflix만 존재한다.
+    - @EnableEurekaClient는 spring-cloud-netflix만 존재한다.
   - 소스
     ```java
     @SpringBootApplication
