@@ -101,7 +101,7 @@ category: msa
 - application.yml 속성
   ```
   server:  
-  port: ${PORT:8888}    
+    port: ${PORT:8888}    
   spring:
     application:
       name: config-server
