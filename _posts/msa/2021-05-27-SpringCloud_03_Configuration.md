@@ -55,7 +55,7 @@ category: msa
   - 기본적으로 스프링 클라우드 컨피그 서버는 Git 저장소에서 컨피규레이션 데이터를 가져오려고 한다.
   - 네이티브 프로파일을 활성화하기 위해서는 spring.profiles.active=native로 설정 해야 한다.
   - classpath:/, classpath:/config, file:./, file:./config에서 컨피규레이션 파일을 찾는다.
-    - 속성 또는 YAML 파일이 JAR 파일 안에 위치할 수 있다는 뜻이다.
+    - 속성 또는 YAML 파일이 JAR 파일 안에 위치할 수 있다.
 
 - 예제
   - 테스트를 위해 src/main/resources 아래 config 폴더를 생성했다.
