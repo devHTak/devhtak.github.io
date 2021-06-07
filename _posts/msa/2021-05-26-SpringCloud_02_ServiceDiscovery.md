@@ -9,7 +9,7 @@ category: msa
 
 #### 들어가기
 
-- Eureca
+- Eureka
   - 서비스 디스커버리로 넷플릭스의 Eureka를 많이 사용한다.
   - Eureka는 서버와 클라이언트로 라이브러리가 나눠져 있다.
   - 서버
