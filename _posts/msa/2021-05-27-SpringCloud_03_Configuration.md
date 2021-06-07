@@ -322,6 +322,230 @@ category: msa
 
 - 사용할 일이 없을 듯 하여 현재는 넘어가도록 하겠다..
 
+### 추가 기능
+
+- 시작 시 실패와 재시도
+  - 컨피그 서버가 사용 불가능한 경우 클라이언트에서 예외를 발생시켜 멈추게 해야 한다.
+    - spring.cloud.config.failFast=true 설정 필요
+  
+  - 하지만 이런 방식보다는 접속 시도를 여러번 주어 시도해 볼 수 있다.
+    - spring.cloud.config.failFast=true 설정 유지
+    - spring-retry 라이브러리와 spring-boot-starter-aop 를 application class path에 추가해야 한다.
+    - 기본 행동은 초기 1000ms의 백오프 간격으로 6번 재시도한다.
+    - spring.cloud.config.retry.* 컨피규레이션 속성을 사용해 설정을 재정의할 수 있다.
+
+- 클라이언트 안전하게 하기
+  - 서비스 디스커버리 서버와 마찬가지로 컨피그 서버도 기본 인증을 사용해 안전하게 할 수 있다.
+  - 컨피그 서버에 spring security 적용
+  - client의 bootstrap.yml에 사용자 이름과 비밀번호 설정해야 한다.
+    ```
+    spring:
+      cloud:
+        config:
+	  uri: https://localhost:8889
+	  username: user
+	  password: secret
+    ```
+
+### 자동으로 컨피규레이션 다시 읽기
+
+- 파일 시스템, Git, Valut 중 어떤 것을 선택하더라도 새로운 컨피규레이션을 가져오기 위해서는 클라이언트 애플리케이션을 다시 시작해야 한다.
+- 하지만 MSA 환경에서 최적화된 솔루션은 아니다.
+- 컨피그 서버에 컨피그 내용을 동적으로 클라이언트에 적용하는 방법
+  - 첫 번째, 컨피그 서버에 웹훅을 호출하게 될 특별한 종단점을 활성화한다.
+  - 두 번째, 클라이언트에 @RefreshRemote 빈 설정 및 컨피그 서버와 클라이언트에 MQ를 설치하여 컨피그 서버에 컨피그 변경 이벤트가 발생하면 클라이언트에 전달하도록 한다. 
+  - 세 번째, spring-cloud-config-monitor의 /monitor 종단점으로 변경 사항 적용
+  - 네 번째, 지속적인 통합 도구인 Gitlab을 활용하여 이벤트 
+
+- 솔루션 아키텍처
+  - 서비스 디스커버리에서 서버와 연결을 끊기 위해 /shutdown 종단점을 제공한 것과 같은 종단점을 활용하여 동적으로 컨피규레이션을 가져올 수 있다.
+  - 소스 코드 저장소 제공자는 웹훅(WebHook) 메커니즘을 사용해 저장소의 변경을 알릴 수 있다.
+    - 웹훅은 서비스 제공자가 제공하는 웹 대시보드에 URL과 이벤트 타입의 목록을 선택해 설정할 수 있다.
+    - 서비스 제공자는 웹훅에 정의된 경로에 POST 요청을 호출해 커밋의 목록을 전송한다.
+  - 컨피그 서버
+    - 종단점을 활성화하기 위해서 프로젝트에 스프링 클라우드 버스 의존성을 포함해야 한다.
+      - 스프링 클라우드 버스: Rabbit MQ, Kafka
+    - 웹훅이 호출되면 컨피그 서버는 마지막 커밋에 의해 변경된 소스 속성의 목록을 이벤트로 보낼 준비를 하며, 이 이벤트는 MQ를 통해 전송된다.
+  - 클라이언트
+    - 데이터를 받기 위해서 스프링 클라우드 버스 의존성을 추가하자.
+    - @RefreshScope을 설정하여 동적 리프레시 메커니즘을 활성화한다.
+
+- @RefreshScope를 사용해 컨피규레이션 다시 읽기
+  - 클라이언트 컨피규레이션
+    ```
+    eureka:
+      instance:
+        metadata-map: 
+	  zone: zone1
+      client:
+        service-url:
+	  default-zone: http://localhost:8761/eureka/
+    server:
+      port: ${PORT:8081}
+    management:
+      security:
+        enabled: false
+    sample:
+      string:
+        property: Client App
+      int:
+        property: 1
+    ```
+    - management.security.enabled: false
+      - 스프링 부트 액추에이터의 종단점 보안을 비활성화
+      - 종단점을 비밀번호 없이 호출 가능
+    - sample.string.property, sample.int.property
+      - 예제에서 값에 기반한 빈을 생성하기 위해 추가
+    - /refresh
+      - 스프링 클라우드는 스프링 부트 액추에이터를 위한 몇가지 추가적인 HTTP 관리 종단점을 제공하는 것 중 하나
+      - http://localhost:8081/refresh 종단점을 HTTP POST 메서드로 호출하면 @RefreshScope을 사용한 빈을 갱신
+      - 이 경우, 디스커버리와 컨피그 서버가 실행중 이어야 한다.
+    - 클라이언트 애플리케이션은 --spring.profiles.active=zone1 인자로 실행
+  
+  - @RefreshScope 빈
+    ```java
+    @Component
+    @RefreshScope
+    public class ClientConfiguration {
+      @Value("${sample.string.property}")
+      private String sampleStringProperty;
+      
+      @Value("${sample.int.property}")
+      private int sampleIntProperty;
+      
+      public String showProperties() {
+      	return String.format("Hello from %s %d", sampleStringProperty, sampleIntProperty);
+      }
+    }
+    ```
+    
+  - 빈은 ClientController 클래스로 주입되고 http://localhost:8081/ping에 노출되는 내부의 ping 메서드를 호출한다.
+    ```java
+    @RestController
+    public class ClientController {
+      @Autowired private ClientConfiguration conf;
+      
+      @GetMapping("/ping")
+      public String ping() { return confi.showProperties(); }
+    }
+    ```
+  
+  - config server의 client-service-zone1.yml 파일 수정
+  - /client-service/zone1 HTTP 종단점을 호출하면 최신값이 반환된다.
+  - 하지만, /ping 메서드를 호출하면 이전 값이 그대로 보인다.
+
+  - 변경은 감지했지만, 외부 작응 없이(MQ event) 자동으로 갱신할 수 없기 떄문에 재시작하거나 /refresh 메서드를 호출해 컨피규레이션을 강제로 읽어주어야 한다.
+    
+- 메시지 브로커로 부터 이벤트 받기
+  - rabbit mq 실행
+    - container 실행
+      ```
+      $ docker run -d --name rabbit -p 5672:5672 -p 15672:15672 rabbitmq:management
+      ```
+      - 5672: 클라이언트 연결 용, 15672: 대시보드 연결 용
+    - 클라이언트 pom.xml에 rabbitmq 의존성 추가
+      ```
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-bus-amqp</artifactId>
+      </dependency>
+      ```
+      - 해당 라이브러리는 자동으로 설정을 지원하지만, 윈도우에서 도커릴 실행했기 때문에 기본 속성 재정의
+      
+        ```
+        spring:
+          rabbitmq:
+          host: 192.168.99.100
+          port: 5672
+          username: guest
+          password: guest
+        ```
+      - http:192.168.99.100:15672 로 접속하면 대쉬보드에 접속할 수 있다.
+
+- 컨피그 서버에서 저장소 변경 모니터링
+  - 클라이언트에 spring-cloud-config-monitor 의존성 추가
+    ```
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-config-monitor</artifactId>
+    </dependency>
+    ```
+    - /monitor 종단점을 노출하도록 한다.
+  - application.yml 에 컨피규레이션 모니터링 활성화
+    - 스프링 클라우드에는 저장소 제공자마다 다르게 구현되기 때문에 선택 필요
+    - 현재는 Github
+    ```
+    spring:
+      application:
+        name: config-server
+    cloud:
+      config:
+        server:
+	  monitor:
+	    github:
+	      enabled: true
+    ```
+  - 변경 감지 메커니즘 사용자 정의
+    ```java
+    @Bean
+    public GithubPropertyPathNotificationExtractor githubPropertyPathNotificationExtractor {
+      return new GithubPropertyPathNotificationExtractor();
+    }
+    ```
+    - 기본으로 애플리케이션의 이름과 매칭되는 파일의 변경을 감지한다.
+    - PropertyPathNotificationExtractor를 구현해 제공
+      - Github으로 부터의 알림을 이용하기 위해 GithubPropertyPathNotificationExtractor
+    
+- 변경 이벤트를 수동으로 흉내내기
+  - 수동으로 /monitor 종단점을 POST로 호출하면 웹훅을 쉽게 흉내낼 수 있다.
+  - 깃허브 명령은 요처에 X-Github-Event 헤더를 포함해야 한다.
+    ```
+    $ curl -H "X-Github-Event: push" -H "Content-Type: application/json" -X POST -d '{"commits":[{"modified": ["client-service-zone1.yml"]}]}' http//localhost:8889/monitor
+    ```
+    - 만얀 sample.int.property를 수정한다면, 클라이언트 애플리케이션 로그에 Received remote refresh requests. key refreshed [sample.int.property]라고 표시된다.
+    - /ping 종단점을 호출하면 변경된 속성의 최신값이 반환된다.
+
+- 깃랩 인스턴스를 사용해 로컬 호스트에서 테스트하기
+  - 지속적인 통합 도구인 깃랩 컨테이너 실행
+    ```
+    $ docker run -d --nae gitlab -p 10443:443 -p 10080:80 -p 10022:22 gitlab/gitlab-ce:latest
+    ```
+  - 웹 대시보드(포트: 10080) 접속
+    - admin 계정 생성하고 로그인
+  - 프로젝트 생성
+    - 프로젝트 명: sample-spring-cloud-config-repo
+    - http://192.168.99.100:10080/root/sample-spring-cloud-config-repo 에서 복제
+  - 깃허브에서 컨피규레이션 파일을 가져와 커밋
+  - 컨피그 서버의 /monitor 존단점에서 푸시 알림을 주는 웹 훅을 정의
+    - Settings | Integration 섹션, URL 필드에 서버 주소 입력 (localhost 대신 hostname을 이용)
+    - Push Events 체크박스 선택
+  - 컨피그 서버에 설정 추가(application.yml)
+    ```
+    spring:
+      application:
+        name: config-server
+    cloud:
+      config:
+        server:
+	  monitor:
+	    github:
+	      enabled: true
+	git:
+	  uri: http://192.168.99.100:10080/root/sample-spring-cloud-config-repo.git
+	  username: root
+	  password: root123
+	  clone-on-start: true
+    ```
+  - 컨피그 서버에 빈 설정
+    ```java
+    @Bean
+    public GitlabPropertyPathNotificationExtractor gitlabPropertyPathNotificationExtractor() {
+      return new GitlabPropertyPathNotificationExtractor();
+    }
+    ```
+  
+  - 컨피규레이션 파일을 변경한 후 커밋하면 클라이언트 애플리케이션의 컨피규레이션도 갱신되는 것을 확인할 수 있다.
+
 #### 출처
 
 - 마스터링 스프링 클라우드 
