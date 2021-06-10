@@ -98,7 +98,78 @@ category: Container
     master $ kubectl uncordon node-1
     ```
 
+#### 백업과 복원
 
+- 백업 리소스
+  - 포드의 정보 파일 YAML
+    ```
+    $ kubectl get all --all-namespaces -o yaml > all-deploy-services.yaml
+    $ kubectl create -f all-deploy-services.yaml
+    ```
+    
+  - ETCD 데이터 베이스
+    ```
+    $ $ sudo ETCDCTL_API=3 ./etcdctl --endpoints=127.0.0.1:2379 \
+      --cacert /etc/kubernetes/pki/etcd/ca.crt \
+      --cert /etc/kubernetes/pki/etcd/server.crt \
+      --key /etc/kubernetes/pki/etcd/server.key \
+      snapshot save snapshotdb
+    $ etcdctl --write-out=table snapshot status snapshotdb
+    ```
+    - 생겨난 all-deploy-services.yaml 파일과 스냅샷을 뜬 snapshotdb를 복원하고자 하는 위치로 이동시킨다.
+    
+  - Persistent Volume: 일반적인 방법으로 백업
+
+- 복원
+  - Etcd 백업 파일 복원 명령
+    ```
+    $ sudo ETCDCTL_API=3 ./etcdctl --endpoints=127.0.0.1:2379 \
+      --cacert /etc/kubernetes/pki/etcd/ca.crt \
+      --cert /etc/kubernetes/pki/etcd/server.crt \
+      --key /etc/kubernetes/pki/etcd/server.key \
+      --data-dir /var/lib/etcd-restore \
+      --name master \
+      --initial-cluster-token this-is-token \
+      --initial-advertise-peer-urls https://127.0.0.1:2738 \
+      snapshot restore ~/yaml/snapshotdb
+    ```
+    - 옵션 정보: https://github.com/etcd-io/etcd/blob/master/Documentation/op-guide/configuration.md
+    - cacert, cert, key는 HTTPS를 위하여 설정하였다
+    - restore 확인
+      - msg에 restore 완료라는 문구가 뜬다.
+      - /var/lib/etcd-restore/member가 존재하면 성공
+      
+  - etcd.yml 스태틱 포드 수정
+    ```
+    $ sudo vim /etc/kubernetes/manifest/etcd.yaml
+    ```
+    - 다음 디렉토리를 모두 찾아 디렉토리 변경
+      - /var/lib/etcd --> /var/lib/etcd-restore
+    - 옵션 추가
+      - --initial-cluster-token=this-is-token
+    
+  - Etcd가 부팅되고 1분 정도 기다린 후 kubectl 동작 확인
+    ```
+    $ sudo docker ps -a | grep etcd
+    # etcd가 올라오는 것을 확인해야 한다.
+    ```
+
+#### 보안을 위한 다양한 리소스
+
+- 모든 통신은 TLS
+  - 대부분 엑세스는 kube-apiserver를 통하지 않고서는 불가능하다.
+  - 엑세스 가능한 유저
+    - 파일 - 유저 이름과 토큰
+    - Service-Accounts
+    - 인증서(Certificates)
+    - External Authentication Providers - LDAP
+    
+  - 무엇을 할 수 있는가?
+    - RBAC Authorization
+    - ABAC Authorization
+    - Node Authorization
+    - WebHook Mode
+    
 #### 출처
 
 - 데브옵스(DevOps)를 위한 쿠버네티스 마스터 인프런 강의
