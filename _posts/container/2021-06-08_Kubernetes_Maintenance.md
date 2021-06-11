@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Kubernetes Cluster Maintaining and security
+title: Kubernetes Cluster Maintaining
 summary: Kubernetes
 author: devhtak
 date: '2021-06-08 21:41:00 +0900'
@@ -153,23 +153,7 @@ category: Container
     $ sudo docker ps -a | grep etcd
     # etcd가 올라오는 것을 확인해야 한다.
     ```
-
-#### 보안을 위한 다양한 리소스
-
-- 모든 통신은 TLS
-  - 대부분 엑세스는 kube-apiserver를 통하지 않고서는 불가능하다.
-  - 엑세스 가능한 유저
-    - 파일 - 유저 이름과 토큰
-    - Service-Accounts
-    - 인증서(Certificates)
-    - External Authentication Providers - LDAP
-    
-  - 무엇을 할 수 있는가?
-    - RBAC Authorization
-    - ABAC Authorization
-    - Node Authorization
-    - WebHook Mode
-    
+  
 #### 출처
 
 - 데브옵스(DevOps)를 위한 쿠버네티스 마스터 인프런 강의
