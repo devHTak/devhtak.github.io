@@ -116,6 +116,64 @@ category: Container
     $ sudo ls /etc/kubernetes/manifests
     ```
 
+#### TLS 인증서 정보 확인과 자동갱신 방법
+
+- 인증서 정보 확인
+  ```
+  $ sudo openssl x509 -in <certificate> -text
+  ```
+
+- 인증서 갱신
+  - https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs
+  - Check certificate expiration
+    ```
+    $ kubeadm alpha certs check-expiration
+    ```
+  - Automatic certificate renewal
+    ```
+    kubeadm 은 컨트롤 플레인을 업그레이드하면 모든 인증서를 자동 갱신
+    ```
+  - Manual certificate renewal
+    ```
+    $ kubeadm alpha certs renew all
+    ```
+
+#### TLS 인증서를 활용한 유저 생성
+
+- ca를 사용하여 직접 csr(certificate sending request) 승인하기
+  - 개인 키 생성
+    ```
+    $ openssl genrsa -out ${random.key} 2048
+    ```
+  - private 키를 기반으로 인증서 서명 요청하기
+    - CN: 사용자 이름
+    - O: 그룹 이름
+    - CA에게 CSR 파일로 인증을 요청할 수 있음
+    ```
+    $ openssl req -new -key ${random.key} -out ${csr} -subj
+    "/CN={}/O={}"
+    ```
+    
+  - ca를 사용하여 직접 csr 승인하기
+    - kubernetes 클러스터 인증 기관(CA) 사용이 요청을 승인해야 함
+    - 내부에서 직접 승이하는 경우 pki 디렉토리에 있는 ca.key, ca.crt를 사용하여 승인 가능
+    - csr을 승인하여 최종 인증서를 생성
+    - -days 옵션을 사용해 며칠간 인증서가 유효할 수 있는지 설정
+    ```
+    $ openssl x509 -req -in ${csr} -CA /etc/kubernetes/pki/ca.cert =CAkey /etc/kubernetes/pki/ca.key -CAcreateserial -out ${crt} -days 500
+    ```
+
+  - 인증 사용을 위해 쿠버네티스에 crt를 증록
+    - crt를 사용할 수 있도록 kubectl을 사용하여 등록
+      ```
+      $ kubectl config set-credentials ${name} --client-certificate=.${crt} -- client-key=${key}
+      ```
+    - 다음 명령을 사용하여 사용자 권한으로 실행 가능 
+      - 지금은 사용자에게 권한을 할당하지 않아 실행되지 않음
+      ```
+      $ kubectl --context=gasbugs-context get pods
+      ```
+
 #### 출처
 
 - DevOps 를 위한 쿠버네티스 마스터 강의
