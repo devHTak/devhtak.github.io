@@ -174,6 +174,65 @@ category: Container
       $ kubectl --context=gasbugs-context get pods
       ```
 
+- kubeconfig 설정 관리
+  - 직접 curl을 사용하여 요청
+    - key, cert, cacert 키를 가지고 직접 요청 가능
+    - 그러나 매번 이 요청을 사용하기에는 무리가 있음
+      ```
+      $ curl https://kube-api-server:6443/api/v1/pods \
+      --key user.key \
+      --cert user.crt \
+      --cacert ca.crt \
+      ```
+  
+  - kube config 파일 확인하기
+    ```
+    $ kubectl config view
+    $ kubectl config view --kube config=<config file>
+    ```
+  
+  - kube config 의 구성
+    - ~/.kube/config 파일을 확인하면 세가지 부분으로 작성됨
+    - clusters: 연결할 쿠버네티스 클러스터의 정보 입력
+    - users: 사용할 권한을 가진 사용자 입력
+    - contexts: cluster와 user를 함께 입력하여 권한 할당
+    - 예시
+      - curl에 입력되는 parameter를 config 파일에 세부분으로 나누어 작성이 가능하다.
+      ```
+      $ curl https://kube-api-server:6443/api/v1/pods \
+      --key user.key \
+      --cert user.crt \
+      --cacert ca.crt \
+      ```
+      ```
+      # kubectl config view
+      # Clusters
+      name: kube-cluster
+      cluster:
+        certificate-authority: ca.crt
+        server: https://cluster-ip:6443
+      # Contexts
+      name: user-name@kube-cluster
+      context:
+        cluster: kube-cluster
+        user: user-name
+      # Users
+      name: user-name
+      user:
+        client-certificate: user.crt
+        client-key: user.key
+      ```
+    - context는 cluster와 user로 구성되어 있다.
+    - 인증 사용자 바꾸기
+      ```
+      $ kubectl config use-context user@kube-cluster
+      ```
+    - 인증 테스트
+      ```
+      $ kubectl get pod
+      # forbidden이 나오면 성공
+      ```
+       
 #### 출처
 
 - DevOps 를 위한 쿠버네티스 마스터 강의
