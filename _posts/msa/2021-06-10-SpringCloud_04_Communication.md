@@ -197,9 +197,55 @@ category: msa
 
 ### 서비스 디스커버리와 함께 RestTemplate 개발하기
 
-- 
- 
- 
+- 서비스 디스커버리와의 통합은 리본 클라이언트의 기본 행동이다.
+- 서비스 디스커버리의 존재는 예제에서 서비스 간의 커뮤니케이션 중에 스프링 클라우드 구성 요소의 컨피규레이션을 간단하게 만든다.
+
+#### 예제 애플리케이션 개발
+
+- 새로운 discover-service 모듈
+- 리본 클라이언트와 관련된 모든 컨피규레이션과 애노테이션을 제거한 후, 제거된 리본 클라이언트는 @EnableDiscoveryClient를 사용해 유레카 디스커버리 클라이언트를 사용하는 것으로 대체하고 유레카 서버 주소를 application.yml에 제공
+  - OrderService.java
+    ```
+    @SpringBootApplication
+    @EnableDiscoveryClient
+    public class OrderApplication {
+      @LoadBalanced
+      @Bean
+      RestTemplate restTemplate() {
+        return new RestTemplate();
+      }
+      
+      publi static void main(String[] args) {
+        SpringApplication.run(DiscoveryServiceApplication.class, args);
+      }
+    }
+    ```
+  - application.yml
+    ```
+    spring:
+      application:
+        name: OrderService
+    server:
+      port: ${PORT:8090}
+    eureka:
+      client:
+        serviceUrl:
+          defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}      
+    ```
+  - 다른 서비스를 실행하면 Eureka 서버에서 확인이 가능하다.
+
+- 기본으로 리본 클라이언트는 등록된 모든 마이크로 서비스의 인스턴스 간에 균등하게 트래픽을 분배한다.
+  - 해당 알고리즘은 라운드 로빈(round robbin) 이라 한다.
+  - 클라이언트가 마지막 요청을 보낸 곳을 기억하고 이번 요청을 다음 순서의 서비스로 전달하는 것
+
+- 서비스 디스커버리가 아닌 다른 방식으로 재정의할 수 있다.
+  - 서비스 디스커버리 없이 ribbon.listOfServers에 ,로 분리된 서비스 주소 목록을 설정해 구헝할 수 있다.
+
+### Feign 클라이언트 사용하기
+
+
+
+
 #### 출처
 
 - Mastering Spring Cloud 책 발췌
