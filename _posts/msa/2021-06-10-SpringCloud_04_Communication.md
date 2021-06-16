@@ -243,8 +243,37 @@ category: msa
 
 ### Feign 클라이언트 사용하기
 
+- RestTemplate 은 스프링 클라우드와 마이크로 서비스의 상호작용을 위해 도입된 스프링 구성 요소
+- Netflix에서 REST 커뮤니케이션을 위해 독립적으로 개발한 웹 서비스 클라이언트가 Feign
+  - @LoadBalanced을 사용하는 RestTemplate으로 동일하지만, 애노테이션을 템플릿화된 요청으로 처리해 동작하는 HTTP 클라이언트 바인더이다.
+  - 페인 클라이언트는 서비스 디스커버리에서 모든 네트워크 주소를 가져오는 부하 분산 HTTP 클라이언트를 제공하기 위해 리본 및 유레카와 통합한다.
 
+#### 여러 존의 지원
 
+- 여러 존을 구성하기 위해 서비스 디스커버리에서 유레카 사용
+- zone 내부에서 여러 서비스가 커뮤니케이션 하는 구조
+
+#### 애플리케이션에서 페인 사용하기
+
+- 프로젝트에 페인을 포함하기 위해서는 spring-cloud-starter-feign 아티팩트 또는 스프링 클라우드 넷플릭스를 위한 spring-cloud-starter-openfeign 의존성을 추가 해야 한다.
+  ```
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-feign</artifactId>
+  </dependency>
+  ```
+
+- Main에 @EnableFeignClients 애노테이션을 추가해 페인 사용
+  ```java
+  @SpringBootApplicatioin
+  @EnableDiscoveryClient
+  @EnableFeignClients
+  public class OrderApplication {
+    public static void main(Strings[] args) {
+        
+    }
+  }
+  ```
 
 #### 출처
 
