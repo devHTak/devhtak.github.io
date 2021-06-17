@@ -275,9 +275,15 @@ category: Container
       verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
     ```
     - role 생성
-    ```
-    $ kubectl create -f pod-reader-role.yaml
-    ```
+      ```
+      $ kubectl create -f pod-reader-role.yaml
+      ```
+    - apiGroups는 resources마다 다르다
+      - 테스트 해보면 가능하다.
+        ```
+        $ kubectl get pod --user gasbugs -n office
+        # 권한에 대한 오류 메시지에 apiGroup, resources에 대한 내용이 포함되어 있다.
+        ```
     
   - Rule에는 API 그룹, 리소스, 작업 가능한 동작 작성
     - API 를 사용하게 할 그룹 정의
