@@ -322,6 +322,60 @@ category: Container
     ```
     - namespace가 default이기 때문에 실행되면 안된다.
 
+- ClusterRole과 ClusterRoleBinding
+  - clusterrole 확인하기
+    ```
+    $ kubectl get clusterrole cluster-admin -o yaml
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      annotations:
+        rbac.authorization.kubernetes.io/autoupdate: "true"
+      creationTimestamp: "2021-04-01T08:02:23Z"
+      labels:
+        kubernetes.io/bootstrapping: rbac-defaults
+      name: cluster-admin
+      resourceVersion: "84"
+      uid: 9a8c8420-5d2c-49ba-bf11-c755cba5d263
+    rules:
+    - apiGroups:
+      - '*'
+      resources:
+      - '*'
+      verbs:
+      - '*'
+    - nonResourceURLs:
+      - '*'
+      verbs:
+      - '*'
+    ```
+    - cluster-admin에 대한 yaml 확인 가능
+    - 모든 권한을 가지고 있다.
+
+  - clusterrolebinding 확인하기
+    ```
+    $ kubectl get clusterrolebinding cluster-admin -o yaml
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      annotations:
+        rbac.authorization.kubernetes.io/autoupdate: "true"
+      creationTimestamp: "2021-04-01T08:02:24Z"
+      labels:
+        kubernetes.io/bootstrapping: rbac-defaults
+      name: cluster-admin
+      resourceVersion: "145"
+      uid: d8ed66d9-a365-442c-ac37-bf0b6ef5a776
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: cluster-admin
+    subjects:
+    - apiGroup: rbac.authorization.k8s.io
+      kind: Group
+      name: system:masters
+    ```
+  
 - 권한 종류
   - https://kubernetes.io/docs/reference/access-authn-authz/authorization
   
