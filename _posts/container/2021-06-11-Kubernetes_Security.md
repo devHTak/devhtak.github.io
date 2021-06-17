@@ -233,6 +233,105 @@ category: Container
     $ kubectl get pod
     # forbidden이 나오면 성공
     ```
+    
+#### RBAC를 활용한 롤 기반 액세스 컨트롤
+
+- 역할 기반 액세스 제어(RBAC)
+  - 기업 내에서 개별 사용자의 역할을 기반으로 컴퓨터, 네트워크 리소스에 대한 액세스를 제어
+  - rbac.authorization.k8s.ioAPI를 사용하여 정의
+  - 권한 결정을 내리고 관리자가 Kubernetes API를 통해 정책을 동적으로 구성
+  - RBAC를 사용하여 롤을 정의하려면 apiserver에 --authorization-mode=RBAC 옵션 필요
+    - kubeadm을 기본으로 설치되어 있으면 해당 옵션이 저장되어 있다.
+
+- rbac.authorization.k8s.ioAPI
+  - RBAC를 다루는 이 API는 총 4가지의 리소스를 컨트롤
+    - Role
+    - RoleBinding
+    - ClusterRole
+    - ClusterRoleBinding
+
+  - Role과 Rolebinding의 차이
+    - Role
+      - "누가"하는 것인지는 정하지 않고 Rule(룰)만을 정의
+      - 일반 롤의 경우에는 네임스페이스 단위로 역할 관리
+      - 클러스터롤은 네임스페이스 구애 받지 않고 특정 자원을 전체 클러스터에서 자원을 관리할 롤을 정의
+    - RoleBinding
+      - "누가"하는 것인지만 정하고 롤은 정의하지 않음
+      - 롤을 정의하는 대신에 참조할 롤을 정의(roleRef)
+      - 어떤 사용자에게 어떤 권한을 부여할 지 정하는(바인딩) 리소스
+      - 클러스터롤에는 클러스터롤바인딩, 일반 롤에는 롤바인딩 필요
+    - 리소스 <-> Role(cluster) <-> RoleBinding(Cluster) <-> 사용자
+  
+  - Role 작성 요령
+    ```
+    kind: Role
+    apiVersion: rbac.authorization.k8s.io/v1beta1
+    metadata:
+      namespace: office
+      name: deployment-manager
+    rules:
+    - apiGroups: ["", "extensions", "apps"] # 비어 있으면 cores라는 그룹에 속한다.
+      resources: ["deployments", "replicasets", "pods"]
+      verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+    ```
+    - role 생성
+    ```
+    $ kubectl create -f pod-reader-role.yaml
+    ```
+    
+  - Rule에는 API 그룹, 리소스, 작업 가능한 동작 작성
+    - API 를 사용하게 할 그룹 정의
+
+- 사용자 권한 할당
+  - 롤바인딩을 사용하여 office namespace 권한 할당
+  - kubectl create -f 를 사용하여 생성
+  - 해당 네임스페이스에 모든 권한을 생성
+    ```
+    kind: RoleBinding
+    apiVersion: rbac.authorization.k8s.io/vibeta1
+    metadata:
+      name: deployment-manager-binding
+      namespace: office
+    subjects:
+    - kind: User
+      name: gasbugs
+      apiGroup: ""
+    roleRef:
+      kind: Role
+      name: deployment-manager
+      apiGroup: ""
+    ```
+    - 생성
+      ```
+      $ kubectl create -f pod-reader-role-binding.yaml
+      ```
+    - office namespace 내에 User중 gasbugs를 선택
+    - User가 아닌 ServiceAccount로 변경하여 사용할 수 있다.
+    - roleRef에는 생성한 Role을 매핑해준다.
+    
+- 사용자 권한 테스트
+  - 실행돼야 하는 명령어
+    ```
+    $ kubectl --context=gasbugs-context get pods -n office
+    $ kubectl --context=gasbugs-context run --generator=pod-run/v1 nginx --image=nginx -n office
+    ```
+  - 실행되면 안되는 명령어
+    ```
+    $ kubectl --context=gasbugs-context get pods
+    $ kubectl --context=gasbugs-context run --generator=pod-run/v1 nginx --image=nginx
+    ```
+    - namespace가 default이기 때문에 실행되면 안된다.
+
+- 권한 종류
+  - https://kubernetes.io/docs/reference/access-authn-authz/authorization
+  
+  |HTTP Verb|request verb|
+  |---|---|
+  |POST|create|
+  |GET, HEAD|get(for individual resources), list(for collections, including full object content), watch(for watching an individual resource or collection of resources)|
+  |PUT|update|
+  |PATCH|patch|
+  |DELETE|delete(for individual resources), deletecollection(for collections)|
 
 #### 출처
 
