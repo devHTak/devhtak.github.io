@@ -419,7 +419,7 @@ category: Container
     metadata:
       name: security-context-demo
     spec:
-      securityContext:
+      securityContext: # id 지정
         runAsUser: 1000
         runAsGroup: 3000
         fsGroup: 2000
@@ -438,6 +438,7 @@ category: Container
     ```
   - 실행
     ```
+    $ kbuectl create -f security-context.yaml
     $ kubectl exec -it security-context-demo /bin/bash 
     / $ id
     uid=1000 gid=3000 groups=2000
