@@ -392,6 +392,121 @@ category: Container
   |PUT|update|
   |PATCH|patch|
   |DELETE|delete(for individual resources), deletecollection(for collections)|
+  
+#### Security Context
+
+- 보안 컨텍스트
+  - 서버 침해사고 발생 시 침해사고를 당한 권한을 최대한 축소하여 그 사고에 대한 확대 방지
+  - 침해사고를 당한 서비스가 모든 권한(루트나 노드 커널 기능)으로 동작하는 경우 서비스를 탈취한 공격자는 그대로 컨테이너의 권한을 사용할 수 있음
+  - 최소 권한 정책에 따른 취약점 감소
+  - 보안 컨텍스트 설정에는 다음 사항 포함
+    - 권한 상승 기능 여부
+    - 프로세스 기본 UID/GID 를 활용한 파일등의 오브젝트의 액세스 제어
+    - Linux Capabilities 를 활용한 커널 기능 추가
+    - 오브젝트에 보안 레이블에 지정하는 SELinux(Security Enhanced Linux) 기능
+    - AppArmor: 프로그램 프로필을 사용하여 개별 프로그램 기능 제한
+    - Seccomp: 프로세스의 시스템 호출 필터링
+
+- 포드에 시큐리티 컨텍스트 설정
+  - 포드에 UID를 설정하면 모든 컨테이너에 적용된다.
+    - 컨테이너 UID/GID 설정
+    - 권한상승 제한
+  
+  - security-context.yml
+    ```
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: security-context-demo
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 3000
+        fsGroup: 2000
+      volumes:
+      - name: sec-ctx-vol
+        emptyDir: {}
+      containers:
+      - name: sec-ctx-demo
+        image: busybox
+        command: ["sh", "-c", "sleep 1h"]
+        volumeMounts:
+        - name: sec-ctx-vol
+          mountPath: /data/demo
+        securityContext:
+          allowPrivilegeEscalation: false
+    ```
+  - 실행
+    ```
+    $ kubectl exec -it security-context-demo /bin/bash 
+    / $ id
+    uid=1000 gid=3000 groups=2000
+    / $ ps -eaf
+    PID USER  TIME  COMMAND
+    1   1000  0:00  sleep 1h
+    10  1000  0:00  sh
+    16  1000  0:00  ps -eaf
+    ```
+    
+- 컨테이너에 시큐리티 컨텍스트 설정
+  - 컨테이너 내부에 새로운 유저를 사용하면 그 설정 우선
+  - 컨테이너에 UID/GID 설정
+  - security-context2.yaml
+    ```
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: security-context-demo-2
+    spec:
+      securityContext:
+        runAsUser: 1000
+      containers:
+      - name: sec-ctx-demo-2
+        image: gcr.io/google-samples/node-hello:1.0
+        securityContext:
+          runAsUser: 2000
+          allowPrivilegeEscalation: false
+    ```
+
+- 캐퍼빌리티 적용
+  - 캐퍼빌리티를 적용하면 리눅스 커널에서 사용할 수 있는 권한을 추가 설정 가능
+  - 캐퍼빌리티를 활용한 리눅스 커널 권한 변수
+    - https://github.com/torvalds/linux/blob/master/include/uapi/linux/capability.h
+  - date+%T -s "12:00:00" 명령은 SYS_TIME 커널 권한이 있어야만 가능
+  - security-context-4.yaml
+    ```
+    apiVersion: v1
+    kind: Pod
+    metadata: security-context-demo-4
+    spec:
+      containers:
+      - name: sec-ctx-4
+        image: gcr.io/google-samples/node-hello:1.0
+        securityContext:
+          capabilities:
+            add: ["NET_ADMIN", "SYS_TIME"] # NET_ADMIN 과 SYS_TIME에 대하여 추가
+    ```
+
+- SELinux 권한
+  - 모든 프로세스와 객체에 시큐리티 콘텍스트 (또는 레이블)을 달아 관리하는 형태
+  - 네필터와 더불어 리눅스의 핵심 보안 기능 담당
+  - 그러나 실무에서는 복잡도가 높아 오히려 소외
+  - SELinux에 대한 자세한 정보 사이트
+    - https://www.lesstif.com/ws/selinux/selinux
+  - 다음과 같은 형태로 취급
+    ```
+    # ...
+    securityContext:
+      seLinuxOptions:
+        level: "s0:c123,c456"
+    ```
+  
+  |요소|설명|
+  |---|---|
+  |사용자|시스템의 사용자와는 별도의 SELinux 사용자로 역할이나 레벨과 연계하여 접근 권한을 관리하는 데 사용|
+  |역할(Role)|하나 혹은 그 이상의 타입과 연결되어 SELinux의 사용자의 접근을 허용할 지 결정하는 데 사용|
+  |타입(Type)|Type Enforcement의 속성중 하나로 프로세스의 도메인이나 파일의 타입을 지정하고 이를 기반으로 접근 통제 수행|
+  |레이블(Label)|레이블은 MLS(Multi Level System)에 필요하여 강제 접근 통제보다 더 강력한 보안이 필요할 때 사용하는 기능으로 정부나 군대 등 최고의 기빌을 취급하는 곳이 아니면 사용하지 않음|
 
 #### 출처
 
