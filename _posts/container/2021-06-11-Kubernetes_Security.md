@@ -509,6 +509,81 @@ category: Container
   |타입(Type)|Type Enforcement의 속성중 하나로 프로세스의 도메인이나 파일의 타입을 지정하고 이를 기반으로 접근 통제 수행|
   |레이블(Label)|레이블은 MLS(Multi Level System)에 필요하여 강제 접근 통제보다 더 강력한 보안이 필요할 때 사용하는 기능으로 정부나 군대 등 최고의 기빌을 취급하는 곳이 아니면 사용하지 않음|
 
+#### 네트워크 정책(Network Policy)
+
+- 네트워크 정책
+  - 포드 그룹이 서로 및 다른 네트워크 끝점과 통신하는 방법을 지정
+  - NetworkPolicy 리소스는 레이블을 사용하여 포드를 선택
+  - 선택한 포드에 허용되는 트래픽을 지정하는 규칙 정의
+  - 특정 포드를 선택하는 네임 스페이스에 NetworkPolicy가 있으면 해당 포드는 NetworkPolicy에서 허용하지 않는 연결은 거부
+  - Network Policy 사용이 가능한 CNI가 있다.
+    - Calico, weavenet 등
+  - GCP에서는 따로 설정을 해주어야 한다.
+    - 클러스터 만들기 -> 네트워킹 -> 네트워크 정책 사용 체크 필요
+    
+- Egress
+  - 선택된 포드에서 나가는 트레픽에 대한 정책 설정
+  - ipBlock을 통해 Block하고자 하는 IP 대역 설정 가능
+  - Ports에는 어떤 포드를 막고자 하는지 명시
+  - 예시
+    ```
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: test-network-policy
+      namespace: default
+    spec:
+      podSelector:
+        matchLabels:
+          role: db
+    policyTypes: # role: db label이 붙은 Pod에 egress 적용
+      - Egress
+      egress: # whitelist 작성
+      - to:
+        - ipBlock:
+          cidr: 10.0.0.0/24
+        ports:
+        - protocol: TCP
+          port: 5978
+    ```
+    
+- Ingress
+  - 선택된 포드로 들어오는 트래픽에 대한 정책 설정
+  - IpBlock은 기본적으로 막고자 하는 IP 대역을 설정
+  - Except를 사용하여 예외 항목 설정 가능
+  - NamespaceSelector와 podSelector를 사용
+    - 그룹별 더욱 상세한 정책 설정 가능
+  - 예시
+    ```
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: test-network-policy
+      namespace: default
+    spec:
+      podSelector:
+        matchLabels:
+          role: db
+      policyTypes:
+      - Ingress
+      ingress:
+      - from:
+        - ipBlock: # whitelist ip block
+            cidr: 172.17.0.0/16
+            except:
+            - 172.17.1.0/24
+        - namespaceSelector: # whitelist namespace label
+            matchLables:
+              project: myproject
+        - podSelector: # whitelist pod label
+            matchLabels:
+              role: frontend
+        ports:
+        - protocol: TCP
+          port: 6379
+    ```
+    - ipBlock, namespace selector, pod selector 에 대한 조건은 모두 or 연산이다.
+
 #### 출처
 
 - DevOps 를 위한 쿠버네티스 마스터 강의
