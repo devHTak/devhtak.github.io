@@ -48,6 +48,9 @@ category: Container
 #### 서비스의 생성 방법
 
 - kubectl의 expose가 가장 쉬운 방법
+  ```
+  $ kubectl expose deployment hello-world --type=?? --name=my-service --port=??
+  ```
   
 - YAML을 통해 버전 관리 기능
   ```
