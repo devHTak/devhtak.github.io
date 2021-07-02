@@ -11,7 +11,7 @@ category: Java Study
 
 ![image](https://user-images.githubusercontent.com/42403023/124233346-b7f23280-db4d-11eb-8bdb-28bd07ed9d47.png)
 
-* 이미지 출처: https://sourcemaking.com/design_patterns/proxy
+*** 이미지 출처: https://sourcemaking.com/design_patterns/proxy
 
 - Proxy 객체에는 RealSubject에 대한 레퍼런스가 들어있다.
 - Proxy, RealSubject는 동일하게 Subject interface에 대한 구현체이기 때문에 RealSubject가 들어갈 자리에 Proxy를 사용할 수 있다.
@@ -35,7 +35,7 @@ category: Java Study
 
 ![image](https://user-images.githubusercontent.com/42403023/124234273-c856dd00-db4e-11eb-9588-5c7657c8107c.png)
 
-* 이미지 출처: https://sourcemaking.com/design_patterns/decorator
+*** 이미지 출처: https://sourcemaking.com/design_patterns/decorator
 
 - 객체의 결합을 통해 기능을 동적으로 유연하게 확장할 수 있게 해주는 패턴
   - 기본 기능에 추가할 수 있는 기능의 종류가 많은 경우에 각 추가 기능을 Decorator 클래스로 정의한 후 필요한 Decorator 객체를 조합함으로써 추가 기능의 조합을 설계하는 방식
