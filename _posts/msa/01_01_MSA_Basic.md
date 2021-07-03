@@ -7,6 +7,57 @@ date: '2021-06-05 14:41:00 +0900'
 category: msa
 ---
 
+#### Cloud Native Architecture
+
+- 확장 가능한 아키텍처
+  - 시스템의 수평적 확장에 유연
+  - 확장된 서버로 시스템의 부하 분산, 가용성 보장
+  - 시스템, 서비스 어플리케이션 단위의 패키지(컨테이너 기반 패키지)
+  - 모니터링
+
+- 탄력적 아키텍처
+  - 서비스 생성, 통합, 배포
+    - 비즈니스 환경 변화에 대응 시간 단축
+  - 분활된 서비스 구조
+  - 무상태 통신 프로토콜
+  - 서비스의 추가와 삭제 자동 감지
+  - 변경된 서비스 요청에 따라 사용자 요청 처리(동적 처리)
+
+- 장애격리(Fault Isolation)
+  - 특정 서비스에 오류가 발생해도 다른 서비스에 영향을 주지 않음
+
+- Cloud Native Application
+  - Microservices로 개발
+  
+  - CI/CD
+    - 지속적 통합(Continous Integration)
+      - 통합 서버, 소스관리, 빌드 도구, 테스트 도구 
+      - ex) Jenkins, Team CI, Travis CI
+    - 지속적 배포(Continuous Delivery, Continuous Deployment)
+      - pipeline 구축
+      
+  - DevOps
+    - Development + Operation + Quality Assurance
+    - Plan - Create - Verify - Package - Release - Configure - Monitor를 통합함으로써 빠르게 통합, 배포, 테스트할 수 있도록 한다.
+    
+  - Container
+
+- 12 Factors: Cloud native application을 만들고 서비스할 때 지켜야 할 12가지 요소
+  - Base Code
+  - Depedency isolation
+  - configurations
+  - linkable backing services
+  - stages of creation (build, release and run)
+  - stateless processes
+  - port binding
+  - concurrency
+  - desposability
+  - development & production parity (dev/prod parity)
+  - logs
+  - admin processes from eventual progresses
+  - + 3 factors
+    - API First, Telemetry, Authentication and authorization
+    
 #### MSA 등장 배경
 
 - Monotlith Application
@@ -101,5 +152,6 @@ category: msa
     - 서비스 호출 추적, 디버깅(장애추적), 모니터링 등의 어려움
     - 전체적인 복잡도 증가
 
-  
-  
+#### 출처
+- Clout Native Architecture 책(톰 랴쥬스키 , 카말 아로라 , 에릭 파, 피윰 조누즈 , 홍성민 저)
+- 인프런 강의: Spring Cloud로 개발하는 마이크로 서비스 
