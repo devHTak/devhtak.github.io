@@ -55,6 +55,7 @@ category: msa
   - development & production parity (dev/prod parity)
   - logs
   - admin processes from eventual progresses
+  
   ++ 3 factors
     - API First, Telemetry, Authentication and authorization
     
