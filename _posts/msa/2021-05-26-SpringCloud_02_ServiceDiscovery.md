@@ -30,6 +30,12 @@ category: msa
       ![image](https://user-images.githubusercontent.com/42403023/119246284-5a1c1380-bbbb-11eb-8862-22fa9b819a2f.png)
       
       ** 이미지 출처: https://bcho.tistory.com/1252
+      
+    - 예를들면 service(instance A http://localhost:8080), service(instance B http://localhost:8081), service(instance C http://localhost:8082)
+      - 같은 서비스이지만 인스턴스가 3개로 나누어져 있다.
+    - Service Discovery는 외부에서 마이크로 서비스를 검색하기 위해 사용하는 것
+      - 여러 서비스에 정보를 Service Discovery에 등록하면 Service Discovery는 요청에 따른 경로를 알려준다.
+    - Client -> Api Gateway or Load Balancer <-> Service Discovery(key: value)
 
   - 클라이언트
     - spring-cloud-starter-eureka를 추가하여 사용
