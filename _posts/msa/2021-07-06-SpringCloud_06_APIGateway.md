@@ -166,6 +166,17 @@ category: msa
       }
     }
     ```
+  - 로그를 확인할 수 있다.
+    ```
+    2021-07-06 23:42:05.017  INFO 10252 --- [nio-8000-exec-2] c.example.demo.filter.ZuulLoggingFilter  : ====print log
+    2021-07-06 23:42:05.018  INFO 10252 --- [nio-8000-exec-2] c.example.demo.filter.ZuulLoggingFilter  : request: /second-service/welcome
+    2021-07-06 23:42:15.155  INFO 10252 --- [nio-8000-exec-3] c.example.demo.filter.ZuulLoggingFilter  : ====print log
+    2021-07-06 23:42:15.156  INFO 10252 --- [nio-8000-exec-3] c.example.demo.filter.ZuulLoggingFilter  : request: /first-service/welcome
+    ```
+
+#### Spring Cloud Gateway
+
+- Spring Boot 2.4 버전 이상에서 사용할 수 있는 API Gateway
   
 #### 출처
 
