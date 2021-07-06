@@ -1,0 +1,172 @@
+---
+layout: post
+title: 마스터 스프링 클라우드 - 07. API Gateway
+summary: Spring Cloud
+author: devhtak
+date: '2021-07-06 22:41:00 +0900'
+category: msa
+---
+
+#### API Gateway란?
+
+![image](https://user-images.githubusercontent.com/42403023/124608140-704f0c00-dea9-11eb-9e30-e16c9927ccab.png)
+
+** 이미지 출처: https://m.blog.naver.com/dktmrorl/222129517689
+
+- API Gateway는 서비스 앞단에서 모든 API 요청을 단일화해주는 역할을 한다.
+- 즉, 클라이언트 측에서는 마이크로서비스에 IP 변경등에 영향을 받지 않고 오로지 API Gateway에게 요청을 보내며 해당 요청을 API Gateway가 서비스에 보내주는 역할을 한다.
+
+- API Gateway 기능 
+  - 인증 및 권한 부여
+  - 서비스 검색 통합
+  - 응답 캐싱
+  - 정책, 회로 차단기 및 QoS 다시 시도
+  - 속도 제한
+  - 부하 분산
+  - 로깅, 추적, 상관관계
+  - 헤더, 쿼리 문자열 및 청구 변환
+  - IP 허용 목록에 추가(방화벽)
+
+- Spring Cloud에서의 MSA 간 통신
+  - RestTemplate
+    ```java
+    RestTemplate restTemplate = new RestTemplate();
+    restTemplate.getForObject("http://localhost:8080/", User.class, 200);
+    ```
+  - Feign Client
+    ```java
+    @FeignClient("stores")
+    public interface StoreClient {
+      @GetMapping(value="/stores")
+      List<Store> getStores();
+    }
+    ```
+    
+- Ribbon: Client side LoadBalancer
+  - 서비스 이름으로 호출 (MSA Service Name)
+  - Health Check
+  - Reactive(RxJava)와 호환이 안되어 최근에는 많이 사용하지 않는다.
+  - Spring Cloud Ribbon은 Spring Boot 2.4에서 maintenance 상태
+
+- Netflix Zuul
+  - Routing, API Gateway 역할을 한다.
+  - client는 service를 직접 호출하는 것이 아닌 Zuul에 요청을 하면 Zuul이 service에게 요청을 보낸다.    
+  - Spring Cloud Zuul은 Spring Boot 2.4에서 mainenance 상태
+
+#### Netflix Zuul 구현
+
+- Spring Boot 2.3.8을 사용해야 한다 (2.4는 지원하지 않는다.
+- First Service와 Second Service 구현
+  - dependency: lombok, web, eureka client
+  - RestController: GET /welcome 요청 처리
+    ```java
+    @RestController
+    public void FirstController {
+      @GetMapping("/welcome")
+      public String welcome() {
+        return "Welcome First Service";
+      }
+    }
+    ```
+  - application.yml
+    ```
+    server:
+      port: 8081
+    spring:
+      application:
+        name: first-service
+    eureka:
+      client:
+        register-with-eureka: false
+        fetchRegistry: false
+    ```
+    ```
+    server:
+      port: 8082
+    spring:
+      application:
+        name: second-service
+    eureka:
+      client:
+        register-with-eureka: false
+        fetchRegistry: false
+    ```
+    
+- Zuul Service 구현
+  - Spring Boot: 2.3.8
+  - dependency: lombok, web, zuul
+  - 메인 함수
+    ```java
+    @SpringBootApplication
+    @EnableZuulProxy
+    public class ZuulServiceApplication {
+      public static void main(String[] args) {
+        SpringApplication.run(ZuulServiceApplication.class, args);
+      }
+    }
+    ```
+    
+  - application.yml 설정
+    ```
+    server:
+      port: 8000
+
+    spring:
+      application:
+        name: zuul-service
+
+    zuul:
+      routes:
+        first-service:
+          path: /first-service/**
+          url: http://localhost:8081
+        second-service:
+          path: /second-service/**
+          url: http://localhost:8082
+    ```
+  - 테스트
+    - 요청1: http://localhost:8080/first-service/welcome
+    - 요청2: http://localhost:8080/second-service/welcome
+
+- ZuulFilter
+  
+  - ZuulFilter를 상속받아 Filter를 구현할 수 있다.
+  - filterType(): 요청 사전, 사후 필터를 작성할 수 있으며, filterType()이 pre면 사전, post는 사후이다.
+  - filterOrder(): 필터의 순서를 지정할 수 있다.
+  - shouldFilter(): true/false : 필터 사용여부
+  - run(): 필터 실행 메소드
+    ```java
+    @Slf4j
+    @Component
+    public class ZuulLoggingFilter extends ZuulFilter {
+
+      @Override
+      public Object run() throws ZuulException {
+        // TODO Auto-generated method stub
+        log.info("====print log");
+        HttpServletRequest request = RequestContext.getCurrentContext().getRequest();
+        log.info("request: " + request.getRequestURI());
+        return null;
+      }
+      @Override
+      public boolean shouldFilter() {
+        // TODO Auto-generated method stub
+        return true;
+      }
+        @Override
+      public String filterType() {
+        // TODO Auto-generated method stub
+        return "pre";
+      }
+      @Override
+      public int filterOrder() {
+        // TODO Auto-generated method stub
+        // filter 순서
+        return 0;
+      }
+    }
+    ```
+  
+#### 출처
+
+- Sprint Cloud로 개발하는 마이크로서비스 애플리케이션, 인프런 강의
