@@ -177,7 +177,94 @@ category: msa
 #### Spring Cloud Gateway
 
 - Spring Boot 2.4 버전 이상에서 사용할 수 있는 API Gateway
+- 비동기 처리(RxJava)가 가능하다
+
+- 프로젝트 생성
+  - spring boot version: 2.4.9
+  - dependency: lombok, gateway, eureka client
+  - application.yml로 라우팅하기
+    ```
+    server:
+      port: 8000
+
+    eureka:
+      client:
+        register-with-eureka: false
+        fetch-registry: false
+        service-url:
+        
+          default-zone: http://localhost:8761/eureka
+
+    spring:
+      application:
+        name: apigateway-service
+      cloud:
+        gateway:
+          routes:
+          - id: first-service
+            uri: http://localhost:8081/
+            predicates:
+            - Path= /first-service/**
+          - id: second-service
+            uri: http://localhost:8081/
+            predicates:
+            - Path= /second-service/**
+    ```
+    - Path로 지정한 uri로 api gateway의 URI를 구분할 수 있다.
+    - 다만 Path가 그대로 service에 전달하게 된다.
+    - 즉, localhost:8000/first-service/welcome -> localhost:8081/first-service/welcome
+    - 그래서 first-service, second-service의 url을 변경해주어야 한다.
+  - java code를 활용하여 filter 추가하여 라우팅하기
+    ```java
+    @Configuration
+    public class FilterConfig {
+      @Bean
+      public RouteLocator gatewayRoutes(RouteLocatorBuilder builder) {
+        return builder.routes()
+            .route(r -> r.path("/first-service/**")
+                .filters(f -> f.addRequestHeader("first-request", "first-request-header")
+                    .addResponseHeader("first-response", "first-response-header"))
+                .uri("http://localhost:8081"))
+            .route(r -> r.path("/second-service/**")
+                .filters(f -> f.addRequestHeader("second-request", "second-request-header"))
+                .uri("http://localhost:8082"))
+            .build();
+      }
+    }
+    ```
+    - application.yml 파일에 작성해두었던 spring.cloud.gateway.routes 밑에 부분은 주석처리한다.
+    - filters 메소드를 통해, request, response header를 설정할 수 있다.
+    
+- Filter
   
+  ![image](https://user-images.githubusercontent.com/42403023/124709325-4e4f9b00-df36-11eb-94b3-53fdf60b40dd.png)
+
+  ** 이미지 출처: https://www.baeldung.com/spring-cloud-gateway-webfilter-factories
+  
+  - property를 통한 filter 추가
+    ```
+    spring:
+      application:
+        name: apigateway-service
+      cloud:
+        gateway:
+          routes:
+          - id: first-service
+            uri: http://localhost:8081/
+            predicates:
+            - Path= /first-service/**
+            filters:
+            - AddRequestHeader=first-request, first-request-header2
+            - AddResponseHeader=first-response, first-response-header2
+          - id: second-service
+            uri: http://localhost:8081/
+            predicates:
+            - Path= /second-service/**
+            filters:
+            - AddRequestHeader=second-request, second-request-header2
+            - AddResponseHeader=second-response, second-response-header2
+    ```
+
 #### 출처
 
 - Sprint Cloud로 개발하는 마이크로서비스 애플리케이션, 인프런 강의
