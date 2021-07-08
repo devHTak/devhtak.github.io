@@ -331,6 +331,10 @@ category: msa
     2021-07-08 10:45:00.283  INFO 7088 --- [ctor-http-nio-4] com.example.demo.CustomFilter            : Custom Post filter.response status code: 200 OK
     ```
     - 요청 시 확인
+
+  - Global Filter
+    - Global Filter도 만드는 방법은 이전과 비슷하다.
+    - Custom Filter와의 차이점은 route 정보
     
     
 #### 출처
