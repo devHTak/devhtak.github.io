@@ -264,7 +264,75 @@ category: msa
             - AddRequestHeader=second-request, second-request-header2
             - AddResponseHeader=second-response, second-response-header2
     ```
+  - custom filter
+    ```java
+    @Component
+    @Slf4j
+    public class CustomFilter extends AbstractGatewayFilterFactory<CustomFilter.Config>{
 
+      public static class Config {
+        // put the configuration properties
+      }
+
+      public CustomFilter() {
+        super(Config.class);
+      }
+
+      @Override
+      public GatewayFilter apply(Config config) {
+        // TODO Auto-generated method stub
+
+        return (exchange, chain) -> {
+          // Custom Pre Filter
+          ServerHttpRequest request = exchange.getRequest();
+          ServerHttpResponse response = exchange.getResponse();
+
+          log.info("Custom Pre filter: {}", request.getId());
+
+          // chaining한 후 Post Filter
+          return chain.filter(exchange).then(Mono.fromRunnable(()-> {
+            log.info("Custom Post filter.response status code: {}", response.getStatusCode());
+          }));
+        };
+      }
+    }
+    ```
+    - java code를 활용한 custom filter
+    - AbstractGatewayFilterFactory fmf tkdthrqkedk tkdydgksek.
+    - ServletHttpRequest, ServletHttpResponse 가 아닌 ServerHttpRequest, ServerHttpResponse를 사용
+    
+    ```
+    spring:
+      application:
+        name: apigateway-service
+      cloud:
+        gateway:
+          routes:
+          - id: first-service
+            uri: http://localhost:8081/
+            predicates:
+            - Path= /first-service/**
+            filters:
+            #- AddRequestHeader=first-request, first-request-header2
+            #- AddResponseHeader=first-response, first-response-header2
+            - CustomFilter
+          - id: second-service
+            uri: http://localhost:8081/
+            predicates:
+            - Path= /second-service/**
+            filters:
+            #- AddRequestHeader=second-request, second-request-header2
+            #- AddResponseHeader=second-response, second-response-header2
+            - CustomFilter
+    ```
+    - application.yml 에 등록
+    ```
+    2021-07-08 10:44:59.837  INFO 7088 --- [ctor-http-nio-2] com.example.demo.CustomFilter            : Custom Pre filter: 288bb018-1
+    2021-07-08 10:45:00.283  INFO 7088 --- [ctor-http-nio-4] com.example.demo.CustomFilter            : Custom Post filter.response status code: 200 OK
+    ```
+    - 요청 시 확인
+    
+    
 #### 출처
 
 - Sprint Cloud로 개발하는 마이크로서비스 애플리케이션, 인프런 강의
