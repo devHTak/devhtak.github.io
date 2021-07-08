@@ -334,8 +334,85 @@ category: msa
 
   - Global Filter
     - Global Filter도 만드는 방법은 이전과 비슷하다.
-    - Custom Filter와의 차이점은 route 정보
+    - Custom Filter는 Custom Filter에 경우 application.yml에 route 정보에 따른 filter를 등록했다.
+    - Global Filter는 모든 route 정보에 적용된다.
     
+    ```java
+    @Component
+    @Slf4j
+    public class GlobalFilter extends AbstractGatewayFilterFactory<GlobalFilter.Config>{
+
+      @Data
+      public static class Config {
+        private String baseMessage;
+        private boolean pre;
+        private boolean post;
+
+      }
+
+      public GlobalFilter() {
+        super(Config.class);
+      }
+
+      @Override
+      public GatewayFilter apply(Config config) {
+        // TODO Auto-generated method stub
+        return (exchange, chain) -> {
+          ServerHttpRequest request = exchange.getRequest();
+          ServerHttpResponse response = exchange.getResponse();
+
+          if(config.isPre()) {
+            log.info("Global Pre Filter -> Request ID: {}", request.getId());
+          }
+
+          return chain.filter(exchange).then(Mono.fromRunnable(()->{
+            if(config.isPost()) {
+              log.info("Global Post Filter -> Response Status Code: {}", response.getStatusCode());
+            }
+          }));
+        };
+      }
+    }
+    ```
+    - java code 작성
+    - CustomFilter와 작성 방식은 같다.
+    - CustomFilter 또한 GlobalFilter.Config 에 데이터를 놓고 getter, setter로 접근 가능하며 application.yml에 있는 값을 가져온다.
+    
+    ```
+    spring:
+      application:
+        name: apigateway-service
+      cloud:
+        gateway:
+          default-filters:
+          - name: GlobalFilter
+            args:
+              baseMessage: Spring Cloud Gateway Log Filter 
+              pre: True
+              post: True
+          routes:
+          - id: first-service
+            uri: http://localhost:8081/
+            predicates:
+            - Path= /first-service/**
+            filters:
+            - CustomFilter
+          - id: second-service
+            uri: http://localhost:8081/
+            predicates:
+            - Path= /second-service/**
+            filters:
+            - CustomFilter
+    ```
+    - application.yml에 default_filtes로 GlobalFilter를 등록할 수 있다.
+    - args로 Config 값을 설정하였다.
+    ```
+    2021-07-08 11:09:41.275  INFO 21260 --- [ctor-http-nio-3] com.example.demo.GlobalFilter            : Global Pre Filter -> Request ID: 54a9517e-1
+    2021-07-08 11:09:41.276  INFO 21260 --- [ctor-http-nio-3] com.example.demo.CustomFilter            : Custom Pre filter: 54a9517e-1
+    2021-07-08 11:09:41.695  INFO 21260 --- [ctor-http-nio-1] com.example.demo.CustomFilter            : Custom Post filter.response status code: 200 OK
+    2021-07-08 11:09:41.695  INFO 21260 --- [ctor-http-nio-1] com.example.demo.GlobalFilter            : Global Post Filter -> Response Status Code: 200 OK
+    ```
+    - 로그를 확인할 수 있다.
     
 #### 출처
 
