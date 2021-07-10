@@ -378,6 +378,20 @@ category: msa
     - java code 작성
     - CustomFilter와 작성 방식은 같다.
     - CustomFilter 또한 GlobalFilter.Config 에 데이터를 놓고 getter, setter로 접근 가능하며 application.yml에 있는 값을 가져온다.
+    - AbstractGatewayFilterFactory를 상속받는다.
+        ```java
+        GatewayFilter filter = new OrderedGatewayFilter((exchange, chain)-> {
+          // pre 정의
+          return chain.filter(exchange).then(Mono.fromRunnable(()-> {
+            // post 정의
+          }));
+        }, Ordered.HIGHEST_PRECEDENCE);
+
+        return filter;
+        ```
+      - public GatewayFilter apply 를 구현해주어야 한다.
+      - 리턴 객체는 GatewayFilter는 OrderedGatewayFilter 구현체를 사용하며 filter 메소드를 재정의해야 한다.
+      - OrderedGatewayFilter 구현을 해주었기 때문에 Filter 순위를 적용할 수 있다.
     
     ```
     spring:
@@ -414,6 +428,83 @@ category: msa
     2021-07-08 11:09:41.695  INFO 21260 --- [ctor-http-nio-1] com.example.demo.GlobalFilter            : Global Post Filter -> Response Status Code: 200 OK
     ```
     - 로그를 확인할 수 있다.
+
+- Spring Cloud Gateway 와 Eureka 연동
+  - client가 localhost:8000/first-service/welcome을 요청
+  - Spring Cloud Gateway
+    - API Gateway는 Eureka에 요청정보를 전달하여 Service의 위치를 전달 받는다.
+  - Eureka Server: Service Discovery, Registration
+    - Eureka Server는 API Gateway에 요청된 정보를 토대로 First Service 또는 Second Service의 위치 정보를 전달한다.
+  - First Service, Second Service
+    - API Gateway에게 응답을 전달한다.
+    - localhost:8081/first-service/welcome
+    - localhost:8082/second-service/welcome
+  - API Gateway는 Service에게 전달받은 응답을 Client에게 전달한다.
+
+  - 개발 순서
+    - Step1) Eureka Client 추가 - pom.xml
+      ```
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+      </dependency>
+      ```
+    - Step2) Eureka Client 설정 -  application.yml
+      - Spring Cloud Gateway
+        - 기존 사용했던 URI 정보를 lb://eureka-등록-service-name 으로 등록이 가능하다.
+        ```
+        eureka:
+        client:
+          register-with-eureka: true
+          fetch-registry: true
+          service-url:
+            default-zone: http://localhost:8761/eureka
+
+      spring:
+        application:
+          name: apigateway-service
+        cloud:
+          gateway:
+            default-filters:
+            - name: GlobalFilter
+              args:
+                baseMessage: Spring Cloud Gateway Log Filter 
+                pre: true
+                post: true
+            routes:
+            - id: first-service
+              uri: lb://FIRST-SERVICE
+              predicates:
+              - Path= /first-service/**
+              filters:
+              # - AddRequestHeader=first-request, first-request-header2
+              # - AddResponseHeader=first-response, first-response-header2
+              - CustomFilter
+            - id: second-service
+              uri: lb://SECOND-SERVICE
+              predicates:
+              - Path= /second-service/**
+              filters:
+              #- AddRequestHeader=second-request, second-request-header2
+              #- AddResponseHeader=second-response, second-response-header2
+              - CustomFilter
+        ```
+      - First Service, Second Service에 등록
+        ```
+        eureka:
+        client:
+          register-with-eureka: true
+          fetchRegistry: true
+          service-url:
+            defaultZone: http://localhost:871/eureka
+        ```
+        
+    - Step3) Eureka Server에 등록 확인
+      - localhost:8761
+
+      ![image](https://user-images.githubusercontent.com/42403023/125160281-068b7680-e1b7-11eb-962a-429d68e0775b.png)
+
+  
     
 #### 출처
 
