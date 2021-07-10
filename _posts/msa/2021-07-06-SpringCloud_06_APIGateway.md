@@ -361,8 +361,9 @@ category: msa
           ServerHttpRequest request = exchange.getRequest();
           ServerHttpResponse response = exchange.getResponse();
 
-          if(config.isPre()) {
+          if(config.isPre()) { // Config에 있는 getter 사용
             log.info("Global Pre Filter -> Request ID: {}", request.getId());
+            log.info(config.getBaseMessage()); 
           }
 
           return chain.filter(exchange).then(Mono.fromRunnable(()->{
