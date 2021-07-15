@@ -151,7 +151,83 @@ category: Spring
     - 트랜잭션 도중 새로운 레코드 삽입을 허용하기 때문에 나타나는 현상임
     - 완벽한 읽기 일관성 모드를 제공함
     - 다른 사용자는 트랜잭션 영역에 해당되는 데이터에 대한 수정 및 입력 불가능
+
+#### Lock
+
+- Lock을 통해 ACID 원칙을 지켜낸다. 하지만, ACID 원칙을 strict하게 지켜내기 위해서는 동시성이 떨어질 수 있다.
+- Database에서는 Isolation level에 따라 다양한 Lock을 제공함으로써 ACID 원칙과 동시성을 선택하게 해준다.
+
+- Lock Mode
+  - Exclusive lock mode
+    - Write에 대한 lock
+    - UPDATE, DELETE 문과 같이 데이터를 수정할 때 데이터에 Lock을 걸어 해당 트랜잭션의 잠금이 해제될 때까지 데이터를 변경할 수 없도록 한다.
+  - Share lock mode
+    - Read에 대한 lock
+    - 여러 트랜잭션이 데이터를 읽어들일 때 read를 허락하지만 exclusive lock 이 필요(수정이 필요) 하는 트랜잭션이 접근하는 것을 막는다.
+
+- Lock 설정 레벨(범위)
+  - Table
+    - 테이블 기준으로 Lock이 걸린다.
+    - 주로 DDL 구문을 사용할 때 Lock이 걸리기 때문에 DDL Lock이라고 한다.
+  - Column
+    - 컬럼 기준으로 Lock을 설정할 수 있지만, Lock 설정 및 해제의 리소스가 많이 들어 일반적으로 잘 사용하지 않는다.
+  - Row
+    - 1개의 Row를 기준으로 Lock을 설정한다. DML에 대한 Lock으로 가장 일반적으로 사용하는 Lock
+    - Record Lock
+      - Index record에 걸리는 lock
+      - 예시)
+        - Test 란 테이블에 index로 col1이 걸려있다
+        - Transaction 1.
+        
+	  ```
+	  UPDATE Test
+	  SET COL2 = 'TEST'
+	  WHERE COL1=10
+	  ```
+        - Transaction 2.
+          
+	  ```
+	  DELETE FROM Test
+	  WHERE COL1=10
+	  ```
+	  
+	- Transaction 1이 COL1=10인 index record에 락을 걸어둔 상태이기 때문에 commit이나 rollback하기 전에 Transaction2가 row를 삭제할 수 없다.      
+	
+    - Gap Lock 
+      - index table에 없는 index에 대하여 lock을 건다.
+      - 예시)
+        - id가 인덱스로 걸려있는 Test란 테이블이 있다. 여기에 현재 데이터는 3, 7만 존재한다.
+          
+	  ```
+	  SELECT id FROM Test;
+	  id
+	  ---
+	  3
+	  7
+	  ---
+	  ```
+	- Transaction 1.
+	  
+	  ```
+	  UPDATE Test 
+	  SET COL1='TEST'
+	  WHERE id BETWEEN 1 AND 10;
+          ```
+	
+	- Transaction 2.
+	  ```
+	  INSERT Test(id, COL1) VALUES(2, 'TEST01');
+	  ```
+	
+	- 2란 id값은 없지만 1 부터 10까지의 id에 Exclusive Lock을 걸은 상태로 transaction1이 commit이나 rollback을 하기 전까지 insert를 하지 못하게 된다.
+
+- Blocking 과 Deaklock
+
+- Isolation Level에 따른 Lock
     
 - 출처: https://bamdule.tistory.com/51
 - 출처: https://www.hanumoka.net/2018/09/11/spring-20180911-spring-Transactional/
 - 출처: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/jdbc/datasource/DataSourceTransactionManager.html
+- 출처: https://sabarada.tistory.com/121
+- 출처: https://docs.oracle.com/database/121/CNCPT/consist.htm#CNCPT88972
+- 출처: https://suhwan.dev/2019/06/09/transaction-isolation-level-and-lock/
