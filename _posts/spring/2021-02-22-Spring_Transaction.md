@@ -195,7 +195,7 @@ category: Spring
           WHERE COL1=10
           ```
 	  
-	- Transaction 1이 COL1=10인 index record에 락을 걸어둔 상태이기 때문에 commit이나 rollback하기 전에 Transaction2가 row를 삭제할 수 없다.      
+        - Transaction 1이 COL1=10인 index record에 락을 걸어둔 상태이기 때문에 commit이나 rollback하기 전에 Transaction2가 row를 삭제할 수 없다.      
 	
     - Gap Lock 
       - index table에 없는 index에 대하여 lock을 건다.
