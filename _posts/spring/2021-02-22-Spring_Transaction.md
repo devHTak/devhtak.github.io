@@ -224,13 +224,13 @@ category: Spring
           INSERT Test(id, COL1) VALUES(2, 'TEST01');
           ```
 	
-	- 2란 id값은 없지만 1 부터 10까지의 id에 Exclusive Lock을 걸은 상태로 transaction1이 commit이나 rollback을 하기 전까지 insert를 하지 못하게 된다.
+         - 2란 id값은 없지만 1 부터 10까지의 id에 Exclusive Lock을 걸은 상태로 transaction1이 commit이나 rollback을 하기 전까지 insert를 하지 못하게 된다.
 
 - Blocking 과 Deaklock
   - Blocking은 Lock간의 경합이 발생하여 특정 Transaction이 작업을 진행하지 못하고 멈춰선 상태
     - shared lock 간에는 블로킹이 발생하지는 않지만 shared lock + exclusive lock 또는 exclusive lock + exclusive lock 간에는 경합이 발생
     - 한 트랜잭션의 길이를 너무 길게하면 blocking이 발생할 가능성이 높다.
-  - deadlock은 두 트랜잭션이 각각 Lock을 설정하고 다음 서로의 Lock에 접근하여 값을 얻어오려고 하는 경우 발생한다.
+  - Deadlock은 두 트랜잭션이 각각 Lock을 설정하고 다음 서로의 Lock에 접근하여 값을 얻어오려고 하는 경우 발생한다.
     - 교착상태에 빠지면 계속 Lock을 건 상태에서 끝나지 않기 떄문에 DBMS에서 둘 중 한 트랜잭션에 에러를 발생시켜 해결한다.
     - 교착상태를 해결하기 위해서는 DB 접근 순서를 동일하게 하는 것이 중요하다.
       - master -> sub 테이블 순으로 update 
