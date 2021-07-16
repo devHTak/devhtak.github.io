@@ -161,9 +161,10 @@ category: Spring
   - Exclusive lock mode
     - Write에 대한 lock
     - UPDATE, DELETE 문과 같이 데이터를 수정할 때 데이터에 Lock을 걸어 해당 트랜잭션의 잠금이 해제될 때까지 데이터를 변경할 수 없도록 한다.
-  - Share lock mode
+  - Shared lock mode
     - Read에 대한 lock
     - 여러 트랜잭션이 데이터를 읽어들일 때 read를 허락하지만 exclusive lock 이 필요(수정이 필요) 하는 트랜잭션이 접근하는 것을 막는다.
+    - 일반적인 select 문은 shared lock이 발생하지 않는다. 다만 select ... for share 등 일부 select 쿼리는 read 작업을 수행할 때 S lock을 건다.
 
 - Lock 설정 레벨(범위)
   - Table
@@ -232,7 +233,25 @@ category: Spring
     - 교착상태를 해결하기 위해서는 DB 접근 순서를 동일하게 하는 것이 중요하다.
       - master -> sub 테이블 순으로 update 
 
-- Isolation Level에 따른 Lock
+- Consistent Read (기준: InnoDB)
+  - Read operation을 수행할 때 현재 DB의 값이 아닌 Snapshot으로부터 읽어오는 것이다.
+  - Snapshot은 commit된 변화만이 적용된 상태를 의미
+  - InnoDB에서는 쿼리의 로그를 활용하여 Snapshot을 복구하여 가져온다.
+
+- Isolation Level에 따른 Lock (기준: InnoDB)
+  - Read Uncommited
+    - Consistent Read를 지원하지 않는다.
+    - 즉, 해당 시점의 DB를 읽기 때문에 dirty read가 발생한다.
+  - Read Commited
+    - read operation(select) 마다 snapshot을 다시 뜬다.
+    - consisten read를 수행하여 새로 뜬 snapshot을 보기 때문에 dirty read가 발생하지 않는다.
+    - record lock을 지원하며 gap lock은 사용하지 않는다.
+  - Repeatable Commit
+    - 처음 실행하는 read operation 수행시간을 기록한다. 그리고 그 이후 모든 read operation마다 해당 시점을 기준으로 consistent read를 수행한다.
+    - record lock과 gap lock을 사용한다.
+  - Serializable
+    - 모든 select 문을 select ... for share로 변경하여 shared lock을 건다.
+    - select문에 lock을 걸기 때문에 deadlock이 걸릴 가능성이 높아 사용할 때 조심해야 한다.
     
 - 출처: https://bamdule.tistory.com/51
 - 출처: https://www.hanumoka.net/2018/09/11/spring-20180911-spring-Transactional/
