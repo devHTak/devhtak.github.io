@@ -210,7 +210,7 @@ category: Spring
           7
           ---
           ```
-	- Transaction 1.
+        - Transaction 1.
 	  
           ```
           UPDATE Test 
@@ -218,7 +218,7 @@ category: Spring
           WHERE id BETWEEN 1 AND 10;
           ```
 	
-	- Transaction 2.
+        - Transaction 2.
 	
           ```
           INSERT Test(id, COL1) VALUES(2, 'TEST01');
