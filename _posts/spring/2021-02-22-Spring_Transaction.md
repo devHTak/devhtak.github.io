@@ -161,10 +161,12 @@ category: Spring
   - Exclusive lock mode
     - Write에 대한 lock
     - UPDATE, DELETE 문과 같이 데이터를 수정할 때 데이터에 Lock을 걸어 해당 트랜잭션의 잠금이 해제될 때까지 데이터를 변경할 수 없도록 한다.
+    - 또 다른 Lock(Shared lock, Exclusive lock)이 걸릴 수 없다.
   - Shared lock mode
     - Read에 대한 lock
     - 여러 트랜잭션이 데이터를 읽어들일 때 read를 허락하지만 exclusive lock 이 필요(수정이 필요) 하는 트랜잭션이 접근하는 것을 막는다.
     - 일반적인 select 문은 shared lock이 발생하지 않는다. 다만 select ... for share 등 일부 select 쿼리는 read 작업을 수행할 때 S lock을 건다.
+    - Exclusive lock이 걸릴 수 없다.
 
 - Lock 설정 레벨(범위)
   - Table
