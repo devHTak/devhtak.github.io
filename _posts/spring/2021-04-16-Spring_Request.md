@@ -210,7 +210,8 @@ public class RequestHeaderController {
     - HTTP 응답
   - (Enum)HttpMethod
     - HTTP 메서드를 조회한다. org.springframework.http.HttpMethod
-  - Locale|Locale(지역 정보)를 조회한다.|
+  - Locale
+    - Locale(지역 정보)를 조회한다.
   - @RequestHeader MultiValueMap<String, String> headerMapper
     - 모든 HTTP 헤더를 MultiValueMap 형식으로 조회
     - MultiValueMap 이란?
