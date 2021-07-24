@@ -48,6 +48,7 @@ category: msa
 - 클라이언트의 관점에서 application 입력값은 애플리케이션의 이름으로 spring.application.name 또는 spring.config.name 속성에서 가져온다.
 - profile은 활성화된 프로파일 또는 콤마로 분리된 활성화된 프로파일의 목록이다.
 - label은 선택적 속성인데, 깃에 경우 브랜치 이름으로 설정한다. 기본 값은 master이다.
+- localhost:8888/config_filename/profiles 를 통해 관리되는 설정정보를 알수있다.
 
 #### 네이티브 프로파일 지원
 
@@ -317,6 +318,27 @@ category: msa
                   pattern: local*
                   uri: file:/home/config/config-repo
     ```
+    
+#### 서비스 중단없이 설정 파일 적용하기
+
+- actuator의 refresh 사용
+  - actuator 등록
+    ```
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    ```
+  - actuator의 endpoint 등록
+    ```
+    # auctuator 설정 - 사용하고자 하는 endpoint 
+    management:
+      endpoints:
+        web:
+	  exposure:
+	    include: refresh, health, beans
+    ```
+  - http://localhost:${server.port}/actuator/refresh (POST method)으로 설정파일 변경을 바로 적용할 수 있다.
 
 #### Vault Backend
 
