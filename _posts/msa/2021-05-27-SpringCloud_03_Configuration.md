@@ -321,6 +321,16 @@ category: msa
     
 #### 서비스 중단없이 설정 파일 적용하기
 
+- 3가지 방법이 있다.
+  - 서버 재기동
+  - Actuator refresh
+    - Application 상태, 모티너링
+    - Metric 수집을 위한 Http Endpoint 제공
+    - 여러개 service가 구성되어 있는 경우 모두 refresh하는 것은 번거러울 수 있다.
+  - Spring cloud bus 사용
+    - 분산 시스템의 노드를 경량 메시지 브로커와 연결
+    - 상태 및 구성에 대한 변경 사항을 연결된 노드에게 전달(Broadcast)
+  
 - actuator의 refresh 사용
   - actuator 등록
     ```
@@ -339,10 +349,6 @@ category: msa
 	    include: refresh, health, beans
     ```
   - http://localhost:${server.port}/actuator/refresh (POST method)으로 설정파일 변경을 바로 적용할 수 있다.
-
-#### Vault Backend
-
-- 사용할 일이 없을 듯 하여 현재는 넘어가도록 하겠다..
 
 ### 추가 기능
 
@@ -458,7 +464,25 @@ category: msa
 
   - 변경은 감지했지만, 외부 작응 없이(MQ event) 자동으로 갱신할 수 없기 떄문에 재시작하거나 /refresh 메서드를 호출해 컨피규레이션을 강제로 읽어주어야 한다.
     
-- 메시지 브로커로 부터 이벤트 받기
+- 메시지 브로커로 부터 이벤트 받기(Spring Cloud Bus)
+  - Spring CLoud Config Server + Spring Cloud Bus
+    - AMQP(Advanced Message Queuing Protocol)을 활용하여 Cloud Config Server가 여러 서비스에게 이벤트를 Push할 수 있다.
+    - AMQP
+      - 메시지 지향 미들웨어를 위한 개방형 표준 응용 계층 프로토콜
+      - 메시지 지향, 큐잉, 라우팅(P2P, Publish-Subscriber), 신뢰성, 보안
+      - Erlang, RabbitMQ에서 사용
+    - Kafka 프로젝트
+      - Apache Software Foundation이 Scalar 언어로 개발한 오픈 소스 메시지 브로커 프로젝트
+      - 분산형 스트리밍 플랫폼
+      - 대용량의 데이터를 처리 가능한 메시징 시스템
+  - Actuator bus-refresh Endpoint
+    - 분산 시스템의 노드를 경량 메시지 브로커와 연결
+    - 상태 및 구성에 대한 변경 사항을 연결된 노드에게 전달(Broadcast)
+    - 흐름
+      - client -> HTTP Post /busrefresh 호출(호출되는 서비스는 상관 없음)
+      - Spring Cloud Bus가 변경된 이벤트를 감지
+      - 연결된 Service로 변경된 사안을 업데이트한다.
+      
   - rabbit mq 실행
     - container 실행
       ```
@@ -567,6 +591,8 @@ category: msa
     ```
   
   - 컨피규레이션 파일을 변경한 후 커밋하면 클라이언트 애플리케이션의 컨피규레이션도 갱신되는 것을 확인할 수 있다.
+
+
 
 #### 출처
 
