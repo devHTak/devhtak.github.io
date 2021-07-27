@@ -615,6 +615,21 @@ category: msa
   - 기동 순서
     - rabbitmq 실행 -> config server 실행하면 rabbitmq 관련되 정보가 정상 연결된 것을 확인할 수 있다.
 
+#### 암호화하여 사용하기
+
+- config server에 bootstrap 등록
+  - spring-cloud-starter-bootstrap dependency
+
+- bootstrap.yml에 encrypt 키 등록
+  ```
+  encrypt:
+    key: ...
+  ```
+  - bootstrap.yml은 자동으로 읽어오지 않는다.
+  - spring-cloud-starter-bootstrap dependency를 등록해주어야 한다.
+
+- POST /encrypt 에 body를 작성하여 요청하면 암호화된 값을 받을 수 있다.
+
 #### 출처
 
 - 마스터링 스프링 클라우드 
