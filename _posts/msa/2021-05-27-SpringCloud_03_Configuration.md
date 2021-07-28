@@ -648,8 +648,8 @@ category: msa
       ```
       $ mkdir ${user.home}/Desktop/Work/keystore
       $ keytool -genkeypair -alias apiEncryptionKey -keyalg RSA\
-        -dname "CN=Kenneth Lee, OU=API Development, O=joneconsulting.co.kr, L=Seoul, C=KR"\
-        -keypass "1q2w3e4r" -keystore apiEncryptionKey.jks -storepass "1q2w3e4r"
+        -dname "CN=test, OU=API Development, O=test.co.kr, L=Seoul, C=KR"\
+        -keypass "..." -keystore apiEncryptionKey.jks -storepass "..."
       ```
       - alias로 지정한 값을 통해 호출할 수 있다.
       - keypass, storepass는 임의로 지정한 키이다
@@ -657,8 +657,8 @@ category: msa
       ```
       encrypt:
         key-store:
-	  location: file://${user.home}/Desktop/Work/keystore/apiEncryptionKey.jks
-	  password: 1q2w3e4r
+	  location: file://${user.home}/.../apiEncryptionKey.jks
+	  password: ...
 	  alias: apiEncryptionKey
       ```
     - POST /encrypt, /decrypt 를 호출하면 암호화/복호화된 값을 볼 수 있다
