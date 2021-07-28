@@ -620,15 +620,21 @@ category: msa
 - config server에 bootstrap 등록
   - spring-cloud-starter-bootstrap dependency
 
-- bootstrap.yml에 encrypt 키 등록
-  ```
-  encrypt:
-    key: ...
-  ```
-  - bootstrap.yml은 자동으로 읽어오지 않는다.
-  - spring-cloud-starter-bootstrap dependency를 등록해주어야 한다.
+- 대칭키를 이용한 암호화
+  - bootstrap.yml에 encrypt 키 등록
+    ```
+    encrypt:
+      key: ...
+    ```
+    - bootstrap.yml은 자동으로 읽어오지 않는다.
+    - spring-cloud-starter-bootstrap dependency를 등록해주어야 한다.
 
-- POST /encrypt 에 body를 작성하여 요청하면 암호화된 값을 받을 수 있다.
+  - POST /encrypt 에 body를 작성하여 요청하면 암호화된 값을 받을 수 있다.
+
+    ![image](https://user-images.githubusercontent.com/42403023/127247936-bbb32a0a-7627-4e68-9c6d-62315c4b6dce.png)  
+    
+
+
 
 #### 출처
 
