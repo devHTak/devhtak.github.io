@@ -633,9 +633,6 @@ category: msa
 
     ![image](https://user-images.githubusercontent.com/42403023/127247936-bbb32a0a-7627-4e68-9c6d-62315c4b6dce.png)  
     
-
-
-
 #### 출처
 
 - 마스터링 스프링 클라우드 
