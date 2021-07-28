@@ -650,14 +650,18 @@ category: msa
       $ keytool -genkeypair -alias apiEncryptionKey -keyalg RSA\
         -dname "CN=test, OU=API Development, O=test.co.kr, L=Seoul, C=KR"\
         -keypass "..." -keystore apiEncryptionKey.jks -storepass "..."
+      $ keytool -export -alias apiEncryptionKey -keystore apiEncryptionKey.jks -rfc -file trustServer.csr
+      $ keytool -import -alias trustServer -file trustServer.cer -keystore publicKey.jks
       ```
       - alias로 지정한 값을 통해 호출할 수 있다.
       - keypass, storepass는 임의로 지정한 키이다
+      - export 를 사용하여 인증서를 만들 수 있다.
+      - import 를 사용하여 public jks 파일을 만들 수 있다
     - key-store 을 config server 속성에 작성한다.
       ```
       encrypt:
         key-store:
-	  location: file://${user.home}/.../apiEncryptionKey.jks
+	  location: file://${user.home}/.../keystore
 	  password: ...
 	  alias: apiEncryptionKey
       ```
@@ -674,4 +678,5 @@ category: msa
 
 #### 출처
 
-- 마스터링 스프링 클라우드 
+- 마스터링 스프링 클라우드
+- Spring Cloud로 개발하는 마이크로서비스애플리케이션
