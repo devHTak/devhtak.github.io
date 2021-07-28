@@ -633,7 +633,45 @@ category: msa
 
     ![image](https://user-images.githubusercontent.com/42403023/127247936-bbb32a0a-7627-4e68-9c6d-62315c4b6dce.png)  
     
+  - yml파일에 사용하고자 하는 값을 encrypt하여 사용한다.
+    ```
+    spring:
+      datasource:
+        url: jdbc:h2:~/test;
+        driverClassName: org.h2.Driver
+        username: sa
+        password: '{cipher}...'
+    ```
+  
+  - 비대칭키
+    - Public, Private key 생성 -> JDK keytool 이용
+      ```
+      $ mkdir ${user.home}/Desktop/Work/keystore
+      $ keytool -genkeypair -alias apiEncryptionKey -keyalg RSA\
+        -dname "CN=Kenneth Lee, OU=API Development, O=joneconsulting.co.kr, L=Seoul, C=KR"\
+        -keypass "1q2w3e4r" -keystore apiEncryptionKey.jks -storepass "1q2w3e4r"
+      ```
+      - alias로 지정한 값을 통해 호출할 수 있다.
+      - keypass, storepass는 임의로 지정한 키이다
+    - key-store 을 config server 속성에 작성한다.
+      ```
+      encrypt:
+        key-store:
+	  location: file://${user.home}/Desktop/Work/keystore/apiEncryptionKey.jks
+	  password: 1q2w3e4r
+	  alias: apiEncryptionKey
+      ```
+    - POST /encrypt, /decrypt 를 호출하면 암호화/복호화된 값을 볼 수 있다
+    - yml파일에 사용하고자 하는 값을 encrypt하여 사용한다.
+      ```
+      spring:
+        datasource:
+          url: jdbc:h2:~/test;
+          driverClassName: org.h2.Driver
+          username: sa
+          password: '{cipher}...'
+      ```
+
 #### 출처
 
 - 마스터링 스프링 클라우드 
-
