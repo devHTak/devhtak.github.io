@@ -661,7 +661,7 @@ category: msa
       ```
       encrypt:
         key-store:
-	  location: file://${user.home}/.../keystore
+	  location: file://${user.home}/.../keystore/apiEncryptionKey.jks
 	  password: ...
 	  alias: apiEncryptionKey
       ```
