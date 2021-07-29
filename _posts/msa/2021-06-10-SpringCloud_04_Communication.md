@@ -286,6 +286,32 @@ category: msa
 
 - 서비스에서 @FeignClient Interface를 가져와서 사용
 
+- FeignClient 에서 로그 사용
+  - application.yml 에 로그 레벨 설정
+    ```
+    logging:
+      level:
+        com.example.userservice.client: DEBUG
+    ```
+  - Feign Logger 빈 등록
+    ```java
+    @Bean
+    public Logger.Level feignLoggerLevel() {
+      return Logger.Level.FULL;
+    }
+    ```
+    
+- Feign Client 예외 처리
+  - FeignException 처리
+    - 해당 방식으로 try-catch를 사용하면 orders에 대한 정보를 보여주지 않는다.
+      ```
+      try {
+        ordersList = orderServiceClient.getOrders(userId);
+      } catch(FeignException e) {
+        log.error(e.getMessage());
+      }
+      ```
+
 #### 출처
 
 - Mastering Spring Cloud 책 발췌
