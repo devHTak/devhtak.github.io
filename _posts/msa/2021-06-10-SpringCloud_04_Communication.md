@@ -270,10 +270,21 @@ category: msa
   @EnableFeignClients
   public class OrderApplication {
     public static void main(Strings[] args) {
-        
+      // ...
     }
   }
   ```
+- @FeignClient Interface 생성
+  ```java
+  @FeignClient(name="order-service")
+  public interface OrderServiceClient {
+    @GetMapping("/order-service/{userId}/orders")
+    List<ResponseOrder> getOrders(@PathVariable String userId);
+  }
+  ```
+  - @FeignClient에 등록된 name은 Eureka에 등록된 서비스 네임을 사용
+
+- 서비스에서 @FeignClient Interface를 가져와서 사용
 
 #### 출처
 
