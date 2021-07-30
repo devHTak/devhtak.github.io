@@ -56,7 +56,6 @@ category: Spring
   - Pointcut은 Advice가 언제 실행될지를 지정하는 데 사용한다.
   - Pointcut 지정자
     - execution: 메소드 실행 결합점(join points)과 일치시키는데 사용된다.
-      - execution(public * *(..)): public 메소드 실행
       - 접근지시자 리턴타입 메소드명(아규먼트) 형식으로 작성      
       
     - within: 특정 타입에 속하는 결합점을 정의한다.
@@ -97,7 +96,7 @@ category: Spring
       ```java
       @Aspect
       public class AspectExample {
-          @Before("execution(public * *(...))")
+          @Before("execution(* *(...))")
           public void beforeTargetMethod(JoinPoint thisJoinPoint) {
               Class clazz = thisJoinPoint.getTarget().getClass();
               String className = thisJoinPoint.getTarget().getClass().getSimpleName();
