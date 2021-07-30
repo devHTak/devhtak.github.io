@@ -311,6 +311,61 @@ category: msa
         log.error(e.getMessage());
       }
       ```
+      
+- ErrorDecoder 를 활용한 예외 처리
+  - ErrorDecoder에 decode 메소드를 오버라이딩하여 구현한다.
+    ```java
+    public class FeignErrorDecoder implements ErrorDecoder {
+	    @Override
+	    public Exception decode(String methodKey, Response response) {
+		    // TODO Auto-generated method stub
+		    switch(response.status()) {
+		    case 400:
+			    break;
+		    case 404:
+			    if(methodKey.contains("getOrders")) {
+				    return new ResponseStatusException(HttpStatus.valueOf(response.status()),
+						    "User's order list is empty");
+			    }
+			    break;
+		    default:
+			    return new Exception(response.reason());
+		    }
+		    return null;
+	    }
+    }
+    ```
+    
+  - ErrorDecoder 구현체를 빈으로 등록
+    ```java
+    @Bean
+	  public FeignErrorDecoder feignErrorDecoder() {
+		  return new FeignErrorDecoder();
+	  }
+    ```
+    
+  - try-catch가 필요 없이 실행하면 된다.
+    ```java
+    /* ErrorDecoder를 통해 예외 처리*/
+		List<ResponseOrders> orderList = orderServiceClient.getOrders(id);
+    ```
+  
+  - FeignClient에 ErrorDecoder 매핑
+    ```java
+    @FeignClient(name = "order-service", configuration = FeignErrorDecoder)
+    public interface OrderServiceClient {
+    ```
+    - 여러 Feign Client가 생성될 수 있기 때문에 사용하는 ErrorDecoder를 지정할 수 있다.
+
+- 데이터 동기화 문제
+  - 만약 Orders Service 2개 기동
+    - Users의 요청 분산 처리
+    - Orders 데이터도 분산 저장 -> 동기화 문제 발생
+
+  - 해결 방법
+    - 같은 서비스이기 때문에 하나의 데이터베이스 사용 -> 트랜잭션 관리가 필요하다.
+    - 각각의 데이터베이스 간의 동기화 -> Messaging Queing Server(Kafka, RabbitMQ 등) 를 활용하여 데이터 동기화를 한다.
+    - Kafka Connector + DB -> Order Service 간에 발생한 트랜잭션에 대해 Messaging Queing Server에 전달, Messaging Queing Server가 따로 거대한 단일 DB를 구성하여 저장
 
 #### 출처
 
