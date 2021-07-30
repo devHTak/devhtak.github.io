@@ -102,7 +102,7 @@ category: Spring
           }
       }
       ```
-      - 접근 지정자가 public 인 모든 메서드가 실행되기 전에 실행된다.
+      - 모든 패키지의 모든 메소드의 실행 이전에 실행된다.
       
   - After returning
     - After returing Advice는 정상적으로 메소드가 실행될 때 수행된다.
