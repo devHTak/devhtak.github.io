@@ -352,7 +352,7 @@ category: msa
   
   - FeignClient에 ErrorDecoder 매핑
     ```java
-    @FeignClient(name = "order-service", configuration = FeignErrorDecoder)
+    @FeignClient(name = "order-service", configuration = FeignErrorDecoder.class)
     public interface OrderServiceClient {
     ```
     - 여러 Feign Client가 생성될 수 있기 때문에 사용하는 ErrorDecoder를 지정할 수 있다.
