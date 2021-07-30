@@ -97,7 +97,7 @@ category: Spring
       ```java
       @Aspect
       public class AspectExample {
-          @Before(execution("public * *(...)")
+          @Before("execution(public * *(...))")
           public void beforeTargetMethod(JoinPoint thisJoinPoint) {
               Class clazz = thisJoinPoint.getTarget().getClass();
               String className = thisJoinPoint.getTarget().getClass().getSimpleName();
