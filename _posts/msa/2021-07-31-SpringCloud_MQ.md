@@ -284,28 +284,14 @@ category: msa
       {"schema":
         {"type":"struct",
         "fields":[
-	    {"type":"int32",
-	    "optional":false,
-	    "field":"id"},
-	    {"type":"string",
-	    "optional":true,
-	    "field":"name"},
-	    {"type":"string",
-	    "optional":true,
-	    "field":"pwd"}, 
-	    {"type":"int64",
-		"optional":true,
-		"name":"org.apache.kafka.connect.data.Timestamp",
-		"version":1,
-		"field":"created_at"}
-          ],
+	    {"type":"int32","optional":false,"field":"id"},
+	    {"type":"string","optional":true,"field":"name"},
+	    {"type":"string","optional":true,"field":"pwd"}, 
+	    {"type":"int64","optional":true,"name":"org.apache.kafka.connect.data.Timestamp","version":1,field":"created_at"}],
 	  "optional":false,
-	  "name":"users"},
-	  "payload":{
-	      "id":1,
-	      "name":"test",
-	      "pwd":"test1234",
-	      "created_at":1627815857000}}
+	  "name":"users"
+        },
+        "payload":{"id":1,"name":"test","pwd":"test1234","created_at":1627815857000}}
       ```
 
     
