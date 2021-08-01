@@ -142,6 +142,124 @@ category: msa
     - ./share/java/kafka/ 폴더에 mariadb-java-client-2.7.3.jar  파일 복사
     - ${USER.HOMW}\.m2\repository\org\mariadb\jdbc\mariadb-java-client\2.7.3 폴더에서 maraidb-java-client-2.7.3.jar 파일이 있다
 
+- Kafka Source Connect 사용
+  - Kafka Connect API 활용하여 Source Connector 등록
+    ```
+    POST http://localhost:8083/connectors
+    Body:  {
+            "name" : "my-source-connect",
+            "config" : {
+                "connector.class" : "io.confluent.connect.jdbc.JdbcSourceConnector",
+                "connection.url":"jdbc:mysql://localhost:3306/mydb",
+                "connection.user":"root",
+                "connection.password":"test1357",
+                "mode": "incrementing",
+                "incrementing.column.name" : "id",
+                "table.whitelist":"users",
+                "topic.prefix" : "my_topic_",
+                "tasks.max" : "1"}}
+    ```
+    - mode: incrementing -> 데이터가 등록될 때 자동으로 증가시키는 모드로 설정
+    - incrementing.column.name: id -> 자동으로 증가하는 컬럼은 id
+    - table.whitelist: "users" -> whitelist는 MariaDB에 변경 사항이 생기면 topic에 저장하게 되는 데, 해당 테이블을 설정
+    - topic.prefix: 'my_topic_' -> 저장할 topic은 my_topic_으로 시작한다.
+    
+  - Kafka Connect 목록 확인
+    ```
+    GET 192.168.56.2:8083/connectors
+    [
+      "my-source-connect"
+    ]
+    ```
+    - vm에 kafka를 설치해였기 때문에 8083 방화벽을 오픈하여 연결하였다.
+    - my-source-connect가 생성된 것을 확인할 수 있다.
+  - Kafka Connect 확인
+    ```
+    GET http://localhost:8083/connectors/my-source-connect/status
+    {
+      "name": "my-source-connect",
+      "connector": {
+        "state": "RUNNING",
+        "worker_id": "127.0.1.1:8083"
+      },
+      "tasks": [
+        {
+            "id": 0,
+            "state": "RUNNING",
+            "worker_id": "127.0.1.1:8083"
+        }
+      ],
+      "type": "source"
+    }
+    ```
+  
+- Kafka Sink Connect 사용
+  ```
+    POST http://localhost:8083/connectors
+    Body:  {
+            "name" : "my-sink-connect",
+            "config" : {
+                "connector.class" : "io.confluent.connect.jdbc.JdbcSinkConnector",
+                "connection.url":"jdbc:mysql://localhost:3306/mydb",
+                "connection.user":"root",
+                "connection.password":"test1357",
+                "auto.create":"true",
+                "auto.evolve": "true",
+		"delete.enabled": "false",
+		"tasks.max": "1",
+		"topics": "my_topic_users"}}
+    response-body: 
+      {
+      "name": "my-sink-connect",
+      "config": {
+          "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+          "connection.url": "jdbc:mysql://localhost:3306/mydb",
+          "connection.user": "root",
+          "connection.password": "test1357",
+          "auto.create": "true",
+          "auto.evolve": "true",
+          "delete.enabled": "false",
+          "tasks.max": "1",
+          "topics": "my_topic_users",
+          "name": "my-sink-connect"
+      },
+      "tasks": [],
+      "type": "sink"
+      }
+    ```
+    - connector를 사용하여 Sink 지정
+    - "auto.create": "true" -> 토픽과 같은 테이블을 생성한다는 의미로 테이블 구조는 토픽이 갖고 있는 구조 그대로 사용하여 생성한다.
+    - "topics": "my-topic_users" -> 구독하고자 하는 
+  - Kafka Connect 목록 확인
+    ```
+    GET 192.168.56.2:8083/connectors
+    Response Body:
+    [
+      "my-sink-connect",
+      "my-source-connect"
+    ]
+    ```
+    
+  - Kafka Connect 확인
+    ```
+    GET 192.168.56.2:8083/connectors/my-sink-connect/status
+    Response body: 
+    {
+    "name": "my-sink-connect",
+    "connector": {
+        "state": "RUNNING",
+        "worker_id": "127.0.1.1:8083"
+    },
+    "tasks": [
+        {
+            "id": 0,
+            "state": "RUNNING",
+            "worker_id": "127.0.1.1:8083"
+        }
+    ],
+    "type": "sink"
+}
+    ```
 - 예제
   - mariaDB 설치(docker 활용)
     - mariadb 설치
@@ -222,39 +340,7 @@ category: msa
         "name":"my-source-connect"},
     "tasks":[],"type":"source"}
     ```
-    - mode: incrementing -> 데이터가 등록될 때 자동으로 증가시키는 모드로 설정
-    - incrementing.column.name: id -> 자동으로 증가하는 컬럼은 id
-    - table.whitelist: "users" -> whitelist는 MariaDB에 변경 사항이 생기면 topic에 저장하게 되는 데, 해당 테이블을 설정
-    - topic.prefix: 'my_topic_' -> 저장할 topic은 my_topic_으로 시작한다.
     
-  - Kafka Connect 목록 확인
-    ```
-    GET 192.168.56.2:8083/connectors
-    [
-      "my-source-connect"
-    ]
-    ```
-    - vm에 kafka를 설치해였기 때문에 8083 방화벽을 오픈하여 연결하였다.
-    - my-source-connect가 생성된 것을 확인할 수 있다.
-  - Kafka Connect 확인
-    ```
-    GET http://localhost:8083/connectors/my-source-connect/status
-    {
-      "name": "my-source-connect",
-      "connector": {
-        "state": "RUNNING",
-        "worker_id": "127.0.1.1:8083"
-      },
-      "tasks": [
-        {
-            "id": 0,
-            "state": "RUNNING",
-            "worker_id": "127.0.1.1:8083"
-        }
-      ],
-      "type": "source"
-    }
-    ```
   - MariaDB에 데이터 추가
     ```
     MariaDB [mydb]> insert into users(name, pwd) values('test', 'test1234');
@@ -278,7 +364,7 @@ category: msa
       my_topic_users
       ```
       - my_topic_users가 생성되었다.
-    - Source 입력 확인
+    - kafka-console-consumer에서 입력 확인
       ```
       $ ./bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic my_topic_users --from-beginning
       {"schema":
@@ -294,9 +380,42 @@ category: msa
         "payload":{"id":1,"name":"test","pwd":"test1234","created_at":1627815857000}}
       ```
 
-    
+  - Kafka sink connect 생성
+    ```
+    $ echo '{
+      > "name" : "my-sink-connect",
+      > "config" : {
+      >    "connector.class" : "io.confluent.connect.jdbc.JdbcSinkConnector",
+      >    "connection.url":"jdbc:mysql://localhost:3306/mydb",
+      >    "connection.user":"root",
+      >    "connection.password":"test1357",
+      >    "auto.create": "true",
+      >    "auto.evolve": "true",
+      >    "delete.enabled": "false",
+      >    "tasks.max": "1",
+      >    "topics": "my_topic_users"
+      >    }
+      >}' | curl -X POST -d @- http://localhost:8083/connectors --header "content-Type:application/json"
+    ```
+    - my_topic_users란 테이블이 생성된 것을 확인할 수 있으며 users에 저장한 데이터가 입력된 것을 확인할 수 있다.
   
-
+  - Kafka Producer를 이용하여 Kafka Topic에 데이터 직접 전송
+    - Kafka-console-producer에서 데이터 전송 -> topic에 추가 -> mariadb에 추가
+      ```
+      $ ./bin/kafka-console-producer.sh --broker-list localhost:9092 --topic my_topic_users
+      > {"schema":
+        {"type":"struct",
+        "fields":[
+	    {"type":"int32","optional":false,"field":"id"},
+	    {"type":"string","optional":true,"field":"name"},
+	    {"type":"string","optional":true,"field":"pwd"}],
+	  "optional":false,
+	  "name":"users"
+        },
+        "payload":{"id":2,"name":"test2","pwd":"test2234"}}
+      ```
+      - schema: 전달하고자 하는 데이터 구조
+      - payload: 전달하는 데이터
 
  
  #### 출처
