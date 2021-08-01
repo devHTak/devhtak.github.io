@@ -166,25 +166,21 @@ category: msa
   - pom.xml에 mariadb dependency 추가
     ```java
     <dependency>
-			<groupId>org.mariadb.jdbc</groupId>
-			<artifactId>mariadb-java-client</artifactId>
-		</dependency>
+      <groupId>org.mariadb.jdbc</groupId>
+      <artifactId>mariadb-java-client</artifactId>
+    </dependency>
     ```
-  - application.yml에 속성 추가
-    ```
-    datasource:
-      url: org.mariadb.jdbc.Driver
-      driverClassName: jdbc:mariadb://192.168.56.2:3306/mydb
-      username: root
-      password: test1357
-    ```
-    - vm에 docker로 mariadb를 설치했기 때문에 docker ip인 192.168.56.2로 설정하였다.
-      
-      ![image](https://user-images.githubusercontent.com/42403023/127762157-a1481a65-ddda-414c-b8aa-0a76c088f47f.png)
-      
-      - 이미지출처: https://empty-cloud.tistory.com/84
+  - h2-console에 들어가 테이블 생성
+    - url: org.mariadb.jdbc.Driver
+    - driverClassName: jdbc:mariadb://192.168.56.2:3306/mydb
+    - username: root
+    - password: test1357
     
-  - 테이블 생성
+    ![image](https://user-images.githubusercontent.com/42403023/127762157-a1481a65-ddda-414c-b8aa-0a76c088f47f.png)
+      
+      - vm에 docker로 mariadb를 설치했기 때문에 docker ip인 192.168.56.2로 설정하였다.
+      - 이미지출처: https://empty-cloud.tistory.com/84
+      
     ```
     create table users( 
       id int auto_increment primary key,
@@ -193,6 +189,127 @@ category: msa
       created_at datetime default NOW()
     );
     ````
+    
+  - Kafka Source Connect 추가(MariaDB)
+    - 직접 명령어를 주어 추가할 수 있다.
+    - 또는 POST /connectors로 
+    ```
+    $ echo '{
+      > "name" : "my-source-connect",
+      > "config" : {
+      >    "connector.class" : "io.confluent.connect.jdbc.JdbcSourceConnector",
+      >    "connection.url":"jdbc:mysql://localhost:3306/mydb",
+      >    "connection.user":"root",
+      >    "connection.password":"test1357",
+      >    "mode": "incrementing",
+      >    "incrementing.column.name" : "id",
+      >    "table.whitelist":"users",
+      >    "topic.prefix" : "my_topic_",
+      >    "tasks.max" : "1"
+      >    }
+      >}' | curl -X POST -d @- http://localhost:8083/connectors --header "content-Type:application/json"
+    {"name":"my-source-connect",
+    "config":{
+        "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
+        "connection.url":"jdbc:mysql://localhost:3306/mydb",
+        "connection.user":"root",
+        "connection.password":"test1357",
+        "mode":"incrementing",
+        "incrementing.column.name":"id",
+        "table.whitelist":"users",
+        "topic.prefix":"my_topic_",
+        "tasks.max":"1",
+        "name":"my-source-connect"},
+    "tasks":[],"type":"source"}
+    ```
+    - mode: incrementing -> 데이터가 등록될 때 자동으로 증가시키는 모드로 설정
+    - incrementing.column.name: id -> 자동으로 증가하는 컬럼은 id
+    - table.whitelist: "users" -> whitelist는 MariaDB에 변경 사항이 생기면 topic에 저장하게 되는 데, 해당 테이블을 설정
+    - topic.prefix: 'my_topic_' -> 저장할 topic은 my_topic_으로 시작한다.
+    
+  - Kafka Connect 목록 확인
+    ```
+    GET 192.168.56.2:8083/connectors
+    [
+      "my-source-connect"
+    ]
+    ```
+    - vm에 kafka를 설치해였기 때문에 8083 방화벽을 오픈하여 연결하였다.
+    - my-source-connect가 생성된 것을 확인할 수 있다.
+  - Kafka Connect 확인
+    ```
+    GET http://localhost:8083/connectors/my-source-connect/status
+    {
+      "name": "my-source-connect",
+      "connector": {
+        "state": "RUNNING",
+        "worker_id": "127.0.1.1:8083"
+      },
+      "tasks": [
+        {
+            "id": 0,
+            "state": "RUNNING",
+            "worker_id": "127.0.1.1:8083"
+        }
+      ],
+      "type": "source"
+    }
+    ```
+  - MariaDB에 데이터 추가
+    ```
+    MariaDB [mydb]> insert into users(name, pwd) values('test', 'test1234');
+    Query OK, 1 row affected (0.010 sec)
+    MariaDB [mydb]> select * from users;
+    +----+------+----------+---------------------+
+    | id | name | pwd      | created_at          |
+    +----+------+----------+---------------------+
+    |  1 | test | test1234 | 2021-08-01 11:04:17 |
+    +----+------+----------+---------------------+
+    1 row in set (0.002 sec)
+    ```
+  - my_topic_users에서 확인
+    - 토픽 확인
+      ```
+      $ ./bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
+      __consumer_offsets
+      connect-configs
+      connect-offsets
+      connect-status
+      my_topic_users
+      ```
+      - my_topic_users가 생성되었다.
+    - Source 입력 확인
+      ```
+      $ ./bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic my_topic_users --from-beginning
+      {"schema":
+        {"type":"struct",
+        "fields":[
+	    {"type":"int32",
+	    "optional":false,
+	    "field":"id"},
+	    {"type":"string",
+	    "optional":true,
+	    "field":"name"},
+	    {"type":"string",
+	    "optional":true,
+	    "field":"pwd"}, 
+	    {"type":"int64",
+		"optional":true,
+		"name":"org.apache.kafka.connect.data.Timestamp",
+		"version":1,
+		"field":"created_at"}
+          ],
+	  "optional":false,
+	  "name":"users"},
+	  "payload":{
+	      "id":1,
+	      "name":"test",
+	      "pwd":"test1234",
+	      "created_at":1627815857000}}
+      ```
+
+    
+  
 
 
  
