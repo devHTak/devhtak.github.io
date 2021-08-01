@@ -105,15 +105,94 @@ category: msa
    - 커스텀 Connector를 통해 다양한 Plubin 제공(File, AWS S3, DB etc ..)
 
 - Source System (Hive, jdbc ..) -> Kafka Connect Source -> Kafka Cluster -> Kafka Connect Sink -> Target System(AWS S3, ...)
+- Kafka Connector 설치
+  ```
+  $ curl -O http://packages.confluent.io/archive/5.5/confluent-community-5.5.2-2.12.tar.gz
+  $ curl -O http://packages.confluent.io/archive/6.1/confluent-community-6.1.0.tar.gz
+  $ tar xvf confluent-community-6.1.0.tar.gz
+  $ cd  $KAFKA_CONNECT_HOME
+  ```
+- Kafka Connect 설정(기본으로 사용)
+  ```
+  $ KAFKA_HOME/config/connect-distriuted.properties
+  ```
+- Kafka Connect 실행
+  ```
+  ./bin/windows/connect-distributed.bat ./etc/kafka/connect-distributed.properties
+  ```
+- Kafka Connect 실행 전에 Topic 목록 확인
+  ```
+  $ ./bin/windows/kafka-topics.bat --bootstrap-server localhost:9092 --list
+  __consumer_offsets
+  connect-configs
+  connect-offsets
+  connect-status
+  ```
+
+- JDBC Connector 설치
+  - https://docs.confluent.io/5.5.1/connect/kafka-connect-jdbc/index.html
+    - download and extract the ZIP file -> confluentinc-kafka-connect-jdbc-10.2.1.zip 다운로드
+  - etc/kafka/connect-distributed.properties 파일 마지막에 아래 plugin 정보 추가
+    - plugin.path=[confluentinc-kafka-connect-jdbc-10.2.1 폴더]
+      ```
+      plubin.path=\D:\\Work\\Excutions\\confluentinc-kafka-connect-jdbc-10.2.1\\lib
+      ```
+      - window에 경우 \을 사용하기 위해 \를 하나 더 붙인다
+  - JdbcSourceConnector에서 MariaDB 사용하기 위해 mariadb 드라이버 복사
+    - ./share/java/kafka/ 폴더에 mariadb-java-client-2.7.3.jar  파일 복사
+    - ${USER.HOMW}\.m2\repository\org\mariadb\jdbc\mariadb-java-client\2.7.3 폴더에서 maraidb-java-client-2.7.3.jar 파일이 있다
 
 - 예제
   - mariaDB 설치(docker 활용)
     - mariadb 설치
       ```
       $ docker pull mariadb
-      $ docker run --name mariadb -p 3306:3306 -e MYSQL_ROOT_PASSWORD=test1357 mariadb
+      $ docker run --name mariadb -p 3306:3306 -e MYSQL_ROOT_PASSWORD=test1357 --cap-add=NET_ADMIN mariadb 
       ```
       - port 는 3306, password는 test1357로 세팅했다
+      - --cap-add=NET_ADMIN을 통해 외부 클라이언트에서 docker로 접속할 수 있도록 했다 (3306 포트 방화벽 오픈)
+    - mariadb 실행
+      ```
+      $ docker exec -i -t mariadb bash
+      root@....:/# mysql -uroot -ptest1357
+      MariaDB [(none)]> show databases;
+      MariaDB [(none)]> create database mydb;
+      MariaDB [(none)]> use mydb;
+      ```
+      - show databases; 를 통해 사용가능한 Database를 확인할 수 있다.
+      - create database mydb: mydb란 신규 데이터베이스 생성
+      - use mydb: mydb 사용
+    
+  - pom.xml에 mariadb dependency 추가
+    ```java
+    <dependency>
+			<groupId>org.mariadb.jdbc</groupId>
+			<artifactId>mariadb-java-client</artifactId>
+		</dependency>
+    ```
+  - application.yml에 속성 추가
+    ```
+    datasource:
+      url: org.mariadb.jdbc.Driver
+      driverClassName: jdbc:mariadb://192.168.56.2:3306/mydb
+      username: root
+      password: test1357
+    ```
+    - vm에 docker로 mariadb를 설치했기 때문에 docker ip인 192.168.56.2로 설정하였다.
+      
+      ![image](https://user-images.githubusercontent.com/42403023/127762157-a1481a65-ddda-414c-b8aa-0a76c088f47f.png)
+      
+      - 이미지출처: https://empty-cloud.tistory.com/84
+    
+  - 테이블 생성
+    ```
+    create table users( 
+      id int auto_increment primary key,
+      name varchar(20),
+      pwd varchar(20),
+      created_at datetime default NOW()
+    );
+    ````
 
 
  
