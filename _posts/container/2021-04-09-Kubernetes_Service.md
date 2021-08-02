@@ -315,6 +315,7 @@ category: Container
 - 노드포트 서비스의 패킷 흐름
 
   ![image](https://user-images.githubusercontent.com/42403023/114121182-df5ba980-9928-11eb-9983-c64c6eb7e90b.png)
+  
   ** 이미지 출처: https://kubernetes.io/docs/concepts/services-networking/service
   
   - NodePort(3001번 포트)로 Node에 접근 -> API Server(Kubectl Proxy) RR 방식으로 -> POD 접근
@@ -324,6 +325,7 @@ category: Container
 - 노드포트를 활용한 로드밸런싱
   
   ![image](https://user-images.githubusercontent.com/42403023/114121224-f39fa680-9928-11eb-8408-1389386b88a8.png)
+  
   ** 이미지 출처: https://en.wikipedia.org/wiki/Kubernetes
 
 #### 로드밸런스
