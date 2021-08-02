@@ -378,6 +378,7 @@ category: Container
   - ingress: (어떤 장소에) 들어감, 입장; 들어갈 수 있는 권리, 입장권
   
   ![image](https://user-images.githubusercontent.com/42403023/114121443-55601080-9929-11eb-9668-32e08d9db481.png)
+  
   ** 이미지 출처: DevOps를 위한 Kubernetes 마스터 강의
 
 - 인그레스 생성하기
