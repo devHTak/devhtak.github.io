@@ -417,6 +417,148 @@ category: msa
       - schema: 전달하고자 하는 데이터 구조
       - payload: 전달하는 데이터
 
+#### Service에 적용하기
+
+- 예제: Orders -> Catalogs
+  - Orders Service에 요청된 주문의 수량 정보를 Catalogs Service에 반영
+  - Orders Service에서 Kafka Topic으로 메시지 전송 -> Producer
+  - Catalogs Service에서 Kafka Topic에 전송된 메시지 취득 -> Consumer
+
+  - Catalog Service (Consumer)
+    - dependency 추가
+      ```
+      <dependency>
+        <groupId>org.springframework.kafka</groupId>
+        <artifactId>spring-kafka</artifactId>
+      </dependency>      
+      ```
+      
+    - KafkaConsumerConfig.java 
+      - Topic 구독 후 변경사항을 이벤트 리스너로 사용
+        ```java
+        @EnableKafka
+        @Configuration
+        public class KafkaConsumerConfig {
+          /* 카프카 접속 정보 저장 빈*/
+          @Bean
+          public ConsumerFactory<String, String> consumerFactory() {
+            Map<String, Object> properties = new HashMap<>();
+            properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.56.2:9092");
+            properties.put(ConsumerConfig.GROUP_ID_CONFIG, "consumerGroupId"); // 여러 토픽을 그룹으로 지정하여 사용할 수 있다.
+            properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+            properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);		
+            return new DefaultKafkaConsumerFactory<>(properties);
+          }	
+          /* 리스너 */
+          @Bean
+          public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
+            ConcurrentKafkaListenerContainerFactory<String, String> factory = 
+                new ConcurrentKafkaListenerContainerFactory<>();
+            factory.setConsumerFactory(consumerFactory());
+            return factory;
+          }
+        }
+        ```
+
+    - kafkaConsumer.java
+      ```java      
+      @Service
+      @Slf4j
+      @Transactional
+      public class KafkaConsumer {
+        private final CatalogRepository catalogRepository;
+        @Autowired 
+        public KafkaConsumer(CatalogRepository catalogRepository) {
+          this.catalogRepository = catalogRepository;
+        }	
+        @KafkaListener(topics = "example-catalog-topic")
+        public void upateQty(String kafkaMessage) {
+          log.info("Kafka message: " + kafkaMessage);	
+          ObjectMapper mapper = new ObjectMapper();
+          Map<Object, Object> map = new HashMap<>();	
+          try {
+            map = mapper.readValue(kafkaMessage, new TypeReference<Map<Object, Object>>() {});
+          } catch (JsonMappingException e) {
+            e.printStackTrace();
+          } catch (JsonProcessingException e) {
+            e.printStackTrace();
+          }
+		
+          Catalog catalog = catalogRepository.findById((Long)map.get("productId")).orElseThrow(IllegalArgumentException::new);
+          catalog.setQty(catalog.getQty() - (Integer)map.get("qty"));
+        }
+      }
+    
+  - Order Service (Producer)
+    - dependency 추가
+      ```
+      <dependency>
+        <groupId>org.springframework.kafka</groupId>
+        <artifactId>spring-kafka</artifactId>
+      </dependency>
+      ```
+    - KafkaProducerConfig.java
+      ```java
+      @EnableKafka
+      @Configuration
+      public class KafkaProducerConfig {
+        /*카프카 접속 정보 저장 빈*/
+        @Bean
+        public ProducerFactory<String, String> producerFactory() {
+          Map<String, Object> properties = new HashMap<>();
+          properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.56.2:9092");
+          properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+          properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringDeserializer.class);			
+          return new DefaultKafkaProducerFactory<>(properties);
+        }
+        /* Kafka Template -> 데이터 publish할 때 사용 */
+        @Bean
+        public KafkaTemplate<String, String> kafkaTemplate() {
+          return new KafkaTemplate<>(producerFactory());
+         }	
+      }
+      ```
+    - KafkaProducer.java
+      ```java
+      @Service
+      @Slf4j
+      @Transactional
+      public class KafkaProducer {
+        private final KafkaTemplate<String, String> kafkaTemplate;
+        @Autowired 
+        public KafkaProducer(KafkaTemplate<String, String> kafkaTemplate) {
+          this.kafkaTemplate = kafkaTemplate;
+        }	
+        public Orders send(String topic, Orders order) {
+          ObjectMapper mapper = new ObjectMapper();
+          String jsonString = "";	
+          try {
+            jsonString = mapper.writeValueAsString(order);
+          }catch(JsonProcessingException e) {
+            e.printStackTrace();
+          }		
+          kafkaTemplate.send(topic, jsonString);	
+          log.info("Kafka Producer send data from the order service: " + jsonString);				
+          return order;
+        }
+      }
+      ```
+    - 주문 생성 시 KafakProducer를 통해 토픽에 데이터 전송
+      ```java
+      public ResponseOrder createOrder(Long userId, RequestOrder requestOrder) {
+        Orders order = new Orders();
+        order.setProductId(requestOrder.getProductId());
+        order.setQty(requestOrder.getQty());
+        order.setUnitPrice(requestOrder.getUnitPrice());
+        order.setTotalPrice(requestOrder.getQty() * requestOrder.getUnitPrice());
+        order.setUserId(userId);
+        Orders returnOrder = orderRepository.save(order);	
+        /* send this order to kafka */
+        kafkaProducer.send("example-category-topic", returnOrder);
+        return new ResponseOrder(returnOrder.getId(), returnOrder.getUserId(), returnOrder.getQty(), returnOrder.getUnitPrice(), 
+            returnOrder.getTotalPrice(), returnOrder.getCreatedAt());
+      }
+      ```
  
  #### 출처
  
