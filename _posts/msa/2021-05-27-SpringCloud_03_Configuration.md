@@ -600,9 +600,9 @@ category: msa
     spring:
       rabbitmq:
         host: 127.0.0.1
-	port: 5672
-	username: guest
-	password: guest
+        port: 5672
+        username: guest
+        password: guest
     ```
   - actuator busrefresh endpoint 추가
     ```
