@@ -345,8 +345,8 @@ category: msa
     management:
       endpoints:
         web:
-	  exposure:
-	    include: refresh, health, beans
+          exposure:
+            include: refresh, health, beans
     ```
   - http://localhost:${server.port}/actuator/refresh (POST method)으로 설정파일 변경을 바로 적용할 수 있다.
 
@@ -370,7 +370,7 @@ category: msa
     spring:
       cloud:
         config:
-	  uri: https://localhost:8889
+          uri: https://localhost:8889
           username: user
           password: secret
     ```
