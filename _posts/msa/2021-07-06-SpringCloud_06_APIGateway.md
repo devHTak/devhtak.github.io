@@ -459,36 +459,36 @@ category: msa
           fetch-registry: true
           service-url:
             default-zone: http://localhost:8761/eureka
-
-      spring:
-        application:
-          name: apigateway-service
-        cloud:
-          gateway:
-            default-filters:
-            - name: GlobalFilter
-              args:
-                baseMessage: Spring Cloud Gateway Log Filter 
-                pre: true
-                post: true
-            routes:
-            - id: first-service
-              uri: lb://FIRST-SERVICE
-              predicates:
-              - Path= /first-service/**
-              filters:
-              # - AddRequestHeader=first-request, first-request-header2
-              # - AddResponseHeader=first-response, first-response-header2
-              - CustomFilter
-            - id: second-service
-              uri: lb://SECOND-SERVICE
-              predicates:
-              - Path= /second-service/**
-              filters:
-              #- AddRequestHeader=second-request, second-request-header2
-              #- AddResponseHeader=second-response, second-response-header2
-              - CustomFilter
+        spring:
+          application:
+            name: apigateway-service
+          cloud:
+            gateway:
+              default-filters:
+              - name: GlobalFilter
+                args:
+                  baseMessage: Spring Cloud Gateway Log Filter 
+                  pre: true
+                  post: true
+              routes:
+              - id: first-service
+                uri: lb://FIRST-SERVICE
+                predicates:
+                - Path= /first-service/**
+                filters:
+                # - AddRequestHeader=first-request, first-request-header2
+                # - AddResponseHeader=first-response, first-response-header2
+                - CustomFilter
+              - id: second-service
+                uri: lb://SECOND-SERVICE
+                predicates:
+                - Path= /second-service/**
+                filters:
+                #- AddRequestHeader=second-request, second-request-header2
+                #- AddResponseHeader=second-response, second-response-header2
+                - CustomFilter
         ```
+        
       - First Service, Second Service에 등록
         ```
         eureka:
