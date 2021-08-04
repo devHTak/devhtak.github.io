@@ -454,11 +454,11 @@ category: msa
         - 기존 사용했던 URI 정보를 lb://eureka-등록-service-name 으로 등록이 가능하다.
         ```
         eureka:
-        client:
-          register-with-eureka: true
-          fetch-registry: true
-          service-url:
-            default-zone: http://localhost:8761/eureka
+          client:
+            register-with-eureka: true
+            fetch-registry: true
+            service-url:
+              default-zone: http://localhost:8761/eureka
         spring:
           application:
             name: apigateway-service
