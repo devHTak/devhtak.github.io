@@ -265,15 +265,14 @@ category: msa
     - 이유는 Evict(퇴거) 이라는 백그라운드 태스크 때문이다.
       - 이것이 하는 일은 클라이언트로부터 하트비트가 계속 수신 되는지 점검하는 일이다.
       - 기본값으러 60초마다 실행되기 때문에 클라이언트에서 설정했던 위에 두 값을 작은 값으로 설정해도 서비스 인스턴스를 제거하는 데 최악의 경우 60초가 걸린다.
-      - eureka.server.evictionIntervalTimerInMs 속성으로 설정 가능하며 millisecond 단위다.
-      
+      - eureka.server.evictionIntervalTimerInMs 속성으로 설정 가능하며 millisecond 단위다.      
         ```
         eureka:
           server:
             enable-self-preservation: false
             eviction-interval-timer-in-ms: 3000
 	```
-	
+
 - 이런 속성을 조작하여 임대 만료 제거 절차에 대한 유지 관리를 사용자가 정의할 수 있다.
 - 그러나 정의된 컨피규레이션이 시스템의 성능을 부족하게 만들지 않는 것도 중요하다.
 - 부하 분산, 게이트웨이, 서킷 브레이커 등이 해당 컨피규레이션 변경에 민감한 요소가 된다.
