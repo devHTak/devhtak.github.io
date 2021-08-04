@@ -177,7 +177,7 @@ category: msa
 #### Spring Cloud Gateway
 
 - Spring Boot 2.4 버전 이상에서 사용할 수 있는 API Gateway
-- 비동기 처리(RxJava)가 가능하다
+- 비동기 처리(WebFlux)가 가능하다
 
 - 프로젝트 생성
   - spring boot version: 2.4.9
