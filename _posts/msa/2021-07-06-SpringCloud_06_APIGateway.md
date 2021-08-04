@@ -191,8 +191,7 @@ category: msa
       client:
         register-with-eureka: false
         fetch-registry: false
-        service-url:
-        
+        service-url:        
           default-zone: http://localhost:8761/eureka
 
     spring:
