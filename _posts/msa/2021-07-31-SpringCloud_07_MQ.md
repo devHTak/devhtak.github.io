@@ -559,7 +559,14 @@ category: msa
             returnOrder.getTotalPrice(), returnOrder.getCreatedAt());
       }
       ```
- 
- #### 출처
+      
+#### Multi Service에서 데이터 동기화 문제
+
+- 만약 Order Service를 확장하여 여러개를 구동한다면, DB도 분산되기 떄문에 따로 저장되어 문제가 발생한다. (동기화 문제)
+- 해결 방법
+  - Orders Service에 요청된 주문 정보를 DB가 아니라 Kafka Topic으로 전송
+  - Kafka Topic에 설정된 Kafka Sink Connect를 사용해 단일 DB에 저장 -> 데이터 동기화
+  
+#### 출처
  
  - Spring Cloud로 개발하는 마이크로서비스 애플리케이션(MSA) 강의
