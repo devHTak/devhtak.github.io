@@ -371,8 +371,8 @@ category: msa
       cloud:
         config:
 	  uri: https://localhost:8889
-	  username: user
-	  password: secret
+          username: user
+          password: secret
     ```
 
 ### 자동으로 컨피규레이션 다시 읽기
