@@ -566,6 +566,9 @@ category: msa
 - 해결 방법
   - Orders Service에 요청된 주문 정보를 DB가 아니라 Kafka Topic으로 전송
   - Kafka Topic에 설정된 Kafka Sink Connect를 사용해 단일 DB에 저장 -> 데이터 동기화
+
+- 예제
+  - 
   
 #### 출처
  
