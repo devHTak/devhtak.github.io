@@ -569,9 +569,7 @@ category: msa
 
 - 예제
   - JPA를 사용하여 DB를 저장하는 부분을 Kafka로 전달하는 것으로 수정
-    ```java
-    
-    ```
+  - mydb에 Order 테이블 
   - OrderService의 Procuer에서 발생하기 위한 메시지 등록
     ```
     {
@@ -582,21 +580,21 @@ category: msa
     - Producer에서 발생하는 메시지를 DTO로 생성
       ```java
       public class KafkaOrderDto implements Serializable {
-      	private Schema schema;
+        private Schema schema;
         private Payload payload;
       }
       public class Schema {
-      	private String type;
+        private String type;
         private List<Field> fields;
         private String name;
       }
       public class Field {
-      	private String type;
+        private String type;
         private boolean optional;
         private String field;
       }
       public class Payload {
-      	private Long id;
+        private Long id;
         private Long userId;
         private Long productId;
         private int qty;
@@ -665,17 +663,17 @@ category: msa
     - 한번만 등록하여 사용하면 된다.
       ```
       {
-      	"name": "my-order-sink-connect",
+        "name": "my-order-sink-connect",
         "config": {
-	  "connector.class": "io.confluent.connect.jdbc.JdbcSingConnector",
-	  "connection.url": "jdbc:mysql://127.0.0.1:3306/mydb",
-	  "connection.user": "root",
-	  "connection.password": "test1357",
-	  "auto.create": "true",
-	  "auto.evolve": "true",
-	  "delete.enbaled": "false",
-	  "tasks.max": "1",
-	  "topics": "orders"
+          "connector.class": "io.confluent.connect.jdbc.JdbcSingConnector",
+          "connection.url": "jdbc:mysql://127.0.0.1:3306/mydb",
+          "connection.user": "root",
+          "connection.password": "test1357",
+          "auto.create": "true",
+          "auto.evolve": "true",
+          "delete.enbaled": "false",
+          "tasks.max": "1",
+          "topics": "orders"
         }
       }
       ```
