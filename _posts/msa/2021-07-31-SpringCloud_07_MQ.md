@@ -568,7 +568,118 @@ category: msa
   - Kafka Topic에 설정된 Kafka Sink Connect를 사용해 단일 DB에 저장 -> 데이터 동기화
 
 - 예제
-  - 
+  - JPA를 사용하여 DB를 저장하는 부분을 Kafka로 전달하는 것으로 수정
+    ```java
+    
+    ```
+  - OrderService의 Procuer에서 발생하기 위한 메시지 등록
+    ```
+    {
+      "schema": {"type": "struct", "fields": [{"type": "string", "optinal": true, "field: "id"}, ...], "optinal": false, "name": "orders"},
+      "payload": {"id": "..", "user_id": "...", "product_id": "...", "qty": 5, "total_price": 6000, "unit_price": "1200"
+    }
+    ```
+    - Producer에서 발생하는 메시지를 DTO로 생성
+      ```java
+      public class KafkaOrderDto implements Serializable {
+      	private Schema schema;
+        private Payload payload;
+      }
+      public class Schema {
+      	private String type;
+        private List<Field> fields;
+        private String name;
+      }
+      public class Field {
+      	private String type;
+        private boolean optional;
+        private String field;
+      }
+      public class Payload {
+      	private Long id;
+        private Long userId;
+        private Long productId;
+        private int qty;
+        private int totalPrice;
+        private int unitPrice;
+      }
+      ```
+    - Producer 생성
+      ```java
+      @Service
+      @Slf4j
+      @Transactional
+      public class OrderProducer {
+        private final KafkaTemplate<String, String> kafkaTemplate;
+        private final List<Field> fields = Arrays.asList(
+          new Field("int32", true, "id"), new Field("int32", true, "user_id"), new Field("int32", true, "product_id"),
+          new Field("int32", true, "qty"), new Field("int32", true, "total_price"), new Field("int32", true, "unit_price"));
+        private final Schema schema = Schema.builder().type("struct").fields(fields).optional(false).name("orders").build();
+	
+        @Autowired 
+        public OrderProducer(KafkaTemplate<String, String> kafkaTemplate) {
+          this.kafkaTemplate = kafkaTemplate;
+        }	
+        public Orders send(String topic, Orders order) {
+          Payload payload = Payload.builder().id(order.getId())
+            .userId(order.getUserId())
+            .productId(order.getProductId())
+            .qty(order.getQty())
+            .totalPrice(order.getTotalPrice())
+            .unitPrice(order.getUnitPrice()).build();		
+          KafkaOrderDto kafkaOrderDto = KafkaOrderDto.builder().schema(schema).payload(payload).build();
+          ObjectMapper mapper = new ObjectMapper();
+          String jsonString = "";
+          try {
+            jsonString = mapper.writeValueAsString(kafkaOrderDto);
+          }catch(JsonProcessingException e) {
+            e.printStackTrace();
+          }	
+          kafkaTemplate.send(topic, jsonString);	
+          log.info("Order Producer send data from the order service: " + jsonString);			
+          return order;
+        }
+      }
+      ```
+    - OrderService에 OrderProducer 추가
+      ```java
+      public ResponseOrder createOrder(Long userId, RequestOrder requestOrder) {
+        Orders order = new Orders();
+        order.setProductId(requestOrder.getProductId());
+        order.setQty(requestOrder.getQty());
+        order.setUnitPrice(requestOrder.getUnitPrice());
+        order.setTotalPrice(requestOrder.getQty() * requestOrder.getUnitPrice());
+        order.setUserId(userId);
+        	
+        /* send this order to kafka */
+        kafkaProducer.send("example-category-topic", order);
+        /* Jpa 대신 Kafka로 전송 */
+        // Orders returnOrder = orderRepository.save(order);
+        orderProducer.send("orders", order);
+        return new ResponseOrder(order.getId(), order.getUserId(), order.getQty(), order.getUnitPrice(), 
+          order.getTotalPrice(), order.getCreatedAt());
+      }
+      ```
+  - Kafka Sink Connector 추가
+    - 127.0.0.1:8082/connectors POST로 데이터 추가
+    - 한번만 등록하여 사용하면 된다.
+      ```
+      {
+      	"name": "my-order-sink-connect",
+        "config": {
+	  "connector.class": "io.confluent.connect.jdbc.JdbcSingConnector",
+	  "connection.url": "jdbc:mysql://127.0.0.1:3306/mydb",
+	  "connection.user": "root",
+	  "connection.password": "test1357",
+	  "auto.create": "true",
+	  "auto.evolve": "true",
+	  "delete.enbaled": "false",
+	  "tasks.max": "1",
+	  "topics": "orders"
+        }
+      }
+      ```
+      
   
 #### 출처
  
