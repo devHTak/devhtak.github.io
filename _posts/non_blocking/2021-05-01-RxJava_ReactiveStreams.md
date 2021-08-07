@@ -155,7 +155,34 @@ paradigm concerned with data streams and the propagation of change.
     
       ![image](https://user-images.githubusercontent.com/42403023/116971008-e55c6480-acf3-11eb-87d8-ef6107f6faa5.png)
       
-      (이미지 출처: https://sightstudio.tistory.com/14)    
+      (이미지 출처: https://sightstudio.tistory.com/14)
+      
+      ```java
+      Iterable<Integer> iter = Arrays.asList(1, 2, 3, 4, 5);
+      Publisher<Integer> publisher = new Publisher<Integer>() {
+        @Override
+        public void subscribe(Subscriber subscriber) {
+          Subscription subscription = new Subscription() {
+					  @Override
+					  public void request(long n) {}					
+					  @Override
+					  public void cancel() {}
+				  };
+				  subscriber.onSubscribe(subscription);
+			  }
+		  };
+		
+		  Subscriber<Integer> subscriber = new Subscriber<Integer>() {
+			  @Override
+			  public void onSubscribe(Subscription subscription) {}
+			  @Override
+			  public void onNext(Integer item) {}
+			  @Override
+			  public void onError(Throwable throwable) {}
+			  @Override
+			  public void onComplete() {}
+		  };
+      ```
     
 - java 1.9 버전에 추가된 Flow 역시 reactive stream 스펙을 채택하여 사용하고 있다.
 
