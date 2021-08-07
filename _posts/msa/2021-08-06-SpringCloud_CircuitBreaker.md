@@ -71,7 +71,7 @@ category: msa
     ```
     <dependency>
       <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
+      <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
     </dependency>
     ```
 
