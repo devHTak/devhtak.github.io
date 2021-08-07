@@ -63,12 +63,49 @@ paradigm concerned with data streams and the propagation of change.
 - Reactive Stream에서의 데이터 처리 방식은 1thread에 여러 요청을 처리할 수 있다.
   - Context Switching을 줄일 수 있고 여러 요청을 한번에 처리할 수 있다.
 
+- blocking & non-blocking
+  - 행위자가 취한 행위 자체가, 또는 그 행위로 인해 다른 무엇이 막혀버린, 제한된, 대기하는 상태.
+  - 대개의 경우에는 나 이외의 대상으로 하여금 내가 Block 당하겠지만(Blocked), 어찌 되었든 문자 자체로는 나라는 단일 개체 스스로의 상태를 나타낸다.
+  - 호출된 함수가 자신이 할 일을 모두 마칠 때까지 제어권을 계속 가지고서 호출한 함수에게 바로 돌려주지 않으면 Block
+  - 호출된 함수가 자신이 할 일을 채 마치지 않았더라도 바로 제어권을 건네주어(return) 호출한 함수가 다른 일을 진행할 수 있도록 해주면 Non-block
+  
+- synchronous & asynchronous
+  - 동시에 발생하는 것들(always plural, can never be singular).
+  - 동시라는 것은 즉, 시(time)라는 단일계(system)에서 같이, 함께 무언가가 이루어지는 두 개 이상의 개체 혹은 이벤트를 의미한다고 볼 수 있겠습니다.
+  - 호출된 함수의 수행 결과 및 종료를 호출한 함수가(호출된 함수뿐 아니라 호출한 함수도 함께) 신경 쓰면 Synchronous
+  - 호출된 함수의 수행 결과 및 종료를 호출된 함수 혼자 직접 신경 쓰고 처리한다면(as a callback fn.) Asynchronous
+
 #### Reactive Programming 기반 기술
 
 - Observer Pattern
   - 한 객체의 상태가 바뀌면 그 객체에 의존하는 다른 객체들한테 연락을 하고, 자동으로 내용이 갱신되는 방식에 디자인패턴
   - push 방식: 데이터의 변화가 발생했을 때 변경이 발생한 곳에서 데이터를 보내주는 방식
   - Observable은 하나 또는 여러개의 Observer를 가지며 Observable은 notifyObservers 메소드를 호출함으로 변화를 Observer들에게 알려준다고 한다
+    ```java
+    // Source(Observable) -> Event/Data -> Target(Observer)
+	  static class IntObservable extends Observable implements Runnable { 
+		  @Override
+		  public void run() {
+			  // TODO Auto-generated method stub
+			  for(int i = 1; i <= 10; i++) {
+				  setChanged();
+				  notifyObservers(i);
+		    }
+      }		
+	  }
+    public static void main(String[] args) {
+		  Observer observer = new Observer() {
+			  public void update(Observable o, Object arg) {
+				  // 이벤트를 받았을 때 진행하는 메서드
+				  System.out.println(arg);
+			  }
+		  };
+		  IntObservable intObservable = new IntObservable();
+		  intObservable.addObserver(observer);
+		  intObservable.run();
+		  return "ok";
+	  }
+    ```
 
 - Iterator Pattern
   - 컬렉션 구현 방법을 노출시키지 않으면서 컬렉션 안에 들어있는 모든 엘리먼트에 접근할 수 있는 방식을 구현한 패턴
@@ -80,11 +117,24 @@ paradigm concerned with data streams and the propagation of change.
     for(Integeri: list) {}
     
     // iterable
-    Iterable<Integer> iterable = Arrays.asList(1, 2, 3, 4, 5);
+    Iterable<Integer> iter = () -> new Iterator<Integer>() {
+				int i = 0;
+				private final static int MAX = 10;
+				public Integer next() {
+					// TODO Auto-generated method stub
+					return ++i;
+				}
+				public boolean hasNext() {
+					// TODO Auto-generated method stub
+					return i < MAX;
+				}
+			};
+    
     for(Iterator it = iterable.iterator(); it.hasNext();) {}
     ```
+    
     - 컬렉션은 Iterable 인터페이스를 구현하기 떄문에 for-each가 가능하다.
-    - Iterable을 받으면 Iterator에 next(), hasNext() 등의 메소드를 사용할 수 있다.
+    - Iterable 인터페이스 안에 Iterator가 존재하며 Iterator의 next(), hasNext() 의 메소드 통해 순회할 수 있다.
   - Iterable은 Iterator를 통해 데이터를 꺼내오고, Iterator의 next()를 통해 데이터를 가져온다
 
 - Reactive Programming은 Observer Pattern + Iterator Pattern
@@ -164,3 +214,9 @@ paradigm concerned with data streams and the propagation of change.
   
 - 참고: Reactive Stream - Observer, Iterator, Reactive Stream
   (URL: https://phantasmicmeans.tistory.com/entry/Observer-Iterator-Reactive-Stream)
+  
+- 출처: Blocking & Non-blocking & Synchronous & Asynchronous
+  (URL: https://musma.github.io/2019/04/17/blocking-and-synchronous.html)
+  
+- 참고: 토비의 봄 TV 5회 스프링 리액티브 프로그래밍 (1) - Reactive Streams
+  (URL: https://www.youtube.com/watch?v=8fenTR3KOJo&list=PLv-xDnFD-nnmof-yoZQN8Fs2kVljIuFyC&index=10&ab_channel=TobyLee)
