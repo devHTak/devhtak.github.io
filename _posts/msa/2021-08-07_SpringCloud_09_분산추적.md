@@ -36,6 +36,7 @@ category: msa
   ```
   $ docker run -d -p 9411:9411 openzipkin/zipkin
   ```
+  - localhost:9411/zipkin 접속 확인
   
 
 #### Spring Cloud Sleuth
