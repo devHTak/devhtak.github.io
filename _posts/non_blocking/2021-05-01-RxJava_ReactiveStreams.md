@@ -83,28 +83,27 @@ paradigm concerned with data streams and the propagation of change.
   - Observable은 하나 또는 여러개의 Observer를 가지며 Observable은 notifyObservers 메소드를 호출함으로 변화를 Observer들에게 알려준다고 한다
     ```java
     // Source(Observable) -> Event/Data -> Target(Observer)
-	  static class IntObservable extends Observable implements Runnable { 
-		  @Override
-		  public void run() {
-			  // TODO Auto-generated method stub
-			  for(int i = 1; i <= 10; i++) {
-				  setChanged();
-				  notifyObservers(i);
-		    }
+    static class IntObservable extends Observable implements Runnable { 
+      @Override
+      public void run() {
+        for(int i = 1; i <= 10; i++) {
+          setChanged();
+          notifyObservers(i);
+        }
       }		
-	  }
+    }
     public static void main(String[] args) {
-		  Observer observer = new Observer() {
-			  public void update(Observable o, Object arg) {
-				  // 이벤트를 받았을 때 진행하는 메서드
-				  System.out.println(arg);
-			  }
-		  };
-		  IntObservable intObservable = new IntObservable();
-		  intObservable.addObserver(observer);
-		  intObservable.run();
-		  return "ok";
-	  }
+      Observer observer = new Observer() {
+        public void update(Observable o, Object arg) {
+          // 이벤트를 받았을 때 진행하는 메서드
+          System.out.println(arg);
+        }
+      };
+      IntObservable intObservable = new IntObservable();
+      intObservable.addObserver(observer);
+      intObservable.run();
+      return "ok";
+    }
     ```
 
 - Iterator Pattern
@@ -118,17 +117,15 @@ paradigm concerned with data streams and the propagation of change.
     
     // iterable
     Iterable<Integer> iter = () -> new Iterator<Integer>() {
-				int i = 0;
-				private final static int MAX = 10;
-				public Integer next() {
-					// TODO Auto-generated method stub
-					return ++i;
-				}
-				public boolean hasNext() {
-					// TODO Auto-generated method stub
-					return i < MAX;
-				}
-			};
+      int i = 0;
+      private final static int MAX = 10;
+      public Integer next() {
+        return ++i;
+      }
+      public boolean hasNext() {
+        return i < MAX;
+      }
+    };
     
     for(Iterator it = iterable.iterator(); it.hasNext();) {}
     ```
