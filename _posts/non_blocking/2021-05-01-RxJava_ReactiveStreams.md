@@ -163,25 +163,24 @@ paradigm concerned with data streams and the propagation of change.
         @Override
         public void subscribe(Subscriber subscriber) {
           Subscription subscription = new Subscription() {
-					  @Override
-					  public void request(long n) {}					
-					  @Override
-					  public void cancel() {}
-				  };
-				  subscriber.onSubscribe(subscription);
-			  }
-		  };
-		
-		  Subscriber<Integer> subscriber = new Subscriber<Integer>() {
-			  @Override
-			  public void onSubscribe(Subscription subscription) {}
-			  @Override
-			  public void onNext(Integer item) {}
-			  @Override
-			  public void onError(Throwable throwable) {}
-			  @Override
-			  public void onComplete() {}
-		  };
+            @Override
+            public void request(long n) {}					
+            @Override
+            public void cancel() {}
+          };
+          subscriber.onSubscribe(subscription);
+        }
+      };	
+      Subscriber<Integer> subscriber = new Subscriber<Integer>() {
+        @Override
+        public void onSubscribe(Subscription subscription) {}
+        @Override
+        public void onNext(Integer item) {}
+        @Override
+        public void onError(Throwable throwable) {}
+        @Override
+        public void onComplete() {}
+      };
       ```
     
 - java 1.9 버전에 추가된 Flow 역시 reactive stream 스펙을 채택하여 사용하고 있다.
