@@ -163,8 +163,15 @@ paradigm concerned with data streams and the propagation of change.
         @Override
         public void subscribe(Subscriber subscriber) {
           Subscription subscription = new Subscription() {
+            Iterator it = iter.iterator();
             @Override
-            public void request(long n) {}					
+            public void request(long n) {
+              if(it.hasNext()){
+                subscriber.onNext(it.next());
+              } else {
+                subscriber.onComplete();
+              }
+            }					
             @Override
             public void cancel() {}
           };
@@ -173,13 +180,22 @@ paradigm concerned with data streams and the propagation of change.
       };	
       Subscriber<Integer> subscriber = new Subscriber<Integer>() {
         @Override
-        public void onSubscribe(Subscription subscription) {}
+        public void onSubscribe(Subscription subscription) {
+          System.out.println("onSubscribe");
+          subscription.request(Long.MAX_VALUE);
+        }
         @Override
-        public void onNext(Integer item) {}
+        public void onNext(Integer item) {
+          System.out.println("onNext: " + item);
+        }
         @Override
-        public void onError(Throwable throwable) {}
+        public void onError(Throwable throwable) {
+          System.out.println("onError: " + throwable.getMessage());
+        }
         @Override
-        public void onComplete() {}
+        public void onComplete() {
+          System.out.println("onComplete");
+        }
       };
       ```
     
