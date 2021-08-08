@@ -1,10 +1,10 @@
 ---
 layout: post
 title: RxJava, Debugging
-summary: RxJava
+summary: Reactive Programming
 author: devhtak
 date: '2021-05-13 21:41:00 +0900'
-category: RxJava
+category: Reactive
 ---
 
 #### RxJava의 디버깅 문제점과 대안
