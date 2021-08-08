@@ -1,6 +1,6 @@
 ---
 layout: post
-title: WebFlux, Operator
+title: Spring Reactor, Operator
 summary: Reactive Programming
 author: devhtak
 date: '2021-08-08 21:41:00 +0900'
@@ -49,7 +49,7 @@ publisher.subscribe(subscriber)
 -  Subscription을 통해 onNext 메소드로 값을 보내고, 완료되면 onComplete가 오류가 발생하면 onError가 발생한다.
 
 
-#### Operator 
+#### Operator 구조
 
 - Sequence를 생성, 변형, 필터링 등을 하기 위해 사용
 - Publischer -> \[Data1] -> Operation1 -> \[Data2] -> Operation2 -> \[Dara3] -> Subscriber
@@ -140,11 +140,11 @@ publisher.subscribe(subscriber)
   - 위 예시 1, 2에서 중복되는 onSubscribe, onError 메서드의 코드를 줄이기 위하여 Subscriber 구현
   - 필요시 오버라이딩 하여 사용
     ```java
-    public class DelegateSubscriber<T> implements Subscriber<T> {
+    public class DelegateSubscriber<T, ㄲ> implements Subscriber<T> {
       Subscriber subscriber;
-	    public DelegateSubscriber(Subscriber<? super T> subscriber) { this.subscriber = subscriber; }
-	    @Override
-	    public void onSubscribe(Subscription subscription) { subscriber.onSubscribe(subscription); }
+      public DelegateSubscriber(Subscriber<? super R> subscriber) { this.subscriber = subscriber; }
+      @Override
+      public void onSubscribe(Subscription subscription) { subscriber.onSubscribe(subscription); }
       public void onNext(T item) { subscriber.onNext(item); }
       @Override
       public void onComplete() { subscriber.onComplete(); }
