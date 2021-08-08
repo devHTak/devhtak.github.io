@@ -1,10 +1,10 @@
 ---
 layout: post
 title: RxJava, 다양한 Reactive Stream 객체
-summary: RxJava
+summary: Reactive Programming
 author: devhtak
 date: '2021-05-04 21:41:00 +0900'
-category: RxJava
+category: Reactive
 ---
 
 #### Reactive stream
