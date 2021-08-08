@@ -1,10 +1,10 @@
 ---
 layout: post
 title: RxJava, 연산자
-summary: RxJava
+summary: Reactive Programming
 author: devhtak
 date: '2021-05-05 21:41:00 +0900'
-category: RxJava
+category: Reactive
 ---
 
 #### RxJava의 Operator
