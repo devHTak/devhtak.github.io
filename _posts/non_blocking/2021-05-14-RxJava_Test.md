@@ -2,9 +2,9 @@
 layout: post
 title: RxJava, Test
 summary: RxJava
-author: devhtak
+author: Reactive Programming
 date: '2021-05-14 21:41:00 +0900'
-category: RxJava
+category: Reactive
 ---
 
 #### 테스트를 위한 blocking 함수
