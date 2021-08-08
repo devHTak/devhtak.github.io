@@ -1,10 +1,10 @@
 ---
 layout: post
 title: RxJava, React Programming과 React Stream 기본
-summary: RxJava
+summary: Reactive Programming
 author: devhtak
 date: '2021-05-04 21:41:00 +0900'
-category: RxJava
+category: Reactive
 ---
 
 #### Reactive Programming
