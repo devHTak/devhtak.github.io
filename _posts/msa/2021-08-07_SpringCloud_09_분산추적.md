@@ -50,7 +50,48 @@ category: msa
   - message channels
   - feign client
 
+#### 예제
 
+- dependency 추가
+  ```
+  <depedency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-sleuth</artifactId>
+  </dependency>
+  <depedency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-zipkin</artifactId>
+    <version>2.2.3.RELEASE</version>
+  </dependency>
+  ```
+
+- application.yml 설정
+  ```
+  spring:
+    application:
+      name: user-service 
+    zipkin:
+      base-url: http://localhost:8411
+      enabled: true
+    sleuth:
+      sampler:
+        probability: 1.0
+  ```
+  
+- 동작 확인
+
+  ![image](https://user-images.githubusercontent.com/42403023/128620286-d5738a7d-a0f8-4d79-a0a2-a26cfa5983c5.png)  
+  
+  - 로그에 service name, trace id, span id 가 작성되어 있다.
+
+  - trace id로 찾기
+    
+    ![image](https://user-images.githubusercontent.com/42403023/128620322-e5cc11b9-32d3-4a74-b0a7-0e435319ca1d.png)
+  
+    - 관리자 페이지에서 trace id로 호출 서비스에 대한 정보를 알 수 있다.
+  
+  - find a trace, dependency에서도 다양한 정보를 확인할 수 있다.
+  
 #### 출처
 
 - Spring Cloud로 개발하는 마이크로서비스 애플리케이션(MSA)
