@@ -1,10 +1,10 @@
 ---
 layout: post
 title: RxJava, Scheduler
-summary: RxJava
+summary: Reactive Programming
 author: devhtak
 date: '2021-05-12 21:41:00 +0900'
-category: RxJava
+category: Reactive
 ---
 
 #### 물리적인 쓰레드와 논리적인 쓰레드의 이해
