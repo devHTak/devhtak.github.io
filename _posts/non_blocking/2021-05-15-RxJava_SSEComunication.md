@@ -1,10 +1,10 @@
 ---
 layout: post
 title: RxJava, SSE 통신
-summary: RxJava
+summary: Reactive Programming
 author: devhtak
 date: '2021-05-15 21:41:00 +0900'
-category: RxJava
+category: Reactive
 ---
 
 #### 실습 프로젝트 구조
