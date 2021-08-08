@@ -1,7 +1,7 @@
 ---
 layout: post
 title: RxJava, Test
-summary: RxJava
+summary: Reactive Programming
 author: Reactive Programming
 date: '2021-05-14 21:41:00 +0900'
 category: Reactive
