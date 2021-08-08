@@ -135,7 +135,7 @@ category: msa
   - etc/kafka/connect-distributed.properties 파일 마지막에 아래 plugin 정보 추가
     - plugin.path=[confluentinc-kafka-connect-jdbc-10.2.1 폴더]
       ```
-      plubin.path=\D:\\Work\\Excutions\\confluentinc-kafka-connect-jdbc-10.2.1\\lib
+      plugin.path=\D:\\Work\\Excutions\\confluentinc-kafka-connect-jdbc-10.2.1\\lib
       ```
       - window에 경우 \을 사용하기 위해 \를 하나 더 붙인다
   - JdbcSourceConnector에서 MariaDB 사용하기 위해 mariadb 드라이버 복사
