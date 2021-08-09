@@ -1,0 +1,96 @@
+---
+layout: post
+title: Reactor, Operator
+summary: Reactive Programming
+author: devhtak
+date: '2021-08-09 21:41:00 +0900'
+category: Reactive
+---
+
+#### Thread Scheduling
+
+- Reactor는 비동기 실행을 강행하지 않는다.
+  ```java
+  Flux<Integer> flux = Flux.range(0, 5);
+  flux.subscribe(item -> log.info("onNext: " + item),
+    throwable -> log.info("onError: " + throwable.getMessage()),
+    () -> log.info("onComplete"));
+  ```
+  ```
+  22:02:38.940 [main] INFO com.example.demo.iterable.SchedulerController - onNext: 0
+  22:02:38.941 [main] INFO com.example.demo.iterable.SchedulerController - onNext: 1
+  22:02:38.941 [main] INFO com.example.demo.iterable.SchedulerController - onNext: 2
+  22:02:38.941 [main] INFO com.example.demo.iterable.SchedulerController - onNext: 3
+  22:02:38.941 [main] INFO com.example.demo.iterable.SchedulerController - onNext: 4
+  22:02:38.941 [main] INFO com.example.demo.iterable.SchedulerController - onComplete
+  ```
+  - 모두 main 메서드에서 실행한다.
+  - Publisher(subscribe)가 Subscribe(onSubscribe)를 호출하고, Subscribe는 Subscription을 통해 onNext, onError, onComplete가 실행되는 일련의 동작이 하나의 main 메서드를 통해 실행된다.
+  - 실제로는 Pub과 Sub이 직렬적으로 돌아가는 구현하지 않는다.
+    - Scheduler의 publishOn, subscribeOn을 통해 새로운 쓰레드를 구성한다.
+
+- subscribeOn
+
+  ![image](https://user-images.githubusercontent.com/42403023/128712347-52ce37fe-81dd-4563-81a1-1604879f7658.png)
+
+  ** 이미지 출처: https://tech.kakao.com/2018/05/29/reactor-programming/
+  
+  - Subscriber에서 request(Subscription) 신호를 별도 Scheduler로 처리한다 
+  - 전형적으로 blocking IO와 같이 publisher가 느리고 consumer가 빠른 경우에 사용
+  - 예시
+    - Flux 활용
+      ```java
+      flux.subscribeOn(Scehdulers.single()).subscribe();
+      ```
+    - Publisher 구현체 활용
+      ```java
+      Publisher<Integer> publisher = subscriber -> {
+        subscriber.onSubscribe(new Subscription() {
+          @Override
+          public void request(long n) { 
+            Arrays.asList(1, 2, 3, 4, 5).forEach(i -> subscriber.onNext(i));
+            subscriber.onComplete();
+          }
+          @Override
+          public void cancel() {}
+        });
+      };
+      Publisher<Integer> subOnPub = subscriber -> {
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        executorService.execute(() -> publisher.subscribe(subscriber));
+      };
+      Subscriber<Integer> subscriber = new Subscriber<Integer>() {
+        public void onSubscribe(Subscription subscription) {log.info("onSubscribe"); subscription.request(Long.MAX_VALUE);};
+        public void onNext(Integer item) {log.info("onNext: " + item);};
+        public void onError(Throwable throwable) {log.info("onError: " + throwable.getMessage());};
+        public void onComplete() {log.info("onComplete");};
+      };
+      subOnPub.subscribe(subscriber);
+      ```
+      ```
+      22:37:35.742 [pool-1-thread-1] INFO com.example.demo.iterable.SchedulerController - onSubscribe
+      22:37:35.748 [pool-1-thread-1] INFO com.example.demo.iterable.SchedulerController - onNext: 1
+      22:37:35.748 [pool-1-thread-1] INFO com.example.demo.iterable.SchedulerController - onNext: 2
+      22:37:35.748 [pool-1-thread-1] INFO com.example.demo.iterable.SchedulerController - onNext: 3
+      22:37:35.748 [pool-1-thread-1] INFO com.example.demo.iterable.SchedulerController - onNext: 4
+      22:37:35.748 [pool-1-thread-1] INFO com.example.demo.iterable.SchedulerController - onNext: 5
+      22:37:35.748 [pool-1-thread-1] INFO com.example.demo.iterable.SchedulerController - onComplete
+
+      ```
+      - single()을 사용했기 때문에 동일한 Thread를 사용하였지만 Main method를 사용하지는 않는다.
+
+- publishOn
+  
+  ![image](https://user-images.githubusercontent.com/42403023/128712424-90d978df-60c5-4094-8bc1-d6c5aa1206c4.png)
+
+  ** 이미지 출처: https://tech.kakao.com/2018/05/29/reactor-programming/
+
+  - publishOn() 메서드를 이용하면 next, complete, error신호를 별도 쓰레드로 처리할 수 있다. 
+  - map(), flatMap() 등의 변환도 publishOn()이 지정한 쓰레드를 이용해서 처리한다.
+    ```java
+    
+    ```
+    
+#### 출처
+
+- 토비의 봄 TV 7회 스프링 리액티브 프로그래밍(3) - Reactive Streams - Scheduler
