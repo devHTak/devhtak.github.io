@@ -68,15 +68,15 @@ category: Reactive
   - generate
     ```java
     Flux<Integer> flux = Flux.generate(sink -> { // SynchronousSink
-			sink.onRequest(request -> {
-			  // request는 subscriber가 요청한 갯수
-				int data = rand.nextInt(100) + 1;
+      sink.onRequest(request -> {
+        // request는 subscriber가 요청한 갯수
+        int data = rand.nextInt(100) + 1;
         sink.next(data);
         if(emitCount == request) {
           sink.complete();
         }
-			});
-		});
+      });
+    });
     ```
     - 동기 방식으로 한번에 1개의 데이터를 생성할 때 사용한다.
     - subscriber로부터 요청이 왔을 때 신호를 생성하며, 실행할 때 인자로 SynchronousSink로 전달한다.
@@ -85,16 +85,16 @@ category: Reactive
   - create
     ```java
     Flux<Integer> flux = Flux.create(sink -> { // FluxSink
-		  sink.onRequest(request -> {
-			  // request는 subscriber가 요청한 갯수
-				for(int i = 0; i < request; i++) {
-				  sink.next(i);
-				}
+      sink.onRequest(request -> {
+        // request는 subscriber가 요청한 갯수
+        for(int i = 0; i < request; i++) {
+          sink.next(i);
+        }
         if(emitCount == request) {
           sink.complete();
         }
-			});
-		});
+      });
+    });
     ```
     - create를 사용하면 Subscriber의 요청과 상관없이 비동기로 데이터를 발생할 수 있다.
     - Consumer<? super FluxSink<T>> emitter를 파라미터로 받는 데, Consumer는 람다이고, FluxSink를 살펴보자.
