@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Spring Reactor, Operator
+title: Reactor, Operator
 summary: Reactive Programming
 author: devhtak
 date: '2021-08-08 21:41:00 +0900'
