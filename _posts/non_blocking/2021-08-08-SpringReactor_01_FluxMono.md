@@ -146,7 +146,14 @@ flux.subscribe(item->System.out.println("onNext: " + item),
 
 - Mono를 생성하는 방법
   - just
-    - just 내에 들어가는 값들로 Mono를 생성한다.
+    ```java
+    Mono<Integer> mono = Mono.just(10).filter(i -> i % 3 != 0);
+    mono.subscribe(item -> System.out.println("onNext: " + item),
+      throwable -> System.out.println("onError: " + throwable.getMessage()),
+      () -> System.out.println("onComplete")
+    );
+    ```
+    - just 내에 들어가는 값으로 Mono를 생성한다.
   - empty
     - 아무값도 전달하지 않는 빈데이터의 Mono를 만들 수 있다.
 
