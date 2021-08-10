@@ -191,6 +191,39 @@ category: Reactive
     ```
     - onSubscribe, request에서는 subscribeOn에서 생성한 스레드, onNext, onError, onComplete는 publishOn에서 생성한 스레드로 실행된다.
 
+#### interval
+
+```java
+Flux.interval(Duration.ofMillis(200L))
+  .take(5)
+  .subscribe(item -> log.info("onNext: " + item));
+		
+Thread.sleep(1200);
+```
+```
+13:21:43.819 [main] DEBUG reactor.util.Loggers - Using Slf4j logging framework
+13:21:44.066 [parallel-1] INFO com.example.demo.iterable.SchedulerController - onNext: 0
+13:21:44.267 [parallel-1] INFO com.example.demo.iterable.SchedulerController - onNext: 1
+13:21:44.454 [parallel-1] INFO com.example.demo.iterable.SchedulerController - onNext: 2
+13:21:44.656 [parallel-1] INFO com.example.demo.iterable.SchedulerController - onNext: 3
+13:21:44.858 [parallel-1] INFO com.example.demo.iterable.SchedulerController - onNext: 4
+```
+- interval에 설정한 주기마다 데이터를 전송한다.
+- 주의할 점은 메인메서드가 해당 주기 이상 살아있어야 한다.
+- 쓰레드를 살펴보면 메인쓰레드가 아닌 다른 쓰레드에서 실행되는 것을 확인할 수 있다.
+- Publisher와 Subscriber 로 구현해보기
+  ```java
+  // ExecutorService es = Executors.newSingleTrheadExecutor();
+  // es.execute(() -> sub.onNex(i);
+  ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
+  exec.scheduleAtFixedRate( () -> {
+    sub.onNext(i);
+  }, 0, 300, TimeUnit.MILLISECONDS);
+  ```
+  - Subscription에서 request 메서드를 수정하였다.
+    - ExecutorService 대신 ScheduledExecutorService를 사용했다.
+    - scheduleAtFixedRate를 사용하여 지정된 기간만큼 대기 후에 전송한다.
+
 #### Scheduler의 메서드 정리
     
 #### 출처
