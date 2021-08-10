@@ -139,7 +139,7 @@ publisher.subscribe(subscriber)
   - 위 예시 1, 2에서 중복되는 onSubscribe, onError 메서드의 코드를 줄이기 위하여 Subscriber 구현
   - 필요시 오버라이딩 하여 사용
     ```java
-    public class DelegateSubscriber<T, ㄲ> implements Subscriber<T> {
+    public class DelegateSubscriber<T, R> implements Subscriber<T> {
       Subscriber subscriber;
       public DelegateSubscriber(Subscriber<? super R> subscriber) { this.subscriber = subscriber; }
       @Override
