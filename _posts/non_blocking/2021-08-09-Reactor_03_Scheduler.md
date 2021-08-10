@@ -173,12 +173,12 @@ category: Reactive
     ```
     ```java
     Flux.range(1, 5)
-			.log()
-			.subscribeOn(Schedulers.newSingle("subOn-"))
-			.publishOn(Schedulers.newSingle("pubOn-"))
-			.subscribe(item -> log.info("onNext: " + item),
-					throwable -> log.info("onComplete: " + throwable.getMessage()),
-					() -> log.info("onComplete"));
+      .log()
+      .subscribeOn(Schedulers.newSingle("subOn-"))
+      .publishOn(Schedulers.newSingle("pubOn-"))
+      .subscribe(item -> log.info("onNext: " + item),
+        throwable -> log.info("onComplete: " + throwable.getMessage()),
+        () -> log.info("onComplete"));
     ```
     ```
     11:25:48.183 [subon-1] INFO com.example.demo.iterable.SchedulerController - onSubscribe
