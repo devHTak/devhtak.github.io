@@ -212,17 +212,52 @@ Thread.sleep(1200);
 - 주의할 점은 메인메서드가 해당 주기 이상 살아있어야 한다.
 - 쓰레드를 살펴보면 메인쓰레드가 아닌 다른 쓰레드에서 실행되는 것을 확인할 수 있다.
 - Publisher와 Subscriber 로 구현해보기
-  ```java
-  // ExecutorService es = Executors.newSingleTrheadExecutor();
-  // es.execute(() -> sub.onNex(i);
-  ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
-  exec.scheduleAtFixedRate( () -> {
-    sub.onNext(i);
-  }, 0, 300, TimeUnit.MILLISECONDS);
-  ```
-  - Subscription에서 request 메서드를 수정하였다.
+  - subscription
+    ```java
+    new Subscription() {
+      int no = 0;
+      volatile boolean cancelled = false;
+      public void request(long n) {
+        // ExecutorService es = Executors.newSingleTrheadExecutor();
+        // es.execute(() -> sub.onNex(i);
+        ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
+        exec.scheduleAtFixedRate( () -> {
+	  if(cancelled) {
+	    exec.shutdown();
+	    return;
+	  }
+          sub.onNext(i);
+        }, 0, 300, TimeUnit.MILLISECONDS);
+      }
+      
+      public void cancel() {
+        cancelled = true;
+      }
+    }  
+    ```
     - ExecutorService 대신 ScheduledExecutorService를 사용했다.
     - scheduleAtFixedRate를 사용하여 지정된 기간만큼 대기 후에 전송한다.
+  - Subscriber 수정
+    ```java
+    Subscriber<Integer> subscriber = new Subscriber<Integer>() {
+      int count = 0;
+      Subscription subsc;
+      public void onSubscribe(Subscription subscription) {
+        log.info("onSubscribe"); 
+	subsc = subscription;
+	subscription.request(Long.MAX_VALUE);
+      };
+      public void onNext(Integer item) {
+        log.info("onNext: " + item);
+	if(++count >= 5) {
+	  subscription.cancel();
+	}
+      };
+      public void onError(Throwable throwable) {log.info("onError: " + throwable.getMessage());};
+      public void onComplete() {log.info("onComplete");};
+    };
+    ```
+    - subscription의 cancel을 호출하여 중단해준다
 
 #### Scheduler의 메서드 정리
     
