@@ -244,14 +244,14 @@ Thread.sleep(1200);
       Subscription subsc;
       public void onSubscribe(Subscription subscription) {
         log.info("onSubscribe"); 
-	subsc = subscription;
-	subscription.request(Long.MAX_VALUE);
+        subsc = subscription;
+        subscription.request(Long.MAX_VALUE);
       };
       public void onNext(Integer item) {
         log.info("onNext: " + item);
 	if(++count >= 5) {
 	  subscription.cancel();
-	}
+        }
       };
       public void onError(Throwable throwable) {log.info("onError: " + throwable.getMessage());};
       public void onComplete() {log.info("onComplete");};
