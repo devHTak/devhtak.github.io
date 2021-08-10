@@ -84,12 +84,114 @@ category: Reactive
   ![image](https://user-images.githubusercontent.com/42403023/128712424-90d978df-60c5-4094-8bc1-d6c5aa1206c4.png)
 
   ** 이미지 출처: https://tech.kakao.com/2018/05/29/reactor-programming/
-
+  
+  - publishOn은 subscribe 이후 onNext, onComplete, onError을 호출할 때 별도 쓰레드를 생성한다.
   - publishOn() 메서드를 이용하면 next, complete, error신호를 별도 쓰레드로 처리할 수 있다. 
   - map(), flatMap() 등의 변환도 publishOn()이 지정한 쓰레드를 이용해서 처리한다.
+  - Publisher는 빠르게 진행되며 Subscriber가 상대적으로 느린 경우 사용한다.
     ```java
-    
+    flux.publishOn(Schedulers.single()).subscribe()
     ```
+    ```java
+    Publisher<Integer> publisher = subscriber -> {
+      subscriber.onSubscribe(new Subscription() {
+        @Override
+        public void request(long n) { 
+          Arrays.asList(1, 2, 3, 4, 5).forEach(item -> subscriber.onNext(item));
+          subscriber.onComplete();
+        }
+        @Override
+        public void cancel() {}
+      });
+    };		
+    Publisher<Integer> pubOnPub = sub -> {
+      publisher.subscribe(new Subscriber<Integer>() {
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        public void onSubscribe(Subscription subscription) {sub.onSubscribe(subscription);}
+        public void onNext(Integer item) { executorService.execute(()-> sub.onNext(item)); }
+        public void onError(Throwable throwable) {executorService.execute( () -> sub.onError(throwable)); }
+        public void onComplete() { executorService.execute(()-> sub.onComplete());}
+      });
+    };
+    Subscriber<Integer> subscriber = new Subscriber<Integer>() {
+      public void onSubscribe(Subscription subscription) {log.info("onSubscribe"); subscription.request(Long.MAX_VALUE);};
+      public void onNext(Integer item) {log.info("onNext: " + item);};
+      public void onError(Throwable throwable) {log.info("onError: " + throwable.getMessage());};
+      public void onComplete() {log.info("onComplete");};
+    };
+    pubOnPub.subscribe(subscriber);
+    ```
+    ```
+    11:16:26.826 [main] INFO com.example.demo.iterable.SchedulerController - onSubscribe
+    11:16:26.839 [pool-1-thread-1] INFO com.example.demo.iterable.SchedulerController - onNext: 1
+    11:16:26.840 [pool-1-thread-1] INFO com.example.demo.iterable.SchedulerController - onNext: 2
+    11:16:26.840 [pool-1-thread-1] INFO com.example.demo.iterable.SchedulerController - onNext: 3
+    11:16:26.841 [pool-1-thread-1] INFO com.example.demo.iterable.SchedulerController - onNext: 4
+    11:16:26.841 [pool-1-thread-1] INFO com.example.demo.iterable.SchedulerController - onNext: 5
+    11:16:26.841 [pool-1-thread-1] INFO com.example.demo.iterable.SchedulerController - onComplete
+    ```
+    
+- publishOn과 subscribeOn 모두 적용 가능하다.
+  ```java
+  Publisher<Integer> publisher = subscriber -> {
+    subscriber.onSubscribe(new Subscription() {
+        @Override
+        public void request(long n) { 
+          Arrays.asList(1, 2, 3, 4, 5).forEach(item -> subscriber.onNext(item));
+          subscriber.onComplete();
+        }				
+        @Override
+        public void cancel() {}
+      });
+    };
+    Publisher<Integer> subOnPub = sub -> {
+      ExecutorService executorService = Executors.newSingleThreadExecutor(new CustomizableThreadFactory() {
+        @Override
+        public String getThreadNamePrefix() { return "subon-"; }
+      });
+      executorService.execute(() -> publisher.subscribe(sub));
+    };
+    Publisher<Integer> pubOnPub = sub -> {
+      subOnPub.subscribe(new Subscriber<Integer>() {
+        ExecutorService executorService = Executors.newSingleThreadExecutor(new CustomizableThreadFactory() {
+          @Override
+          public String getThreadNamePrefix() { return "pubon-"; }
+        });
+        public void onSubscribe(Subscription subscription) {sub.onSubscribe(subscription);}
+        public void onNext(Integer item) { executorService.execute(()-> sub.onNext(item)); }
+        public void onError(Throwable throwable) {executorService.execute( () -> sub.onError(throwable)); }
+        public void onComplete() { executorService.execute(()-> sub.onComplete());}
+      });
+    };
+    Subscriber<Integer> subscriber = new Subscriber<Integer>() {
+      public void onSubscribe(Subscription subscription) {log.info("onSubscribe"); subscription.request(Long.MAX_VALUE);};
+      public void onNext(Integer item) {log.info("onNext: " + item);};
+      public void onError(Throwable throwable) {log.info("onError: " + throwable.getMessage());};
+      public void onComplete() {log.info("onComplete");};
+    };
+    pubOnPub.subscribe(subscriber);
+    ```
+    ```java
+    Flux.range(1, 5)
+			.log()
+			.subscribeOn(Schedulers.newSingle("subOn-"))
+			.publishOn(Schedulers.newSingle("pubOn-"))
+			.subscribe(item -> log.info("onNext: " + item),
+					throwable -> log.info("onComplete: " + throwable.getMessage()),
+					() -> log.info("onComplete"));
+    ```
+    ```
+    11:25:48.183 [subon-1] INFO com.example.demo.iterable.SchedulerController - onSubscribe
+    11:25:48.190 [pubon-1] INFO com.example.demo.iterable.SchedulerController - onNext: 1
+    11:25:48.190 [pubon-1] INFO com.example.demo.iterable.SchedulerController - onNext: 2
+    11:25:48.190 [pubon-1] INFO com.example.demo.iterable.SchedulerController - onNext: 3
+    11:25:48.190 [pubon-1] INFO com.example.demo.iterable.SchedulerController - onNext: 4
+    11:25:48.190 [pubon-1] INFO com.example.demo.iterable.SchedulerController - onNext: 5
+    11:25:48.194 [pubon-1] INFO com.example.demo.iterable.SchedulerController - onComplete
+    ```
+    - onSubscribe, request에서는 subscribeOn에서 생성한 스레드, onNext, onError, onComplete는 publishOn에서 생성한 스레드로 실행된다.
+
+#### Scheduler의 메서드 정리
     
 #### 출처
 
