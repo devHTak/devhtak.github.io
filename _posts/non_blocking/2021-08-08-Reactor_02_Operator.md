@@ -59,9 +59,8 @@ publisher.subscribe(subscriber)
     ```java
     public static void main(String[] args) {
       Publisher<Integer> publisher = iterPub(Stream.iterate(1, a->a+1).limit(10).collect(Collectors.toList()));
-	    Publisher<Integer> mapPublisher = mapPub(publisher, s -> s * 10);
-	    mapPublisher.subscribe(logSub());
-	    return "ok";
+	  Publisher<Integer> mapPublisher = mapPub(publisher, s -> s * 10);
+	  mapPublisher.subscribe(logSub());
     }	
     private Publisher<Integer> mapPub(Publisher<Integer> pub, Function<Integer, Integer> function) {
       return new Publisher<Integer>() {
