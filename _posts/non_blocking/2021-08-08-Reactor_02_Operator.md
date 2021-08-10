@@ -52,7 +52,7 @@ publisher.subscribe(subscriber)
 #### Operator 구조
 
 - Sequence를 생성, 변형, 필터링 등을 하기 위해 사용
-- Publischer -> \[Data1] -> Operation1 -> \[Data2] -> Operation2 -> \[Dara3] -> Subscriber
+- Publisher -> \[Data1] -> Operation1 -> \[Data2] -> Operation2 -> \[Dara3] -> Subscriber
 
 - 예시1: map
   - 1:1 구조로 기존에 있던 sequence를 변형하여 전달하는 역할을 한다.
