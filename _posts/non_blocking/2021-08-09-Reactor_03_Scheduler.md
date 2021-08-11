@@ -209,6 +209,7 @@ Thread.sleep(1200);
 13:21:44.858 [parallel-1] INFO com.example.demo.iterable.SchedulerController - onNext: 4
 ```
 - interval에 설정한 주기마다 데이터를 전송한다.
+- Schedulers.parallel()를 사용해서 신호를 주기적으로 발생한다. 다른 스케줄러를 사용하고 싶다면 interval(Duration, Scheduler) 메서드를 사용하면 된다.
 - 주의할 점은 메인메서드가 해당 주기 이상 살아있어야 한다.
 - 쓰레드를 살펴보면 메인쓰레드가 아닌 다른 쓰레드에서 실행되는 것을 확인할 수 있다.
 - Publisher와 Subscriber 로 구현해보기
@@ -260,7 +261,33 @@ Thread.sleep(1200);
     - subscription의 cancel을 호출하여 중단해준다
 
 #### Scheduler의 메서드 정리
-    
+
+- immediate()
+  - 현재 쓰레드에서 실행한다.
+  
+- parallel()
+  - 고정 크기 쓰레드 풀을 이용해서 실행한다. 병렬 작업에 적합하다.
+
+- single()
+  - 쓰레드가 한 개인 쓰레드 풀을 이용해서 실행한다. 즉 한 쓰레드를 공유한다.
+
+- elastic()
+  - 쓰레드 풀을 이용해서 실행한다. 블로킹 IO를 리액터로 처리할 때 적합하다. 쓰레드가 필요하면 새로 생성하고 일정 시간(기본 60초) 이상 유휴 상태인 쓰레드는 제거한다. 데몬 쓰레드를 생성한다.
+
+- single, parallel, elastic
+  - 매번 새로운 쓰레드 풀을 만들지 않고 동일한 쓰레드 풀을 리턴한다.
+  - 해당 메서드가 생성하는 쓰레드는 데몬 쓰레드로서 main 쓰레드가 종료되면 함께 종료된다.
+
+- newSingle(), newParallel(), newElastic()
+  - 같은 종류의 쓰레드 풀인데 새로 생성하고 싶다면 해당 메서드를 사용하면 된다.
+  - 기본으로 데몬 쓰레드가 아니기 때문에 어플리케이션 종료시에는 다음과 같이 dispose() 메서드를 호출해서 쓰레드를 종료시켜 주어야 한다. 그렇지 않으면 어플리케이션이 종료되지 않는 문제가 발생할 수 있다.
+  - 파라미터
+    - name : 쓰레드 이름으로 사용할 접두사이다.
+    - daemon : 데몬 쓰레드 여부를 지정한다. 지정하지 않으면 false이다. 데몬 쓰레드가 아닌 경우 JVM 종료시에 생성한 스케줄러의 dispose()를 호출해서 풀에 있는 쓰레드를 종료해야 한다.
+    - ttlSeconds : elastic 쓰레드 풀의 쓰레드 유휴 시간을 지정한다. 지정하지 않으면 60(초)이다.
+    - parallelism : 작업 쓰레드 개수를 지정한다. 지정하지 않으면 Runtime.getRuntime().availableProcessors()이 리턴한 값을 사용한다.
+
 #### 출처
 
 - 토비의 봄 TV 7회 스프링 리액티브 프로그래밍(3) - Reactive Streams - Scheduler
+- https://javacan.tistory.com/entry/Reactor-Start-6-Thread-Scheduling
