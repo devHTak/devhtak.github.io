@@ -209,6 +209,10 @@ publisher.subscribe(subscriber)
   - 예시
     ```java
     Flux<String> popularCar = getPopularCar("BENZ").defaultEmpty("Empty");
+    popularCar.subscribe(System.out::println);
+    ```
+    ```
+    Empty
     ```
     - getPopularCar가 brand를 입력받아 해당 브랜드에 인기 차를 Flux타입으로 리턴할 때 defaultEmpty로 빈값일 경우에 기본값을 설정할 수 있다.
   
@@ -219,6 +223,10 @@ publisher.subscribe(subscriber)
     ```java
     Flux<String> emptyCar = Flux.just("Empty");
     Flux<String> popularCar = getPopularCar("BENZ").switchIfEmpty(emptyCar);
+    popularCar.subscribe(System.out::println);
+    ```
+    ```
+    Empty
     ```
 
 - startWith
@@ -226,13 +234,18 @@ publisher.subscribe(subscriber)
   - 데이터나 시퀀스를 넣어줄 수 있다
   - 예제
     ```java
-    Flux.range(2,5)
-      .startWith(0, 1)
-      .startWith(Flux.range(-2, -1)
-      .subscribe(System.out::print);
+    Flux.range(3,3)
+      .startWith(2)
+      .startWith(Flux.range(0, 2)
+      .subscribe(System.out::println);
     ```
     ```
-    -2-1012345
+    0
+    1
+    2
+    3
+    4
+    5
     ```
 
 - concatWithValues
@@ -254,7 +267,7 @@ publisher.subscribe(subscriber)
   - 예제
     ```java
     Flux.range(1,3)
-      .concatWith(Flux.range(4, 5))
+      .concatWith(Flux.range(4, 2))
       .subscribe(System.out::print);
     ```
     ```
@@ -265,28 +278,93 @@ publisher.subscribe(subscriber)
   - 시퀀스를 넣어준 순서가 아닌 시퀀스 발생하는 데이터 순서로 데이터를 섞는다.
   - 예제
     ```java
-    Flux<Integer> first = Flux.interval(Duration.ofMillis(150)).take(2).map(item -> item + " first");
-    Flux<Integer> second = Flux.interval(Duration.ofMillis(100)).take(2).map(item -> item + " second");
+    Flux<String> first = Flux.interval(Duration.ofMillis(150)).take(3).map(item -> item + " first");
+    Flux<String> second = Flux.interval(Duration.ofMillis(100)).take(3).map(item -> item + " second");
     
     first.mergeWith(second)
       .subscribe(System.out::println);
+    Thread.sleep(500);
     ```
     ```
-    0 second // 0mi
-    0 first  // 0mi
-    1 second // 100mi
-    1 first  // 150mi
-    2 second // 200mi
-    2 first  // 300mi
+    0 second // 100mi
+    0 first  // 150mi
+    1 second // 200mi
+    2 second // 300mi
+    1 first  // 300mi    
+    2 first  // 450mi
     ``` 
     
 - zipWith
 
+  ![image](https://user-images.githubusercontent.com/42403023/129035998-ddaf56f2-15ef-4868-bd62-dd9aa884d7a1.png)
+
+  ** 이미지 출처: https://javacan.tistory.com/entry/Reactor-Start-4-tbasic-ransformation?category=699082
+  
+  - 시퀀스를 묶어서 사용할 수 있다.
+  - 두 시퀀스의 값을 묶은 값 쌍을 생성하는 시퀀스를 생성할 수 있다.
+  - 발생한 개수를 맞춰서 쌍을 만든다.
+  - 예시
+    ```java
+    Flux<String> first = Flux.interval(Duration.ofMillis(150)).take(3).map(item -> item + " first");
+    Flux<String> second = Flux.interval(Duration.ofMillis(100)).take(3).map(item -> item + " second");    
+    first.zipWith(second)
+      .subscribe(System.out::println);    
+    Thread.sleep(500);
+    ```
+    ```
+    [0 first,0 second]
+    [1 first,1 second]
+    [2 first,2 second]
+    ```
+
 - combineLatest
+  
+  ![image](https://user-images.githubusercontent.com/42403023/129036093-8a4e393c-5fdc-4c4b-878d-0fb491d65393.png)
+
+  ** 이미지 출처: https://javacan.tistory.com/entry/Reactor-Start-4-tbasic-ransformation?category=699082
+  - 두 시퀀스의 값을 묶은 값 쌍을 생성하는 시퀀스를 생성할 수 있다.
+  - 가장 최근 데이터를 쌍으로 만든다.
+  - 예시
+    ```java
+    Flux<String> first = Flux.interval(Duration.ofMillis(150)).take(10).map(item -> item + " first");
+    Flux<String> second = Flux.interval(Duration.ofMillis(100)).take(10).map(item -> item + " second");    
+    Flux.combineLatest(first, second, (a, b) -> a + ", " + b)
+      .subscribe(System.out::println);
+    Thread.sleep(1500);    
+    ```
+    ```
+    0 first, 0 second
+    0 first, 1 second
+    0 first, 2 second
+    1 first, 2 second
+    1 first, 3 second
+    2 first, 3 second
+    2 first, 4 second
+    2 first, 5 second
+    3 first, 5 second
+    3 first, 6 second
+    4 first, 6 second
+    4 first, 7 second
+    5 first, 7 second
+    5 first, 8 second
+    5 first, 9 second
+    6 first, 9 second
+    7 first, 9 second
+    8 first, 9 second
+    9 first, 9 second
+    ```
 
 - take / takeLast
+  - take(long): 시퀀스에서 처음 n개의 데이터만 유지할 경우 사용
+  - take(Duration): 지정한 시간동안 발생한 데이터만 유지하고 싶을 때 사용
+  - takeLast(long):  마지막 n개의 데이터만 유지하고 싶을 때 사용
+  - takeWhile() / takeUntile(): Predicate를 인자로 받아 takeWhile은 true를 리턴하는 동안 데이터를 포함하고, takeUntil()은 true를 리턴할 때까지 데이터를 포함한다.
 
 - skip / skipLast
+  - skip(long): 시퀀스에서 처음 n개의 데이터를 거르고 싶을 때 사용한다. 
+  - skip(Duration): 지정한 처음 시간 동안 발생한 데이터를 거르고 싶을 때 사용한다.
+  - skipLast(long): 마지막 n개의 데이터를 거르고 싶을 때 사용한다.
+  - skipWhile() / skipUntil(): Predicate를 인자로 받아 skipWhile은 true를 리턴하는 동안 데이터를 거르고, skipUntil()은 true를 리턴할 때까지 데이터를 거른다.
     
 #### 출처
 
