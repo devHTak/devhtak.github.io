@@ -152,6 +152,143 @@ publisher.subscribe(subscriber)
     }
     ```
     
+#### 다양한 Operator
+
+- map
+  - 1:1 변환
+  - Stream의 map과 유사하다
+  - 예시
+    ```java
+    Flux.just("a", "ab", "abc", "abcd")
+      .map(str -> str.length())
+      .subscribe(System.out::println);
+    ```
+    ```
+    1
+    2
+    3
+    4
+    ```
+
+- flatMap
+  - 1:N 변환
+  - 1개의 데이터에서 시퀀스를 생성할 때 사용하기 때문에 1:N 방식으로 변환을 처리한다.
+  - 예시
+    ```java
+    Flux.just("a", "ab", "abc")
+      .flatMap(str -> Flux.range(1, str.length()))
+      .subscribe(System.out::println);    
+    ```
+    ```
+    1 // "a"
+    1 // "ab"
+    2
+    1 // "abc"
+    2
+    3
+    ```
+
+- filter
+  - boolean타입 조건으로 true일 떄만 통과시킨다.
+  - 예시
+    ```java
+    Flux.range(1, 10)
+      .filter(data -> data % 3 == 0)
+      .subscribe(System.out::println);      
+    ```
+    ```
+    3
+    6
+    9
+    ```
+    
+- defaultEmpty
+  - 빈 시퀀스인 경우 기본 값 사용
+  - 시퀀스에 데이터가 없을 때 특정 값을 기본으로 사용할 수 있다.
+  - Mono, Flux 모두 제공한다.
+  - 예시
+    ```java
+    Flux<String> popularCar = getPopularCar("BENZ").defaultEmpty("Empty");
+    ```
+    - getPopularCar가 brand를 입력받아 해당 브랜드에 인기 차를 Flux타입으로 리턴할 때 defaultEmpty로 빈값일 경우에 기본값을 설정할 수 있다.
+  
+- switchIfEmpty
+  - 빈 시퀀스인 경우 다른 시퀀스 사용
+  - Flux와 Mono 모두 제공
+  - 예시
+    ```java
+    Flux<String> emptyCar = Flux.just("Empty");
+    Flux<String> popularCar = getPopularCar("BENZ").switchIfEmpty(emptyCar);
+    ```
+
+- startWith
+  - 특정 값으로 시작하는 시퀀스로 변환
+  - 데이터나 시퀀스를 넣어줄 수 있다
+  - 예제
+    ```java
+    Flux.range(2,5)
+      .startWith(0, 1)
+      .startWith(Flux.range(-2, -1)
+      .subscribe(System.out::print);
+    ```
+    ```
+    -2-1012345
+    ```
+
+- concatWithValues
+  - 특정값으로 끝나도록 시퀀스를 변환한다.
+  - 데이터를 넣어줄 수 있다.
+  - 예제
+    ```java
+    Flux.range(1,3)
+      .concatWithValues(4, 5)
+      .subscribe(System.out::print);
+    ```
+    ```
+    12345
+    ```
+
+- concatWith
+  - 특정값으로 끝나도록 시퀀스를 변환한다.
+  - 시퀀스를 넣어줄 수 있다.
+  - 예제
+    ```java
+    Flux.range(1,3)
+      .concatWith(Flux.range(4, 5))
+      .subscribe(System.out::print);
+    ```
+    ```
+    12345
+    ```
+    
+- mergeWith
+  - 시퀀스를 넣어준 순서가 아닌 시퀀스 발생하는 데이터 순서로 데이터를 섞는다.
+  - 예제
+    ```java
+    Flux<Integer> first = Flux.interval(Duration.ofMillis(150)).take(2).map(item -> item + " first");
+    Flux<Integer> second = Flux.interval(Duration.ofMillis(100)).take(2).map(item -> item + " second");
+    
+    first.mergeWith(second)
+      .subscribe(System.out::println);
+    ```
+    ```
+    0 second // 0mi
+    0 first  // 0mi
+    1 second // 100mi
+    1 first  // 150mi
+    2 second // 200mi
+    2 first  // 300mi
+    ``` 
+    
+- zipWith
+
+- combineLatest
+
+- take / takeLast
+
+- skip / skipLast
+    
 #### 출처
 
 - 토비의 봄 TV 6회 스프링 리액티브 프로그래밍 (2) - Reactive Stream - Operator
+- https://javacan.tistory.com/entry/Reactor-Start-4-tbasic-ransformation?category=699082
