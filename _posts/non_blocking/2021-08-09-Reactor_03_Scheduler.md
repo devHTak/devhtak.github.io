@@ -264,15 +264,17 @@ Thread.sleep(1200);
 
 - immediate()
   - 현재 쓰레드에서 실행한다.
-  
-- parallel()
-  - 고정 크기 쓰레드 풀을 이용해서 실행한다. 병렬 작업에 적합하다.
 
 - single()
   - 쓰레드가 한 개인 쓰레드 풀을 이용해서 실행한다. 즉 한 쓰레드를 공유한다.
+    
+- parallel()
+  - 고정 크기 쓰레드 풀을 이용해서 실행한다. 병렬 작업에 적합하다.
+  - ExecutorService기반으로 단일 스레드 고정 크기(Fixed) 스레드 풀을 사용하여 병렬 작업에 적합함.
 
 - elastic()
   - 쓰레드 풀을 이용해서 실행한다. 블로킹 IO를 리액터로 처리할 때 적합하다. 쓰레드가 필요하면 새로 생성하고 일정 시간(기본 60초) 이상 유휴 상태인 쓰레드는 제거한다. 데몬 쓰레드를 생성한다.
+  - 스레드 갯수는 무한정으로 증가할 수 있고 수행시간이 오래걸리는 블로킹 작업에 대한 대안으로 사용할 수 있게 최적화 되어있다.
 
 - single, parallel, elastic
   - 매번 새로운 쓰레드 풀을 만들지 않고 동일한 쓰레드 풀을 리턴한다.
@@ -320,10 +322,7 @@ Thread.sleep(1200);
   20:41:30.149 [PUB1-1] INFO com.example.demo.iterable.SchedulerController - first onNext:40
   20:41:30.153 [SUB1-2] INFO reactor.Flux.SubscribeOn.1 - onComplete()
   20:41:30.154 [PUB1-1] INFO reactor.Flux.PublishOn.2 - | onComplete()
-  ```
-
-  
-  
+  ``` 
 
 #### 출처
 
