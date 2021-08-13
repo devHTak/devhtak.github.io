@@ -260,7 +260,7 @@ Thread.sleep(1200);
     ```
     - subscription의 cancel을 호출하여 중단해준다
 
-#### Scheduler의 메서드 정리
+#### Schedulers의 메서드 정리
 
 - immediate()
   - 현재 쓰레드에서 실행한다.
@@ -286,6 +286,44 @@ Thread.sleep(1200);
     - daemon : 데몬 쓰레드 여부를 지정한다. 지정하지 않으면 false이다. 데몬 쓰레드가 아닌 경우 JVM 종료시에 생성한 스케줄러의 dispose()를 호출해서 풀에 있는 쓰레드를 종료해야 한다.
     - ttlSeconds : elastic 쓰레드 풀의 쓰레드 유휴 시간을 지정한다. 지정하지 않으면 60(초)이다.
     - parallelism : 작업 쓰레드 개수를 지정한다. 지정하지 않으면 Runtime.getRuntime().availableProcessors()이 리턴한 값을 사용한다.
+
+- 예시
+  ```java
+  Flux.range(0, 5)
+    .subscribeOn(Schedulers.newParallel("SUB1"))
+    .log()
+    .map(item -> item * 10)
+    .publishOn(Schedulers.newParallel("PUB1"))
+    .log()
+    .subscribe(item -> log.info("first onNext:" + item));
+  ```
+  ```
+  20:41:30.064 [main] DEBUG reactor.util.Loggers - Using Slf4j logging framework
+  20:41:30.124 [main] INFO reactor.Flux.SubscribeOn.1 - onSubscribe(FluxSubscribeOn.SubscribeOnSubscriber)
+  20:41:30.130 [main] INFO reactor.Flux.PublishOn.2 - | onSubscribe([Fuseable] FluxPublishOn.PublishOnSubscriber)
+  20:41:30.131 [main] INFO reactor.Flux.PublishOn.2 - | request(unbounded)
+  20:41:30.135 [main] INFO reactor.Flux.SubscribeOn.1 - request(256)
+  20:41:30.141 [SUB1-2] INFO reactor.Flux.SubscribeOn.1 - onNext(0)
+  20:41:30.142 [SUB1-2] INFO reactor.Flux.SubscribeOn.1 - onNext(1)
+  20:41:30.143 [SUB1-2] INFO reactor.Flux.SubscribeOn.1 - onNext(2)
+  20:41:30.143 [SUB1-2] INFO reactor.Flux.SubscribeOn.1 - onNext(3)
+  20:41:30.143 [SUB1-2] INFO reactor.Flux.SubscribeOn.1 - onNext(4)
+  20:41:30.148 [PUB1-1] INFO reactor.Flux.PublishOn.2 - | onNext(0)
+  20:41:30.148 [PUB1-1] INFO com.example.demo.iterable.SchedulerController - first onNext:0
+  20:41:30.148 [PUB1-1] INFO reactor.Flux.PublishOn.2 - | onNext(10)
+  20:41:30.148 [PUB1-1] INFO com.example.demo.iterable.SchedulerController - first onNext:10
+  20:41:30.149 [PUB1-1] INFO reactor.Flux.PublishOn.2 - | onNext(20)
+  20:41:30.149 [PUB1-1] INFO com.example.demo.iterable.SchedulerController - first onNext:20
+  20:41:30.149 [PUB1-1] INFO reactor.Flux.PublishOn.2 - | onNext(30)
+  20:41:30.149 [PUB1-1] INFO com.example.demo.iterable.SchedulerController - first onNext:30
+  20:41:30.149 [PUB1-1] INFO reactor.Flux.PublishOn.2 - | onNext(40)
+  20:41:30.149 [PUB1-1] INFO com.example.demo.iterable.SchedulerController - first onNext:40
+  20:41:30.153 [SUB1-2] INFO reactor.Flux.SubscribeOn.1 - onComplete()
+  20:41:30.154 [PUB1-1] INFO reactor.Flux.PublishOn.2 - | onComplete()
+  ```
+
+  
+  
 
 #### 출처
 
