@@ -112,6 +112,16 @@ category: Reactive
         return new AsyncResult<String>("Hello");
       }
     }	
+    @Bean
+    ThreadPoolTaskExecutor tp() {
+      // @Async 사용하기 위한 Thread 설정
+      ThreadPoolTaskExecutor te = new ThreadPoolTaskExecutor();
+      te.setCorePoolSize(10);
+      te.setMaxPoolSize(100);
+      te.setQueueCapacity(200);
+      
+      return te;
+    }
     @Autowired MyService myService;
     @Bean
     ApplicationRunner run() {
@@ -139,7 +149,6 @@ category: Reactive
   ListenableFuture<String> result = myService.hello();
   result.addCallback(item -> log.info(item), e-> log.error(e.getMessage()));
   ```
-
 
 #### 출처
 
