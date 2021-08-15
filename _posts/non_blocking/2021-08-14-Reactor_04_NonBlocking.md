@@ -100,32 +100,28 @@ category: Reactive
   @EnableAsync
   @Slf4j
   public class WebFluxExampleApplication {
-
-	  public static void main(String[] args) {
-		  SpringApplication.run(WebFluxExampleApplication.class, args);
-	  }
-
-	  @Component
-	  public static class MyService {
-		  @Async
-		  public Future<String> hello() throws InterruptedException {
-			  log.info("hello()");
-			  Thread.sleep(1000);
-			  return new AsyncResult<String>("Hello");
-		  }
-	  }
-	
-	  @Autowired MyService myService;
-	
-	  @Bean
-	  ApplicationRunner run() {
-		  return args -> {
-			  log.info("Run()");
-			  Future<String> result = myService.hello();
-			  log.info("Exit: " + result.isDone());
-			  log.info("Result: " + result.get());
-		  };
-	  }
+    public static void main(String[] args) {
+      SpringApplication.run(WebFluxExampleApplication.class, args);
+    }
+    @Component
+    public static class MyService {
+      @Async
+      public Future<String> hello() throws InterruptedException {
+        log.info("hello()");
+        Thread.sleep(1000);
+        return new AsyncResult<String>("Hello");
+      }
+    }	
+    @Autowired MyService myService;
+    @Bean
+    ApplicationRunner run() {
+      return args -> {
+        log.info("Run()");
+        Future<String> result = myService.hello();
+        log.info("Exit: " + result.isDone());
+        log.info("Result: " + result.get());
+      };
+    }
   }
   ```
   ```
@@ -141,7 +137,7 @@ category: Reactive
   
   ```java
   ListenableFuture<String> result = myService.hello();
-	result.addCallback(item -> log.info(item), e-> log.error(e.getMessage()));
+  result.addCallback(item -> log.info(item), e-> log.error(e.getMessage()));
   ```
 
 
