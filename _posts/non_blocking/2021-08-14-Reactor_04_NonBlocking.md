@@ -119,7 +119,8 @@ category: Reactive
       te.setCorePoolSize(10);
       te.setMaxPoolSize(100);
       te.setQueueCapacity(200);
-      
+      te.setThreadNamePrefix("mythread");
+      te.initialize();
       return te;
     }
     @Autowired MyService myService;
