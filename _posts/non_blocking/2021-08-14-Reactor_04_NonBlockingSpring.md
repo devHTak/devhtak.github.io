@@ -151,7 +151,7 @@ category: Reactive
   result.addCallback(item -> log.info(item), e-> log.error(e.getMessage()));
   ```
 
-#### Servlet
+#### Spring WebMVC
 
 - Servlet을 직접 개발하는 일은 없지만, 3.0 이전에는 Blocking 방식으로 처리하였다.
   - IO 작업에 대해 쓰레드를 하나를 생성하여 처리하였다. 
@@ -237,7 +237,36 @@ category: Reactive
   }
   ```
   - /deferred-result로 요청을 보내면 바로 응답이 오지 않는다. /deferred-result/event를 요청하면 해당 deferredResult가 값이 세팅되어 리턴된다.
+    - Servlet Thread가 요청을 받고 DeferredResult를 Queue에 저장한 후 풀에 다시 반납한다.
+    - DeferredResult Queue에 있는 값은 event 요청이 올때까지 대기한다(따로 Thread를 생성하지 않는다.)
+    - /event 요청이 오면 Queue에 있는 값들을 전부 제거하고 응답을 전송한다.
   - 채팅방에서 메세지를 보내면 내부에 돌고 있는 DeferredResult가 단체인원에게 같은 메시지를 보내주는 등에서 사용한다.
+
+- Emitter
+  ```java
+  @GetMapping("/emitter")
+  public ResponseBodyEmitter emitter() {
+    ResponseBodyEmitter emitter = new ResponseBodyEmitter();
+    Executors.newSingleThreadExecutor().submit(() -> {
+      for(int i = 0; i < 50; i++) {
+        try {
+          emitter.send("<p>Stream " + i + " </p>");
+          Thread.sleep(100);
+        } catch (Exception e) {}
+      }
+    });
+    return emitter;
+  }
+  ```
+  - spring-webmvc에서 HTTP Streaming을 하는 가장 간단한 방법은 SSE(Server-Sent Event)를 사용하는 것이다.
+  - Spring에서 지원하는 Async 응답 방식인 DeferredResult, Callable과 같다
+    - 반환형이 Async 응답을 필요로하는 경우, Spring MVC는 request.startAsync()를 호출하여 AsyncContext를 획득하여 저장해둔다.
+    - AsyncContext는 비동기 처리를 제어할 수 있도록 해준다.
+      - ex) Sevrlet container thread에서 요청 처리를 재개시키며, 기존의 forward와 같은 동작을 하는 dispatch 메서드를 제공한다.
+    - 이로 인해 응답을 별도의 thread에서 비동기로 처리할 수 있다.
+    - 요청 thread를 종료시키되, response는 열어둔다
+    - 다른 thread에서 AsyncContext를 사용해서 response를 완성시킨다.
+    - Spring MVC는 Servlet container로 다시 요청을 보내고(dispatch), client로 응답한다.
 
 #### 출처
 
