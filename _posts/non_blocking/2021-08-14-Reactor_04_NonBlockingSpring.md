@@ -151,6 +151,94 @@ category: Reactive
   result.addCallback(item -> log.info(item), e-> log.error(e.getMessage()));
   ```
 
+#### Servlet
+
+- Servlet을 직접 개발하는 일은 없지만, 3.0 이전에는 Blocking 방식으로 처리하였다.
+  - IO 작업에 대해 쓰레드를 하나를 생성하여 처리하였다. 
+  - 커넥션당 하나의 쓰레드 할당
+  - HttpServletRequest, HttpServletResponse는 InputStream/OuptutStream을 통해 구현되었는데 기본적으로 Blocking 방식이다.
+
+- 하지만 외부에 API를 대기하는 작업을 블로킹 방식으로 진행한다면 비효율적이다.
+  - Req1  --> ServletThread01 - req -> Blocking(DB, API..) -> res(html or json)
+  
+- 3.0 부터 비동기적으로 Servlet 요청을 처리하는 기능이 추가 3.1에는 Non-Blocking IO 추가
+  - 요청에 대하여  Pool에서 할당받은 Servlet Thread가 작업쓰레드로 요청을 보내고 반납한다.
+  - 작업쓰레드가 처리완료 후 Pool에서 할당받은 Servlet Thread에게 응답을 보내고 Servlet Thread는 NIO Connector에게 응답을 보낸 후 반납한다.
+  - ServletThread가 작업이 끝날 때까지 대기하지 않고 바로 반납하기 때문에 많은 요청/응답을 처리할 수 있다.
+    
+- Callable을 활용한 예시
+  - Client <-> NIO Connector <-> Servlet Thread(<-> Thread Pool) <-> 작업 쓰레드(<-> Thread Pool)
+  ```java
+  @GetMapping("/callable")
+  public Callable<String> async() {
+    log.info("callable");
+    return () -> {
+      log.info("async");
+      Thread.sleep(2000);
+      return "ok";
+    };
+  }
+  ```
+  ```
+  2021-08-16 12:06:34.056  INFO 8796 --- [nio-8080-exec-1] com.example.demo.async.AsyncController   : callable
+  2021-08-16 12:06:34.064  INFO 8796 --- [         task-2] com.example.demo.async.AsyncController   : async
+  ```
+  - Callable을 만들어 새로운 쓰레드로 ok를 리턴
+  - callable을 호출한 시간 측정
+  ```java
+  public static void main(String[] args) throws InterruptedException {
+    ExecutorService executorService = Executors.newFixedThreadPool(200);
+    RestTemplate restTemplate = new RestTemplate();
+    String uri = "http://localhost:8080/callable";
+    StopWatch mainWatch = new StopWatch();
+    mainWatch.start();
+    for(int i = 0; i < 100; i++) {
+      executorService.execute(() -> {
+        StopWatch subWatch = new StopWatch();
+        subWatch.start();
+        restTemplate.getForObject(uri, String.class);
+        subWatch.stop();
+        log.info("Elapsed -> " + subWatch.getTotalTimeSeconds());
+      });
+    }
+    executorService.shutdown();
+    executorService.awaitTermination(100, TimeUnit.SECONDS);
+
+    mainWatch.stop();		
+    log.info("Main Watch -> " + mainWatch.getTotalTimeSeconds());
+  }
+  ```
+  - 톰캣에 Thread Pool사이즈를 1개로 줄여도 모든 요청이 2초만에 끝난다.
+  - NIO Connector 1개로 서블릿 쓰레드만 1개로 사용하고 작업 쓰레드는 100개가 실행되어 2초안에 끝나는 것
+
+- DeferredResult Queue
+  - Client <-> NIO Connector <-> Servlet Thread(<-> Thread Pool) <-> DeferredResult Queue (<- Event)
+  ```java
+  Queue<DeferredResult<String>> results = new ConcurrentLinkedQueue<>();
+  
+  @GetMapping("/deferred-result")
+  public DeferredResult<String> deferredResult() {
+    log.info("deferred-result");
+    DeferredResult<String> dr = new DeferredResult<>();
+    results.add(dr);
+    return dr;
+  }
+  @GetMapping("/deferred-result/count")
+  public String deferredResultCount() {
+    return String.valueOf(results.size());
+  }
+  @GetMapping("/deferred-result/event")
+  public String deferredResultEvent(String message) {
+    for(DeferredResult<String> dr: results) {
+      dr.setResult("Hello: " + message);
+      results.remove(dr);
+    }
+    return "OK";
+  }
+  ```
+  - /deferred-result로 요청을 보내면 바로 응답이 오지 않는다. /deferred-result/event를 요청하면 해당 deferredResult가 값이 세팅되어 리턴된다.
+  - 채팅방에서 메세지를 보내면 내부에 돌고 있는 DeferredResult가 단체인원에게 같은 메시지를 보내주는 등에서 사용한다.
+
 #### 출처
 
 - 토비의 봄 TV 8회 스프링 리액티프 프로그래밍(4) - 자바와 스프링의 비동기 기술
