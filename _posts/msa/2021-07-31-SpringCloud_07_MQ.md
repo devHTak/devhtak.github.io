@@ -116,7 +116,7 @@ category: msa
   ```
   $ KAFKA_HOME/config/connect-distriuted.properties
   ```
-- Kafka Connect 실행
+- Kafka Connect 실행(KAFKA_HOME: confluent-6.1.0)
   ```
   ./bin/windows/connect-distributed.bat ./etc/kafka/connect-distributed.properties
   ```
