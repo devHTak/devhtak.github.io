@@ -60,7 +60,7 @@ category: Java Study
 
   |구분|IO|NIO|
   |---|---|---|
-  |입출력|방식|스트림	채널|
+  |입출력 방식|스트림|채널|
   |버퍼 방식|Non-Buffer|Buffer|
   |비동기 방식 지원|X|O|
   |Blocking/Non-Blocking 방식|Blocking Only|Both|
