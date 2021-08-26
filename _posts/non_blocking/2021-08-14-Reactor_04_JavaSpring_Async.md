@@ -159,11 +159,11 @@ category: Reactive
   - HttpServletRequest, HttpServletResponse는 InputStream/OuptutStream을 통해 구현되었는데 기본적으로 Blocking 방식이다.
 
 - 하지만 외부에 API를 대기하는 작업을 블로킹 방식으로 진행한다면 비효율적이다.
-  - Req1  --> ServletThread01 - req -> Blocking(DB, API..) -> res(html or json <- AsyncContext) 
+  - Req1  --> ServletThread01 - req -> Blocking(DB, API..) - WorkThread -> res(html or json <- AsyncContext) 
   
 - 3.0 부터 비동기적으로 Servlet 요청을 처리하는 기능이 추가 3.1에는 Non-Blocking IO 추가
-  - 요청에 대하여  Pool에서 할당받은 Servlet Thread가 작업쓰레드로 요청을 보내고 반납한다.
-  - 작업쓰레드가 처리완료 후 Pool에서 할당받은 Servlet Thread에게 응답을 보내고 Servlet Thread는 NIO Connector에게 응답을 보낸 후 반납한다.
+  - 요청에 대하여  Pool에서 할당받은 Servlet Thread가 Work Thread로 요청을 보내고 반납한다.
+  - Work Thread가 처리완료 후 Pool에서 할당받은 new Servlet Thread에게 응답을 보내고 Servlet Thread는 NIO Connector에게 응답을 보낸 후 반납한다.
   - ServletThread가 작업이 끝날 때까지 대기하지 않고 바로 반납하기 때문에 많은 요청/응답을 처리할 수 있다.
     
 - Callable을 활용한 예시
