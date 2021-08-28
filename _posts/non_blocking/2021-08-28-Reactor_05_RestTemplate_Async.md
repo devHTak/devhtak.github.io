@@ -20,11 +20,11 @@ category: Reactive
   - localhost:8080/rest/hello
     ```java
     RestTemplate restTemplate = new RestTemplate();
-  	@GetMapping("/rest/hello")
-	  public String hello(@RequestParam int index) {
-		  String returnValue = restTemplate.getForObject("http://localhost:8081/another-service?req=${req}", String.class, "hello " + index);
-		  return returnValue;
-	  }
+    @GetMapping("/rest/hello")
+    public String hello(@RequestParam int index) {
+    	String returnValue = restTemplate.getForObject("http://localhost:8081/another-service?req=${req}", String.class, "hello " + index);
+	return returnValue;
+    }
     ```
     - 톰캣에서 생성하는 Thread는 1개로 설정하였다.
       ```
@@ -55,30 +55,30 @@ category: Reactive
   - Load Test
     ```java
     public static void main(String[] args) throws InterruptedException {
-      // 100개 쓰레드 생성
-      ExecutorService executorService = Executors.newFixedThreadPool(100);	
-      RestTemplate restTemplate = new RestTemplate();
-      String url = "http://localhost:8080/rest/hello?index={index}";
-      CyclicBarrier barrier = new CyclicBarrier(100); // 동기화
-      StopWatch mainStopWatch = new StopWatch();
-      mainStopWatch.start();
-      for(int i = 0; i < 100; i++) {
-        executorService.submit(() -> {
-          int index = counter.addAndGet(1);
-          barrier.await(); // 생성 당시 정해놓은 partition까지 blocking을 생성한다. 
-          StopWatch subStopWatch = new StopWatch();
-          log.info("Thread {}", index);
-          subStopWatch.start();
-          String returnValue = restTemplate.getForObject(url, String.class, index);
-          subStopWatch.stop();
-          log.info("Elapsed: {}, {} / {}", index, subStopWatch.getTotalTimeSeconds(), returnValue);
-          return "good";
-        });
-      }	
-      executorService.shutdown();
-      executorService.awaitTermination(100, TimeUnit.SECONDS);
-      mainStopWatch.stop();
-      log.info("Terminated: {}", mainStopWatch.getTotalTimeSeconds());
+	// 100개 쓰레드 생성
+	ExecutorService executorService = Executors.newFixedThreadPool(100);	
+	RestTemplate restTemplate = new RestTemplate();
+	String url = "http://localhost:8080/rest/hello?index={index}";
+	CyclicBarrier barrier = new CyclicBarrier(100); // 동기화
+	StopWatch mainStopWatch = new StopWatch();
+	mainStopWatch.start();
+	for(int i = 0; i < 100; i++) {
+		executorService.submit(() -> {
+			int index = counter.addAndGet(1);
+			barrier.await(); // 생성 당시 정해놓은 partition까지 blocking을 생성한다. 
+			StopWatch subStopWatch = new StopWatch();
+			log.info("Thread {}", index);
+			subStopWatch.start();
+			String returnValue = restTemplate.getForObject(url, String.class, index);
+			subStopWatch.stop();
+			log.info("Elapsed: {}, {} / {}", index, subStopWatch.getTotalTimeSeconds(), returnValue);
+			return "good";
+		});
+	}	
+	executorService.shutdown();
+	executorService.awaitTermination(100, TimeUnit.SECONDS);
+	mainStopWatch.stop();
+	log.info("Terminated: {}", mainStopWatch.getTotalTimeSeconds());
     }
     ```
     - CyclicBarrier를 통해서 동기화를 만들었다.
@@ -93,7 +93,7 @@ category: Reactive
   AsyncRestTemplate asyncRestTemplate = new AsyncRestTemplate();
   @GetMapping("/rest/hello")
   public ListenableFuture<ResponseEntity<String>> hello(@RequestParam int index) {
-    return asyncRestTemplate.getForEntity("http://localhost:8081/another-service?req=${req}", String.class, "hello " + index);
+  	return asyncRestTemplate.getForEntity("http://localhost:8081/another-service?req=${req}", String.class, "hello " + index);
   }
   ```
 - Spring Boot 2.0 부터 Deprecated되었으며 WebClient를 사용해야 한다.
