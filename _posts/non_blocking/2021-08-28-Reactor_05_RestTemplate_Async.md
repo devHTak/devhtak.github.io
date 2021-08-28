@@ -74,7 +74,7 @@ category: Reactive
     			log.info("Elapsed: {}, {} / {}", index, subStopWatch.getTotalTimeSeconds(), returnValue);
     			return "good";
     		});
-	}	
+    	}	
     	executorService.shutdown();
     	executorService.awaitTermination(100, TimeUnit.SECONDS);
     	mainStopWatch.stop();
@@ -88,7 +88,7 @@ category: Reactive
 
 #### AsyncRestTemplate
 
-- RestTemplate을 비동기로 지원하며 Non-blocking이다.
+- API를 호출하는 작업을 비동기적으로 처리하는 방법으로 AsyncRestTemplate은 RestTemplate을 비동기로 지원하며 Non-blocking이다.
   ```java
   AsyncRestTemplate asyncRestTemplate = new AsyncRestTemplate();
   @GetMapping("/rest/hello")
@@ -96,8 +96,32 @@ category: Reactive
   	return asyncRestTemplate.getForEntity("http://localhost:8081/another-service?req=${req}", String.class, "hello " + index);
   }
   ```
+    - ListenableFuture을 바로 리턴이 가능하다.
+  - tomcat 스레드는 요청에 대한 작업을 다 끝내기 전에 반환을 해서 바로 다음 요청을 처리하도록 사용
+  - 외부 서비스로부터 실제 결과를 받고 클라이언트의 요청에 응답을 보내기 위해서는 새로운 스레드를 할당 받아 사용
+  - 외부 서비스로부터 실제 결과를 받고 클라이언트에 응답을 보내기 위해서는 새로운 스레드를 할당 받아야 하지만, 외부 API를 호출하는 동안은 스레드(tomcat) 자원을 낭비하고 싶지 않다는 것이 목적
+  
 - Spring Boot 2.0 부터 Deprecated되었으며 WebClient를 사용해야 한다.
-- 
+
+#### DeferredResult
+
+- DeferredResult를 사용
+  - AsyncRestTemplate으로 가져온 결과는 ListenableFuture이다.
+  - callback을 활용하여 DeferredResult에 결과를 저장하여 사용할 수 있다.
+  ```java
+  AsyncRestTemplate asyncRestTemplate = new AsyncRestTemplate();
+  @GetMapping("/rest/hello")
+  public DeferredResult<String> hello(@RequestParam int index) {
+  	DeferredResult<String> result = new DeferredResult<>();
+  	ListenableFuture<ResponseEntity<String>> future = asyncRestTemplate.getForEntity("http://localhost:8081/another-service?req=${req}", String.class, "hello " + index);
+  	future.addCallback(s-> {
+  		result.setResult(s.getBody());
+  	}, e -> {
+  		result.setErrorResult(e.getMessage());
+  	});	
+  	return result;
+  }
+  ```
 
 #### 출처
 
