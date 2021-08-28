@@ -23,7 +23,7 @@ category: Reactive
     @GetMapping("/rest/hello")
     public String hello(@RequestParam int index) {
     	String returnValue = restTemplate.getForObject("http://localhost:8081/another-service?req=${req}", String.class, "hello " + index);
-	return returnValue;
+    	return returnValue;
     }
     ```
     - 톰캣에서 생성하는 Thread는 1개로 설정하였다.
@@ -63,17 +63,17 @@ category: Reactive
     	StopWatch mainStopWatch = new StopWatch();
     	mainStopWatch.start();
     	for(int i = 0; i < 100; i++) {
-		executorService.submit(() -> {
-			int index = counter.addAndGet(1);
-			barrier.await(); // 생성 당시 정해놓은 partition까지 blocking을 생성한다. 
-			StopWatch subStopWatch = new StopWatch();
-			log.info("Thread {}", index);
-			subStopWatch.start();
-			String returnValue = restTemplate.getForObject(url, String.class, index);
-			subStopWatch.stop();
-			log.info("Elapsed: {}, {} / {}", index, subStopWatch.getTotalTimeSeconds(), returnValue);
-			return "good";
-		});
+    		executorService.submit(() -> {
+    			int index = counter.addAndGet(1);
+    			barrier.await(); // 생성 당시 정해놓은 partition까지 blocking을 생성한다. 
+    			StopWatch subStopWatch = new StopWatch();
+    			log.info("Thread {}", index);
+    			subStopWatch.start();
+    			String returnValue = restTemplate.getForObject(url, String.class, index);
+    			subStopWatch.stop();
+    			log.info("Elapsed: {}, {} / {}", index, subStopWatch.getTotalTimeSeconds(), returnValue);
+    			return "good";
+    		});
 	}	
     	executorService.shutdown();
     	executorService.awaitTermination(100, TimeUnit.SECONDS);
