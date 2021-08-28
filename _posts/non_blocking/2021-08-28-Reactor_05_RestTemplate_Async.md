@@ -56,13 +56,13 @@ category: Reactive
     ```java
     public static void main(String[] args) throws InterruptedException {
 	// 100개 쓰레드 생성
-	ExecutorService executorService = Executors.newFixedThreadPool(100);	
-	RestTemplate restTemplate = new RestTemplate();
-	String url = "http://localhost:8080/rest/hello?index={index}";
-	CyclicBarrier barrier = new CyclicBarrier(100); // 동기화
-	StopWatch mainStopWatch = new StopWatch();
-	mainStopWatch.start();
-	for(int i = 0; i < 100; i++) {
+    	ExecutorService executorService = Executors.newFixedThreadPool(100);	
+    	RestTemplate restTemplate = new RestTemplate();
+    	String url = "http://localhost:8080/rest/hello?index={index}";
+    	CyclicBarrier barrier = new CyclicBarrier(100); // 동기화
+    	StopWatch mainStopWatch = new StopWatch();
+    	mainStopWatch.start();
+    	for(int i = 0; i < 100; i++) {
 		executorService.submit(() -> {
 			int index = counter.addAndGet(1);
 			barrier.await(); // 생성 당시 정해놓은 partition까지 blocking을 생성한다. 
@@ -75,10 +75,10 @@ category: Reactive
 			return "good";
 		});
 	}	
-	executorService.shutdown();
-	executorService.awaitTermination(100, TimeUnit.SECONDS);
-	mainStopWatch.stop();
-	log.info("Terminated: {}", mainStopWatch.getTotalTimeSeconds());
+    	executorService.shutdown();
+    	executorService.awaitTermination(100, TimeUnit.SECONDS);
+    	mainStopWatch.stop();
+    	log.info("Terminated: {}", mainStopWatch.getTotalTimeSeconds());
     }
     ```
     - CyclicBarrier를 통해서 동기화를 만들었다.
@@ -100,3 +100,5 @@ category: Reactive
 - 
 
 #### 출처
+
+- 토비의 봄 TV 9회 스프링 리액티프 프로그래밍(5) - 비동기 RestTemplate과 비동기 MVC/Servlet
