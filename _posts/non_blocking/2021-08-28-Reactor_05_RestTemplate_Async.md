@@ -118,10 +118,35 @@ category: Reactive
   		result.setResult(s.getBody());
   	}, e -> {
   		result.setErrorResult(e.getMessage());
+  	});
+  	return result;
+  }
+  ```
+  
+#### Callback Hell
+
+- AsyncRestTemplate을 활용하여 여러 서비스를 호출한다면, Callback을 계속 걸어주어야 하는 현상이 발생한다.
+  ```java
+  AsyncRestTemplate asyncRestTemplate = new AsyncRestTemplate();
+  @GetMapping("/rest/hello")
+  public DeferredResult<String> hello(@RequestParam int index) {
+  	DeferredResult<String> result = new DeferredResult<>();
+  	ListenableFuture<ResponseEntity<String>> future1 = asyncRestTemplate.getForEntity("http://localhost:8081/another-service?req=${req}", String.class, "hello " + index);
+  	future1.addCallback(s-> {
+  		result.setResult(s.getBody());
+		ListenableFuture<ResponseEntity<String>> future2 = asyncRestTemplate.getForEntity("http://localhost:8081/another-service2", String.class);
+		future2.addCallback(s2 -> {
+			result.setResult(s2.getBody());
+		}, e2 -> {
+			result.setErrorResult(e2.getMessage());
+		}); 
+  	}, e -> {
+  		result.setErrorResult(e.getMessage());
   	});	
   	return result;
   }
   ```
+  - 계속해서 service를 호출하게 되면 callback 안으로 들어가야 한다.
 
 #### 출처
 
