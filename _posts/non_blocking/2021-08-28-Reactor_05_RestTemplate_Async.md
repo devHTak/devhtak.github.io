@@ -65,7 +65,7 @@ category: Reactive
     	for(int i = 0; i < 100; i++) {
     		executorService.submit(() -> {
     			int index = counter.addAndGet(1);
-    			barrier.await(); // 생성 당시 정해놓은 partition까지 blocking을 생성한다. 
+    			barrier.await(); // 생성 당시 정해놓은 partition까지 synchronize. 
     			StopWatch subStopWatch = new StopWatch();
     			log.info("Thread {}", index);
     			subStopWatch.start();
