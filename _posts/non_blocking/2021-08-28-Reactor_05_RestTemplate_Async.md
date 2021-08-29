@@ -228,6 +228,7 @@ public static class ErrorCompletion extends Completion {
     - 또 다른 비동기 작업을 수행하고 그 결과를 반환하는 ApplyCompletion
     - 예외가 발생하는 결과를 실행하는 ErrorCompletion으로 분리하여 구현
   - Generic 적용 필요
+    - 먼저 Class 기준으로 제네릭 변수를 사용할 것인지, 아니면 메소드 범위에 변수를 사용할 것인지 판단 필요
 
 #### 출처
 
