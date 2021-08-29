@@ -148,6 +148,88 @@ category: Reactive
   ```
   - 계속해서 service를 호출하게 되면 callback 안으로 들어가야 한다.
 
+#### AsyncRestTemplate의 콜백 헬 해결
+
+- AsyncRestTemplate으로 서비스를 호출하여 결과를 받아오면 ListenableFuture 타입이다.
+- 해당 콜백을 설정할 때, 콜백안에서 다시 새로운 서비스를 호출하여야 하며 계속 콜백을 만들어야하는 콜백 헬이 발생한다.
+- 해결 방법으로 ListenableFuture Wrapping Class를 정의하여 method chain을 생성하도록 한다.
+
+```java
+public static class Completion {
+	Completion next;	
+	static Completion from(ListenableFuture<ResponseEntity<String>> future) {
+		Completion c = new Completion();
+		future.addCallback(s-> c.complete(s), e -> c.error(e));
+		return c;
+	}	
+	public void complete(ResponseEntity<String> s) {
+		run(s);
+	}	
+	public void error(Throwable e) {
+		if(next != null) next.error(e);
+	}
+	public void andAccept(Consumer<ResponseEntity<String>> consumer) {
+		Completion c = new AcceptCompletion(consumer);
+		this.next = c;
+	}
+	public Completion andError(Consumer<Throwable> consumer) {
+		Completion c = new ErrorCompletion(consumer);
+		this.next = c;
+		return c;
+	}
+	public Completion andApply(Function<ResponseEntity<String>, ListenableFuture<ResponseEntity<String>>> function) {
+		Completion c = new ApplyCompletion(function);
+		this.next = c;
+		return c;
+	}
+	public void run(ResponseEntity<String> s) {}		
+}
+	
+public static class ApplyCompletion extends Completion {
+	Function<ResponseEntity<String>, ListenableFuture<ResponseEntity<String>>> function;
+	public ApplyCompletion(Function<ResponseEntity<String>, ListenableFuture<ResponseEntity<String>>> function) {
+		this.function = function;
+	}
+	@Override
+	public void run(ResponseEntity<String> value) {
+		ListenableFuture<ResponseEntity<String>> future = function.apply(value);
+		future.addCallback(s -> this.next.complete(s), e -> this.next.error(e));
+	}
+}
+
+public static class AcceptCompletion extends Completion {
+	Consumer<ResponseEntity<String>> consumer;		
+	public AcceptCompletion(Consumer<ResponseEntity<String>> consumer) {
+		this.consumer = consumer;
+	}		
+	@Override
+	public void run(ResponseEntity<String> value) {
+		this.consumer.accept(value);
+	}
+}
+
+public static class ErrorCompletion extends Completion {
+	Consumer<Throwable> consumer;
+	public ErrorCompletion(Consumer<Throwable> consumer) {
+		this.consumer = consumer;
+	}
+	@Override
+	public void run(ResponseEntity<String> s) {
+		if(next != null) next.run(s);
+		}
+	@Override
+	public void error(Throwable e) {
+		consumer.accept(e);
+	}
+}
+```
+  - 다형성 활용 
+    - Completion을 결과를 받아서 사용만 하고 끝나는 Accept 처리를 하는 AcceptCompletion
+    - 또 다른 비동기 작업을 수행하고 그 결과를 반환하는 ApplyCompletion
+    - 예외가 발생하는 결과를 실행하는 ErrorCompletion으로 분리하여 구현
+  - Generic 적용 필요
+
 #### 출처
 
 - 토비의 봄 TV 9회 스프링 리액티프 프로그래밍(5) - 비동기 RestTemplate과 비동기 MVC/Servlet
+- 토비의 봄 TV 10회 스프링 리액티프 프로그래밍(6) - AsyncRestTemplate의 콜백 헬과 중복작업 문제
