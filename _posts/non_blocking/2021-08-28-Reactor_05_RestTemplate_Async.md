@@ -32,7 +32,7 @@ category: Reactive
       ```
       
   - localhost:8081/another-service
-    - 한 클래스 내에 새로운 서비스를 생성하기 위해서 @SpringBootApplication을 사용하였고, property(port, max-thread) 를 따로 생성하였다.
+    - 새로운 서비스를 생성하기 위해서 @SpringBootApplication을 사용하였고, property(port, max-thread) 를 따로 생성하였다.
     - 해당 클래스를 따로 spring boot application을 run 하면 된다.
     ```java
     @SpringBootApplication
