@@ -216,7 +216,7 @@ public static class ErrorCompletion extends Completion {
 	@Override
 	public void run(ResponseEntity<String> s) {
 		if(next != null) next.run(s);
-		}
+	}
 	@Override
 	public void error(Throwable e) {
 		consumer.accept(e);
