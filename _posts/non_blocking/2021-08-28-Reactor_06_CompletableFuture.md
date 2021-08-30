@@ -188,7 +188,35 @@ category: Reactive
   - 스레드의 사용을 더 효율적으로 하고 자원을 더 효율적으로 사용한다.
   - 현재 스레드 풀의 정책에 따라서 새로운 스레드를 할당하거나 대기중인 스레드를 사용한다. (스레드 풀 전략에 따라 다르다.)
   
-#### 
+#### Callback Hell 개선 - ListenableFuture to CompletableFuture
+	
+```java
+@Autowired
+MyService myService;
+AsyncRestTemplate rt = new AsyncRestTemplate(new Netty4ClientHttpRequestFactory(new NioEventLoopGroup(1)));
+
+@GetMapping("/rest")
+public DeferredResult<String> rest(int idx) {
+    DeferredResult<String> dr = new DeferredResult<>();
+    toCf(rt.getForEntity("http://localhost:8081/service?req={req}", String.class, "hello " + idx))
+        .thenCompose(s -> toCf(rt.getForEntity("http://localhost:8081/service2?req={req}", String.class, s.getBody())))
+        .thenCompose(s -> toCf(myService.work(s.getBody())))
+        .thenAccept(s -> dr.setResult(s))
+        .exceptionally(e -> {
+            dr.setErrorResult(e.getMessage());
+            return null;
+        });
+
+    return dr;
+}
+
+public <T> CompletableFuture<T> toCf(ListenableFuture<T> lf) {
+    CompletableFuture<T> cf = new CompletableFuture<>();
+    lf.addCallback(s -> cf.complete(s), e -> cf.completeExceptionally(e));
+    return cf;
+}
+```
+  - ListenableFuture을 wrapper하여 CompletableFuture를 생성하여 사용한다.
 
 #### 출처
 
