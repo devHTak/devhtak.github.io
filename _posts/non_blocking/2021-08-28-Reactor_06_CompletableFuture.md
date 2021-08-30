@@ -28,12 +28,12 @@ category: Reactive
 - 예시
   ```java
   CompletableFuture<String> cf1 = new CompletableFuture<>();
-	cf1.complete("Hello");
-	log.info(cf1.get()); // Hello 출력
+  cf1.complete("Hello");
+  log.info(cf1.get()); // Hello 출력
   
-	CompletableFuture<String> cf2 = new CompletableFuture<>();
-	cf2.completeExceptionally(new RuntimeException());
-	log.error(cf2.get()); // 예외 발생
+  CompletableFuture<String> cf2 = new CompletableFuture<>();
+  cf2.completeExceptionally(new RuntimeException());
+  log.error(cf2.get()); // 예외 발생
   ```
   
   - CompletableFuture에는 비동기 Task에 대한 결과가 담기며, get() 메서드를 호출해서 가져올 수 있다.
@@ -93,10 +93,100 @@ category: Reactive
   - thenAccept(Consumer<T>) : 앞의 비동기 작업의 결과를 받아 사용하며 return이 없다.
   
 - thenCompose
+  ```java
+  CompletableFuture
+      .supplyAsync(() -> {
+          log.info("supplyAsync");
+          return 1;
+      }).thenCompose(s -> { 
+          log.info("thenApply {}", s);
+          return CompletableFuture.completedFuture(s + 1);
+      }).thenApply(s -> {
+          log.info("thenApply {}", s);
+          return s + 1;
+      }).thenAccept(s -> log.info("thenAccept {}", s));
+  log.info("exit");
+  ForkJoinPool.commonPool().shutdown();
+  ForkJoinPool.commonPool().awaitTermination(10, TimeUnit.SECONDS);
+  ```
+
+  ```
+  22:56:16.613 [main] INFO com.example.demo.completable.Example - exit
+  22:56:16.613 [ForkJoinPool.commonPool-worker-3] INFO com.example.demo.completable.Example - supplyAsync
+  22:56:16.618 [ForkJoinPool.commonPool-worker-3] INFO com.example.demo.completable.Example - thenApply 1
+  22:56:16.621 [ForkJoinPool.commonPool-worker-3] INFO com.example.demo.completable.Example - thenApply 2
+  22:56:16.621 [ForkJoinPool.commonPool-worker-3] INFO com.example.demo.completable.Example - thenAccept 3
+  ```
+
+  - thenCompose(Function<T, R>): return이 CompletableFuture인 경우 thenCompose를 사용한다.
 
 - exceptionally
+  ```java
+  CompletableFuture
+      .supplyAsync(() -> {
+          log.info("supplyAsync");
+          return 1;
+      }).thenCompose(s -> { 
+          log.info("thenApply {}", s);
+          if (1 == 1) throw new RuntimeException();
+          return CompletableFuture.completedFuture(s + 1);
+      }).exceptionally(e -> {
+          log.info("exceptionally");
+          return -10;
+      }).thenApply(s -> {
+          log.info("thenApply {}", s);
+          return s + 1;
+      }).thenAccept(s -> log.info("thenAccept {}", s));
+  log.info("exit");
+  ForkJoinPool.commonPool().shutdown();
+  ForkJoinPool.commonPool().awaitTermination(10, TimeUnit.SECONDS);
+  ```
+
+  ```
+  23:00:17.344 [main] INFO com.example.demo.completable.Example - exit
+  23:00:17.344 [ForkJoinPool.commonPool-worker-3] INFO com.example.demo.completable.Example - supplyAsync
+  23:00:17.350 [ForkJoinPool.commonPool-worker-3] INFO com.example.demo.completable.Example - thenApply 1
+  23:00:17.352 [ForkJoinPool.commonPool-worker-3] INFO com.example.demo.completable.Example - exceptionally
+  23:00:17.352 [ForkJoinPool.commonPool-worker-3] INFO com.example.demo.completable.Example - thenAccept -10
+  ```
+  - Exception이 발생하면 바로 exceptionally를 타게 된다.
 
 - thenApplyAsync
+  ```java
+  ExecutorService es = Executors.newFixedThreadPool(10);
+  CompletableFuture
+      .supplyAsync(() -> {
+          log.info("supplyAsync");
+          return 1;
+      }, es).thenCompose(s -> {
+          log.info("thenApply {}", s);
+          return CompletableFuture.completedFuture(s + 1);
+      }).thenApply(s -> {
+          log.info("thenApply {}", s);
+          return s + 2;
+      }).thenApplyAsync(s -> {
+          log.info("thenApply {}", s);
+          return s + 3;
+      }, es).exceptionally(e -> {
+          log.info("exceptionally");
+          return -10;
+      }).thenAcceptAsync(s -> log.info("thenAccept {}", s), es);
+  log.info("exit");
+  ForkJoinPool.commonPool().shutdown();
+  ForkJoinPool.commonPool().awaitTermination(10, TimeUnit.SECONDS);
+  ```
+	
+  ```
+  23:03:34.965 [main] INFO com.example.demo.completable.Example - exit
+  23:03:34.964 [pool-1-thread-1] INFO com.example.demo.completable.Example - supplyAsync
+  23:03:34.970 [pool-1-thread-1] INFO com.example.demo.completable.Example - thenApply 1
+  23:03:34.972 [pool-1-thread-1] INFO com.example.demo.completable.Example - thenApply 2
+  23:03:34.973 [pool-1-thread-2] INFO com.example.demo.completable.Example - thenApply 4
+  23:03:34.974 [pool-1-thread-3] INFO com.example.demo.completable.Example - thenAccept 7
+  ```
+  - 이 작업은 다른 스레드에서 처리를 하려고 할 때, thenApplyAsync를 사용한다.
+  - 스레드의 사용을 더 효율적으로 하고 자원을 더 효율적으로 사용한다.
+  - 현재 스레드 풀의 정책에 따라서 새로운 스레드를 할당하거나 대기중인 스레드를 사용한다. (스레드 풀 전략에 따라 다르다.)
   
 #### 
 
