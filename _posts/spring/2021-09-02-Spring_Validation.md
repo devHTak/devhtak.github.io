@@ -67,6 +67,7 @@ public String addItem(@ModelAttribute Item item, BindingResult bindingResult, Re
     return "redirect:/items/{itemId}";
 }
 ```
+- FieldError, ObjectError
   - FieldError: 필드에 오류가 있는 경우 객체를 생성하여 BindingResult 객체에 넣어주면 된다.
   - ObjectError: 특정 필드를 넘어서는 오류가 있으면 ObjectError 객체를 생성하여 BindingResult 객체에 담아두면 된다.
   - 생성자 파라미터
@@ -79,6 +80,7 @@ public String addItem(@ModelAttribute Item item, BindingResult bindingResult, Re
     - defaultMessage: 기본 오류 메시지
   - 바인딩 시점에서 오류가 발생하면 모델 객체에서 사용자가 입력한 값을 유지하기 어렵지만 FieldError, ObjectError를 사용하면 저장하는 기능을 제공한다.
     - rejectedValue가 오류 발생시 저장하는 필드
+  - codes, arguments ㄹㅗ Message ㅊㅓㄹㅣ ㄱㅏㄴㅡㅇ
 
 - BindingResult가 없으면 400오류가 발생하여 Controller가 호출되지 않고, 오류 페이지로 이동한다.
 - BindingResult가 있으면 오류 정보를 BindingResult에 담아서 컨트롤러를 정상 호출한다.
