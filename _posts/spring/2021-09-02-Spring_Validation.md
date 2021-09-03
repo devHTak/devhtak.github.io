@@ -160,6 +160,8 @@ public String addItem(@ModelAttribute Item item, BindingResult bindingResult, Re
 
 - WebDataBinder 사용
   - WebDataBinder를 사용하면 스프링의 파라미터 바인딩의 역할 및 검증 기능도 내부에 포함된다.
+  - WebDataBinder 에 여러개의 validator를 등록할 때 내부에서 Validator를 구분짖기 위해 support를 정의해주어야 한다.
+  
   - ItemController에 추가
     ```java
     @Slf4j
