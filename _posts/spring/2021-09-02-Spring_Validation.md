@@ -110,6 +110,84 @@ public String addItem(@ModelAttribute Item item, BindingResult bindingResult, Re
 
 #### V3. Validator 분리
 
+- Controller에 validation, controller 소스가 복잡하게 섞여있기 때문에 분리해주는 것이 좋다.
+- ItemValidator.java
+  ```java
+  @Component
+  public class ItemValidator extends Validator {
+      @Override
+      public boolean supports(Class<?> clazz) {
+          return Item.class.isAssingalbeFrom(clazz);
+      }
+      
+      @Override
+      public void validate(Objec target, Errors errors) {
+          Item item = (Item) target;
+          
+          if(StringUtils.hasText(item.getName()) {
+              errors.rejectValue("itemName", "상품 이름은 필수 입니다.");
+          }
+          if(item.getPrice() < 100 && item.getPrice() > 100000) {
+              errors.rejectValue("price", "상품 가격은 100원 이상 100000원 미만입니다.");
+          }
+      }
+  }
+  ```
+  - supports: 해당 검증기를 지원하는 여부 확인
+  - validate: 검증 대상 객체와 bindingResult
+
+- ItemController.java
+  ```java
+  @Slf4j
+  @Controller
+  public class ItemController {
+      @Autowired private ItemValidator itemValidator;
+      
+      @PostMapping("/items/add")
+      public String addItem(@ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirect) {
+          itemValidator.validate(item, bindingResult);
+          if(bindingResult.hasErrors() {
+              log.info("errors: {}", bindingResult);
+              return "items/add";
+          }
+
+          Item savedItem = itemRepository.save(item);
+          redirect.addAttribute("itemId", savedItem.getId());      
+          return "redirect:/items/{itemId}";
+      }
+  }
+  ```
+
+- WebDataBinder 사용
+  - WebDataBinder를 사용하면 스프링의 파라미터 바인딩의 역할 및 검증 기능도 내부에 포함된다.
+  - ItemController에 추가
+    ```java
+    @Slf4j
+    @Controller
+    public class ItemController {
+        @Autowired private ItemRepository itemRepository;
+        @Autowired private ItemValidator itemValidator;
+        
+        @InitBinder
+        public void init(WebDataBinder binder) {
+            log.info("init binder: {}", binder);
+            dataBinder.addValidators(itemValidator);
+        }
+      
+        @PostMapping("/items/add")
+        public String addItem(@Validated @ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirect) {
+            if(bindingResult.hasErrors() {
+                log.info("errors: {}", bindingResult);
+                return "items/add";
+            }
+            
+            Item savedItem = itemRepository.save(item);
+            redirect.addAttribute("itemId", savedItem.getId());      
+            return "redirect:/items/{itemId}";
+        }
+    }
+    ```
+
 #### 출처
 
 - 김영한님의 Spring MVC 2 편 - 백엔드 웹 개발 활용 기술
