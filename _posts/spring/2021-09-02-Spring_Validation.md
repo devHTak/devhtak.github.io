@@ -80,7 +80,9 @@ public String addItem(@ModelAttribute Item item, BindingResult bindingResult, Re
     - defaultMessage: 기본 오류 메시지
   - 바인딩 시점에서 오류가 발생하면 모델 객체에서 사용자가 입력한 값을 유지하기 어렵지만 FieldError, ObjectError를 사용하면 저장하는 기능을 제공한다.
     - rejectedValue가 오류 발생시 저장하는 필드
-  - codes, arguments ㄹㅗ Message ㅊㅓㄹㅣ ㄱㅏㄴㅡㅇ
+  - codes, arguments 로 Message 처리가 가능하다. 
+    - 또는 bindingResult.rejectValue()에 errorCode를 넣어준다. errorCode는 required만 설정해도 관련한 메시지 코드를 생성한다.(MessageCodeResolver)
+    - ex) errorCode: required -> required.item.itemName, required.itemName, required.java.lang.String, required 순으로 생성
 
 - BindingResult가 없으면 400오류가 발생하여 Controller가 호출되지 않고, 오류 페이지로 이동한다.
 - BindingResult가 있으면 오류 정보를 BindingResult에 담아서 컨트롤러를 정상 호출한다.
@@ -105,6 +107,8 @@ public String addItem(@ModelAttribute Item item, BindingResult bindingResult, Re
     - Errors 인터페이스는 단순한 오류 저장과 조회 기능을 제공한다. 
     - BindingResult 는 여기에 더해서 추가적인 기능들을 제공한다. addError() 도 BindingResult 가 제공하므로 여기서는 BindingResult 를 많이 사용한다.
     - 주로 관례상 BindingResult 를 많이 사용한다.
+
+#### V3. Validator 분리
 
 #### 출처
 
