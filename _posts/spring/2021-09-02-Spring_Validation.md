@@ -192,6 +192,9 @@ public String addItem(@ModelAttribute Item item, BindingResult bindingResult, Re
 
 #### Bean Validation
 
+- 검증 기능을 매번 코드로 작성하기 번거롭기 때문에 일반적인 로직은 annotation으로 사용할 수 있으며 표준화한 것을 Bean Validation이라고 한다.
+- Bean Validation 2.0(JSR-380) 이라는 기술 표준과 Hibernate Validator라는 구현체가 있다(ORM 과는 관련이 없다.)
+  - Jakarta Bean Validation: Bean Validation 인터페이스로 hibernate-validator 구현체
 - dependency
   ```
   // Gradle
@@ -203,7 +206,11 @@ public String addItem(@ModelAttribute Item item, BindingResult bindingResult, Re
   </dependency>
   ```
   
-- 
+- 검증 annotation
+  - @NotBlank: 빈값 + 공백만 있는 경우 허용하지 않는다.
+  - @NotNull: Null값을 허용하지 않는다.
+  - @Range(min = 1000, max = 10000): 범위 안의 값이 있어야 한다.
+  - @Max(9999) : 최대 9999까지만 허용한다.
 
 #### 출처
 
