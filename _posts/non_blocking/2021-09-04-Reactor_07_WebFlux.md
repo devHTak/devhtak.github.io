@@ -58,7 +58,7 @@ public class WebClientExample {
 //				.flatMap(clientResponse -> clientResponse.bodyToMono(String.class)) // Mono<String>
 // 				.flatMap(res2 -> Mono.fromCompletionStage(myService.work(res2))); // CompletableFuture<String> -> Mono<String>
 		
-    // exchange()가 deprecated 되어 다시 작성
+                // exchange()가 deprecated 되어 다시 작성
 		Mono<String> body = webClient.get().uri(URI1, index)
 				.exchangeToMono(clientResponse -> clientResponse.bodyToMono(String.class))
 				.flatMap(res1 -> webClient.get().uri(URI2, res1)
