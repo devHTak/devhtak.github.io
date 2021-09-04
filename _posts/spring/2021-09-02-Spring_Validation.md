@@ -190,6 +190,21 @@ public String addItem(@ModelAttribute Item item, BindingResult bindingResult, Re
     }
     ```
 
+#### Bean Validation
+
+- dependency
+  ```
+  // Gradle
+  implementation 'org.springframework.boot:spring-boot-starter-validation'
+  // Maven
+  <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+  </dependency>
+  ```
+  
+- 
+
 #### 출처
 
 - 김영한님의 Spring MVC 2 편 - 백엔드 웹 개발 활용 기술
