@@ -341,8 +341,6 @@ public String addItem(@ModelAttribute Item item, BindingResult bindingResult, Re
         @Range(min = 1000, max = 100000)
         private Integer price;
         
-        @NotNull
-        @Max(9999)
         private Integer quantity;
     }
     ```
