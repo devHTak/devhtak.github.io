@@ -207,10 +207,145 @@ public String addItem(@ModelAttribute Item item, BindingResult bindingResult, Re
   ```
   
 - 검증 annotation
+  ```java
+  public class Item {
+      private Long id;
+      
+      @NotBlank(message = "공백X")
+      private String itemName;
+      
+      @NotNull
+      @Range(min = 1000, max = 100000)
+      private Integer price;
+      
+      @NotNull
+      @Max(9999)
+      private Integer quantity;
+  }
+  ```
   - @NotBlank: 빈값 + 공백만 있는 경우 허용하지 않는다.
   - @NotNull: Null값을 허용하지 않는다.
   - @Range(min = 1000, max = 10000): 범위 안의 값이 있어야 한다.
   - @Max(9999) : 최대 9999까지만 허용한다.
+  - message 속성을 통해 validation에 위배되는 경우 나타낼 메시지를 설정해 줄 수 있다.
+    - 에러 코드로 속성에 설정된 메시지를 보여주는 방법 가능
+
+- Bean Validation 적용
+  - @InitBinder + WebDataBinder에 validator를 넣는 소스 제거 필요
+    - 오류 검증기가 중복 적용
+  
+  - Spring 적용 원리
+    - dependency를 추가하면 자동으로 Bean Validator를 인지하고 스프링에 통합한다. 
+    - 자동으로 Validator로 등록한다.
+      - LocalValidatorFactoryBean을 글로벌 Validator로 등록한다.
+      - 해당 Validator는 @NotNull 같은 애노테이션을 보고 검증을 수행
+    - 검증이 필요할 때 파라미터에 @Valid(javax 제공) 또는 @Validation(spring 제공)을 적용하면 된다.
+  
+  - 검증 순서
+    - @ModelAttribute + @Valid or @Validation 각각의 필드에 타입 변환 시도
+      - 실패할 경우 typeMismatch로 FieldError 추가
+    - Validator 적용
+
+- 에러 코드
+  - validation 애노테이션 명 오류 코드를 기반으로 MessageCodesResolver를 통해 다양한 메시지 코드가 순서대로 생성된다.
+    - 예시1. @NotBlank
+      - NotBlank.item.itemName -> NotBlank.itemName -> NotBlank.java.lang.String -> NotBlank
+    - 예시2. @Range
+      - Range.item.price -> Range.price -> Range.java.lang.Integer -> Range
+  - 메시지 찾는 순서
+    - 생성된 메시지 코드 순서대로 messageSource 에서 메시지 찾기
+    - 애노테이션의 message 속성 사용 @NotBlank(message = "공백! {0}")
+    - 라이브러리가 제공하는 기본 값 사용 공백일 수 없습니다
+
+- BeanValidation - groups
+  - 한계: ID에 @NotNull 적용이 필요하다. 하지만 등록할 때에는 Id가 바로 채번되지 않기 때문에 form에서 넘어올 때 validation 오류가 발생한다.
+    - 해결 방법 1. BeanValidation의 groups의 기능 사용
+    - 해결 방법 2. Item을 직접 사용하지 않고, ItemSaveForm, ItemUpdateFrom 같이 폼전송을 위한 별도의 모델 객체를 만들어 사용
+  - groups 적용
+    - @Validated에 적용되는 분류 별 interface 를 정의하고, Item에 groups를 정의하면 된다.
+      - @Valid에는 적용이 불가능하다
+    - SaveCheck interface
+      ```java
+      public interface SaveCheck { }
+      ```
+    - UpdateCheck interface
+      ```java
+      public interface UpdateCheck { }
+      ```
+    - Item.java에 groups 속성 정의
+      ```java
+      public class Item {
+          private Long id;      
+          
+          @NotBlank(message = "공백X", groups=UpdateCheck.class)
+          private String itemName;
+          
+          @NotNull
+          @Range(min = 1000, max = 100000, groups= {UpdateCheck.class, SvaeCheck.class})
+          private Integer price;
+          
+          @NotNull
+          @Max(9999 , groups=SaveCheck.class)
+          private Integer quantity;
+      }
+      ```
+    - handler 파라미터에 @Validated에 value 설정
+      ```java
+      // ...
+      public String addItem(@Validated(SaveCheck.class) @ModelAttribute Item item, BindingResult result) {
+          // ...
+      }
+      
+      public String editItem(@Validated(UpdateCheck.class) @ModelAttribute Item item, BindingResult result) {
+          // ...
+      }
+      // ...
+      ```
+  - Form 별로 전달하고자 하는 데이터가 다르기 때문에 groups 를 적용하기 보다는 Form 별로 요청 객체를 분리하여 사용한다.
+
+- Form 객체 분리
+  - Item.java 원복
+    ```java
+    public class Item {
+        private Long id;      
+        private String itemName;
+        private Integer price;
+        private Integer quantity;
+    }
+    ```
+  - ItemSaveForm.java
+    ```java
+    public class ItemSvaeForm {
+        @NotBlank(message = "공백X")
+        private String itemName;
+        
+        @NotNull
+        @Range(min = 1000, max = 100000)
+        private Integer price;
+        
+        @NotNull
+        @Max(9999)
+        private Integer quantity;
+    }
+    ```
+  - ItemUpdateForm.java
+    ```java
+    public class ItemUpdteForm {
+        @NotBlank
+        private Long id;
+        
+        @NotBlank(message = "공백X")
+        private String itemName;
+        
+        @NotNull
+        @Range(min = 1000, max = 100000)
+        private Integer price;
+        
+        @NotNull
+        @Max(9999)
+        private Integer quantity;
+    }
+    ```
 
 #### 출처
 
