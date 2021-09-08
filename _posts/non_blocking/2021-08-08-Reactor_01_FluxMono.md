@@ -157,9 +157,38 @@ flux.subscribe(item->System.out.println("onNext: " + item),
   - empty
     - 아무값도 전달하지 않는 빈데이터의 Mono를 만들 수 있다.
 
+#### Mono의 동작방식과 block()
+
+```java
+@GetMapping("/")
+public Mono<String> hello() {
+    log.info("pos0");
+    // Publisher -> (Publisher) -> (Publisher) -> Subscriber
+    Mono m = Mono.just("Hello WebFlux").log(); 
+    log.info("pos1");
+    return m;
+}
+```
+```
+2021-09-08 20:45:10.081  INFO 38476 --- [ctor-http-nio-2] com.example.demo.mono.MyController       : pos0
+2021-09-08 20:45:10.082  INFO 38476 --- [ctor-http-nio-2] com.example.demo.mono.MyController       : pos1
+2021-09-08 20:45:10.094  INFO 38476 --- [ctor-http-nio-2] reactor.Mono.Just.1                      : | onSubscribe([Synchronous Fuseable] Operators.ScalarSubscription)
+2021-09-08 20:45:10.096  INFO 38476 --- [ctor-http-nio-2] reactor.Mono.Just.1                      : | request(unbounded)
+2021-09-08 20:45:10.097  INFO 38476 --- [ctor-http-nio-2] reactor.Mono.Just.1                      : | onNext(Hello WebFlux)
+2021-09-08 20:45:10.100  INFO 38476 --- [ctor-http-nio-2] reactor.Mono.Just.1                      : | onComplete()
+
+```
+- Subscriber는 Spring이 자동으로 걸어주게 되어 있다.
+- pos0 다음에 Mono에 대한 로그, pos1 로그가 찍히는 것이 아닌, pos0, pos1 후에 Mono에 대한 로그가 찍혔다.
+  - Spring에서 Subscriber가 subscribe 를 할 때 Mono가 실행되기 때문이다.
+
+
+
 #### 출처
 
 - https://brunch.co.kr/@springboot/154
 - https://projectreactor.io/docs/core/release/api/overview-summary.html
 - https://javacan.tistory.com/tag/Flux.fromStream
 - https://projectreactor.io/docs/core/release/api/reactor/core/publisher/FluxSink.html
+- 토비의 봄 TV 13회 스프링 리액티프 프로그래밍(9) Mono의 동작방식과 block()
+- 토비의 봄 TV 14회 스프링 리액티프 프로그래밍(10) Flux의 특징과 활용방식
