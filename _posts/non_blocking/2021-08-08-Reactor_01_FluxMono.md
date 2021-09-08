@@ -159,30 +159,117 @@ flux.subscribe(item->System.out.println("onNext: " + item),
 
 #### Mono의 동작방식과 block()
 
-```java
-@GetMapping("/")
-public Mono<String> hello() {
-    log.info("pos0");
-    // Publisher -> (Publisher) -> (Publisher) -> Subscriber
-    Mono m = Mono.just("Hello WebFlux").log(); 
-    log.info("pos1");
-    return m;
-}
-```
-```
-2021-09-08 20:45:10.081  INFO 38476 --- [ctor-http-nio-2] com.example.demo.mono.MyController       : pos0
-2021-09-08 20:45:10.082  INFO 38476 --- [ctor-http-nio-2] com.example.demo.mono.MyController       : pos1
-2021-09-08 20:45:10.094  INFO 38476 --- [ctor-http-nio-2] reactor.Mono.Just.1                      : | onSubscribe([Synchronous Fuseable] Operators.ScalarSubscription)
-2021-09-08 20:45:10.096  INFO 38476 --- [ctor-http-nio-2] reactor.Mono.Just.1                      : | request(unbounded)
-2021-09-08 20:45:10.097  INFO 38476 --- [ctor-http-nio-2] reactor.Mono.Just.1                      : | onNext(Hello WebFlux)
-2021-09-08 20:45:10.100  INFO 38476 --- [ctor-http-nio-2] reactor.Mono.Just.1                      : | onComplete()
+- NonBlocking과 Sync
+  ```java
+  @GetMapping("/")
+  public Mono<String> hello() {
+      log.info("pos0");
+      // Publisher -> (Publisher) -> (Publisher) -> Subscriber
+      Mono m = Mono.just("Hello WebFlux").log(); 
+      log.info("pos1");
+      return m;
+  }
+  ```
+  ```
+  2021-09-08 20:45:10.081  INFO 38476 --- [ctor-http-nio-2] com.example.demo.mono.MyController       : pos0
+  2021-09-08 20:45:10.082  INFO 38476 --- [ctor-http-nio-2] com.example.demo.mono.MyController       : pos1
+  2021-09-08 20:45:10.094  INFO 38476 --- [ctor-http-nio-2] reactor.Mono.Just.1                      : | onSubscribe([Synchronous Fuseable] Operators.ScalarSubscription)
+  2021-09-08 20:45:10.096  INFO 38476 --- [ctor-http-nio-2] reactor.Mono.Just.1                      : | request(unbounded)
+  2021-09-08 20:45:10.097  INFO 38476 --- [ctor-http-nio-2] reactor.Mono.Just.1                      : | onNext(Hello WebFlux)
+  2021-09-08 20:45:10.100  INFO 38476 --- [ctor-http-nio-2] reactor.Mono.Just.1                      : | onComplete()
+  ```
+  - Subscriber는 Spring이 자동으로 걸어주게 되어 있다.
+  - pos0 다음에 Mono에 대한 로그, pos1 로그가 찍히는 것이 아닌, pos0, pos1 후에 Mono에 대한 로그가 찍혔다.
+    - Spring에서 Subscriber가 subscribe 를 할 때 Mono가 실행되기 때문이다.
+  - just에 service를 호출한다면 service에 메소드가 먼저 실행된 후 결과값이 just에 들어간다.
+    ```java
+    @GetMapping("/")
+    public Mono<String> hello() {
+        log.info("pos0");
+        // Publisher -> (Publisher) -> (Publisher) -> Subscriber
+        Mono m = Mono.just(myService.findById(1L)).log(); 
+        log.info("pos1");
+        return m;
+    }
+    ```
+    ```
+    2021-09-08 20:51:47.814  INFO 18036 --- [ctor-http-nio-2] com.example.demo.mono.MyController       : pos0
+    2021-09-08 20:51:47.814  INFO 18036 --- [ctor-http-nio-2] com.example.demo.mono.MyService          : service: 1
+    2021-09-08 20:51:47.817  INFO 18036 --- [ctor-http-nio-2] com.example.demo.mono.MyController       : pos1
+    2021-09-08 20:51:47.829  INFO 18036 --- [ctor-http-nio-2] reactor.Mono.Just.1                      : | onSubscribe([Synchronous Fuseable] Operators.ScalarSubscription)
+    2021-09-08 20:51:47.830  INFO 18036 --- [ctor-http-nio-2] reactor.Mono.Just.1                      : | request(unbounded)
+    2021-09-08 20:51:47.831  INFO 18036 --- [ctor-http-nio-2] reactor.Mono.Just.1                      : | onNext(1)
+    2021-09-08 20:51:47.834  INFO 18036 --- [ctor-http-nio-2] reactor.Mono.Just.1                      : | onComplete()
+    ```
+    - just 내부에 있는 myService에 메소드도 미리 실행된다.
 
-```
-- Subscriber는 Spring이 자동으로 걸어주게 되어 있다.
-- pos0 다음에 Mono에 대한 로그, pos1 로그가 찍히는 것이 아닌, pos0, pos1 후에 Mono에 대한 로그가 찍혔다.
-  - Spring에서 Subscriber가 subscribe 를 할 때 Mono가 실행되기 때문이다.
 
+- NonBlocking과 Async
+  ```java
+  @GetMapping("/")
+	public Mono<String> hello() {
+		  log.info("pos0");
+	    // Publisher -> (Publisher) -> (Publisher) -> Subscriber
+	    Mono<String> m = Mono.fromSupplier(() -> myService.findById(1L)).log(); 
+	    log.info("pos1");
+	    return m;
+	}
+  ```
+  ```
+  2021-09-08 20:55:18.650  INFO 20448 --- [ctor-http-nio-3] com.example.demo.mono.MyController       : pos0
+  2021-09-08 20:55:18.653  INFO 20448 --- [ctor-http-nio-3] com.example.demo.mono.MyController       : pos1
+  2021-09-08 20:55:18.664  INFO 20448 --- [ctor-http-nio-3] reactor.Mono.Supplier.1                  : | onSubscribe([Fuseable] Operators.MonoSubscriber)
+  2021-09-08 20:55:18.667  INFO 20448 --- [ctor-http-nio-3] reactor.Mono.Supplier.1                  : | request(unbounded)
+  2021-09-08 20:55:18.668  INFO 20448 --- [ctor-http-nio-3] com.example.demo.mono.MyService          : service: 1
+  2021-09-08 20:55:18.668  INFO 20448 --- [ctor-http-nio-3] reactor.Mono.Supplier.1                  : | onNext(1)
+  2021-09-08 20:55:18.671  INFO 20448 --- [ctor-http-nio-3] reactor.Mono.Supplier.1                  : | onComplete()
+  ```
+  - fromSupplier를 통해 callback 형식으로 작성해 주었다.
+  - 동작 순서를 보면 Subscribe된 상태에서 service가 실행되는 것을 확인할 수 있다.
 
+- return하기 전에 subscribe() 호출
+  ```java
+  @GetMapping("/")
+	public Mono<String> hello() {
+		  log.info("pos0");
+	    // Publisher -> (Publisher) -> (Publisher) -> Subscriber
+	    Mono<String> m = Mono.fromSupplier(() -> myService.findById(1L))
+	    		.doOnNext(c -> log.info(c))
+	    		.log(); 
+	    
+	    m.subscribe(); // 먼저 subscribe
+	    log.info("pos1");
+	    return m;
+	}
+  ```
+  ```
+  2021-09-08 21:01:59.063  INFO 31860 --- [ctor-http-nio-3] com.example.demo.mono.MyController       : pos0
+  2021-09-08 21:01:59.067  INFO 31860 --- [ctor-http-nio-3] reactor.Mono.PeekFuseable.1              : | onSubscribe([Fuseable] FluxPeekFuseable.PeekFuseableSubscriber)
+  2021-09-08 21:01:59.070  INFO 31860 --- [ctor-http-nio-3] reactor.Mono.PeekFuseable.1              : | request(unbounded)
+  2021-09-08 21:01:59.070  INFO 31860 --- [ctor-http-nio-3] com.example.demo.mono.MyService          : service: 1
+  2021-09-08 21:01:59.070  INFO 31860 --- [ctor-http-nio-3] com.example.demo.mono.MyController       : 1
+  2021-09-08 21:01:59.070  INFO 31860 --- [ctor-http-nio-3] reactor.Mono.PeekFuseable.1              : | onNext(1)
+  2021-09-08 21:01:59.071  INFO 31860 --- [ctor-http-nio-3] reactor.Mono.PeekFuseable.1              : | onComplete()
+  2021-09-08 21:01:59.071  INFO 31860 --- [ctor-http-nio-3] com.example.demo.mono.MyController       : pos1
+  2021-09-08 21:01:59.081  INFO 31860 --- [ctor-http-nio-3] reactor.Mono.PeekFuseable.1              : | onSubscribe([Fuseable] FluxPeekFuseable.PeekFuseableSubscriber)
+  2021-09-08 21:01:59.081  INFO 31860 --- [ctor-http-nio-3] reactor.Mono.PeekFuseable.1              : | request(unbounded)
+  2021-09-08 21:01:59.081  INFO 31860 --- [ctor-http-nio-3] com.example.demo.mono.MyService          : service: 1
+  2021-09-08 21:01:59.081  INFO 31860 --- [ctor-http-nio-3] com.example.demo.mono.MyController       : 1
+  2021-09-08 21:01:59.081  INFO 31860 --- [ctor-http-nio-3] reactor.Mono.PeekFuseable.1              : | onNext(1)
+  2021-09-08 21:01:59.086  INFO 31860 --- [ctor-http-nio-3] reactor.Mono.PeekFuseable.1              : | onComplete()
+  ```
+  - pos0로그 후 subscribe()를 하기 Mono에 대한 로그가 나오고 pos1이 찍힌다. 그 다음 return으로 다시 Mono에 대한 subscribe가 진행된다.
+  - Publisher는 1개이지만 여러개의 subscriber를 둘 수 있다.
+  
+- Hot 과 Cold
+  - Cold 방식은 subscribe할 때마다 매번 독립적인 데이터를 발행한다.
+  - Hot 방식은 subscribe 할때 마다, 새로운 데이터를 발행이나 동작하지 않는 방식이다. 
+    - subscribe를 매번 할때마다 미리 생성해 둔 데이터로 동작을 한다. 그리고 subscribe 와 무관하게 즉시 데이터 발행과 동작도 가능한 방식이다.
+
+- block()
+  - publisher가 제공하는 결과값을 꺼내서 Mono나 Flux 같은 컨테이너를 제거하고 값을 넘겨주는 것이 목적.
+  - block으로 값을 빼왔으면, return에서 다시 Mono를 호출해서 처음부터 끝까지 재 생성 작업을 거치지 말고, 결과값을 Mono.just() 로 감싸서 전달하는 것이 훨씬 효율적
+  - Mono 작업들이 DB 조회, Api 요청 등 고 비용 작업인 경우를 생각해보면 명확함
 
 #### 출처
 
