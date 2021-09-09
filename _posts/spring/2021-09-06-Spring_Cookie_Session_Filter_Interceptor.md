@@ -307,6 +307,60 @@ category: Spring
   - setOrder(1) : 필터는 체인으로 동작한다. 따라서 순서가 필요하다. 낮을 수록 먼저 동작한다.
   - addUrlPatterns("/*") : 필터를 적용할 URL 패턴을 지정한다. 한번에 여러 패턴을 지정할 수 있다
 
+- 예시 2) ServletFilter - 인증 체크
+  - Filter 생성
+    ```java
+    @Slf4j
+    public class LoginCheckFilter implements Filter {
+        private static final String[] whitelist = {"/", "/members/add", "/login", "/logout","/css/*"};
+        @Override
+        public void doFilter(ServletRequest request, ServletResponse response,
+            FilterChain chain) throws IOException, ServletException {
+            HttpServletRequest httpRequest = (HttpServletRequest) request;
+            String requestURI = httpRequest.getRequestURI();
+            HttpServletResponse httpResponse = (HttpServletResponse) response;
+            try {
+                log.info("인증 체크 필터 시작 {}", requestURI);
+                if (isLoginCheckPath(requestURI)) {
+                    log.info("인증 체크 로직 실행 {}", requestURI);
+                    HttpSession session = httpRequest.getSession(false);
+                    if (session == null || session.getAttribute(SessionConst.LOGIN_MEMBER) == null) {
+                        log.info("미인증 사용자 요청 {}", requestURI);
+                        //로그인으로 redirect
+                        httpResponse.sendRedirect("/login?redirectURL=" + requestURI);
+                        return; //여기가 중요, 미인증 사용자는 다음으로 진행하지 않고 끝!
+                    }
+                }
+                chain.doFilter(request, response);
+            } catch (Exception e) {
+                throw e; //예외 로깅 가능 하지만, 톰캣까지 예외를 보내주어야 함
+            } finally {
+                log.info("인증 체크 필터 종료 {}", requestURI);
+            }
+        }
+        /**
+        * 화이트 리스트의 경우 인증 체크X
+        */
+        private boolean isLoginCheckPath(String requestURI) {
+            return !PatternMatchUtils.simpleMatch(whitelist, requestURI);
+        }
+    }
+    ```
+    - init, destroy는 Filter 인터페이스에 default로 생성되어 오버라이딩을 안해도 된다.
+  - 빈 등록
+    ```java
+    @Bean
+    public FilterRegistrationBean loginCheckFilter() {
+        FilterRegistrationBean<Filter> filterRegistrationBean = new FilterRegistrationBean<>();
+        filterRegistrationBean.setFilter(new LoginCheckFilter());
+        filterRegistrationBean.setOrder(2);
+        filterRegistrationBean.addUrlPatterns("/*");
+        return filterRegistrationBean;
+    }
+    ```
+    - 모든 URL에 필터가 호출되도록 하고 filter에서 URL을 확인하도록 했다.
+    - 필터에 대한 성능 저하는 크지 않다.
+
 #### 출처
 
 - 인프런 강의: 스프링 MVC 2편 - 백엔드 웹 개발 활용 기술 (김영한님 강의)
