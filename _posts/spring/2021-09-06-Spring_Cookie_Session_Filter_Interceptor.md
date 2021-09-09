@@ -226,7 +226,87 @@ category: Spring
       ```
     - session.getLastAccessedTime(): 최근 세션 접근 시간
     - timeout 시간이 지나면 WAS가 내부에서 해당 세션 제거
-    
+
+#### Servlet Filter
+
+- 공통 관심 사항(cross-cutting concern)
+  - AOP로 해결할 수 있지만, 웹과 관련된 공통 관심사는 Servlet Filter와 Spring Intereptor를 사용하는 것이 좋다.
+  - HttpServletRequest를 제공하기 때문에 Header, Body 등에 정보를 알 수 있다.
+
+- Servlet Filter 특징
+  - 필터 흐름
+    - HTTP 요청 -> WAS -> 필터 -> 서블릿 -> 컨트롤러
+    - 필터를 적용하면 필터가 호출 된 다음에 서블릿이 호출된다. 
+    - 스프링을 사용하는 경우 여기서 말하는 서블릿은 스프링의 디스패처 서블릿으로 생각하면 된다.
+  - 필터 제한
+     - HTTP 요청 -> WAS -> 필터 -> 서블릿 -> 컨트롤러 //로그인 사용자
+     - HTTP 요청 -> WAS -> 필터(적절하지 않은 요청이라 판단, 서블릿 호출X) //비 로그인 사용자
+  - 필터 체인
+    - HTTP 요청 -> WAS -> 필터1 -> 필터2 -> 필터3 -> 서블릿 -> 컨트롤러
+    - 여러 필터를 chaining 할 수 있다.
+  - 필터 인터페이스
+    ```java
+    public interface Filter {
+        public default void init(FilterConfig filterConfig) throws ServletException {}
+        public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException;
+        public default void destroy() {}
+    }    
+    ```
+    - 필터 인터페이스를 구현하고 등록하면 서블릿 컨테이너가 필터를 싱글톤 객체로 생성하고, 관리한다.
+    - init(): 필터 초기화 메서드, 서블릿 컨테이너가 생성될 때 호출된다.
+    - doFilter(): 고객의 요청이 올 때 마다 해당 메서드가 호출된다. 필터의 로직을 구현하면 된다.
+    - destroy(): 필터 종료 메서드, 서블릿 컨테이너가 종료될 때 호출된다.
+
+- 예시 1) Servlet Filter - 요청 로그
+  - Filter 생성
+  ```java
+  @Slf4j
+  public class LogFilter implements Filter {
+      @Override
+      public void init(FilterConfig filterConfig) throws ServletException {
+          log.info("log filter init");
+      }
+
+      @Override
+      public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException{
+          HttpServletRequest request = (HttpServletRequest)request;
+          String requestURI = httpRequest.getRequestURI();
+          String uuid = UUID.randomUUID().toString();
+
+          try {
+              log.info("REQUEST: {}, {}", uuid, requestURI);
+              chain.doFilter(request, response);
+          } catch(Exception e) {
+              throw e;
+          } finally {
+              log.info("RESPONSE: {}, {}", uuid, requestURI);
+          }
+      }
+
+      @Override
+      public void destroy() {
+          log.info("log filter destroy");
+      }
+  }
+  ```
+- Filter 빈 설정
+  ```java
+  @Configuration
+  public class WebConfig {
+      @Bean
+      public FilterRegistrationBean logFilter() {
+          FilterRegistrationBean<Filter> filterRegistrationBean = new FilterRegistrationBean<>();
+          filterRegistrationBean.setFilter(new LogFilter());
+          filterRegistrationBean.setOrder(1);
+          filterRegistrationBean.addUrlPatterns("/*");
+          return filterRegistrationBean;
+      }
+  }
+  ```
+  - setFilter(new LogFilter()) : 등록할 필터를 지정한다.
+  - setOrder(1) : 필터는 체인으로 동작한다. 따라서 순서가 필요하다. 낮을 수록 먼저 동작한다.
+  - addUrlPatterns("/*") : 필터를 적용할 URL 패턴을 지정한다. 한번에 여러 패턴을 지정할 수 있다
+
 #### 출처
 
 - 인프런 강의: 스프링 MVC 2편 - 백엔드 웹 개발 활용 기술 (김영한님 강의)
