@@ -115,7 +115,118 @@ category: Spring
   - 쿠키 탈취 후 사용 해커가 토큰을 털어가도 시간이 지나면 사용할 수 없도록 서버에서 세션의 만료시간을 짧게(예: 30분) 유지한다.
   - 해킹이 의심되는 경우 서버에서 해당 세션을 강제로 제거하면 된다.
 
+- HttpSession을 활용한 로그인
+  - Servlet이 제공하는 HttpSession
+  - 쿠키 이름이 JSESSIONID이고 value는 랜덤값으로 생성된다.
+  - 로그인 기능
+    ```java
+    @PostMapping("/login")
+    public String login(@Valid @ModelAttribute LoginForm form, BindingResult result, HttpServletRequest request) {
+        if(result.hasErrors()) return "login/loginForm";
+        
+        Member member = loginService.login(form.getLoginId(), form.getPassword());
+        if(member == null) {
+            result.reject("loginFail", "아이디 또는 비밀번호가 맞지 않습니다.");
+            return "login/loginForm";
+        }
+        // 로그인 성공 처리
+        // 세션이 있으면 있는 세션 반환, 없으면 신규 세션 생성
+        HttpSession session = request.getSession();
+        // 세션에 로그인 회원 정보 보관
+        session.setAttribute("loginMember", loginMember);
+        
+        return "redirect:/";
+    }    
+    ```
+  - home(redirect:/) 처리
+    ```java
+    @GetMapping("/")
+    public String home(HttpServletRequest request, Model model) {
+        HttpSession session = request.getSession(false); // 기존에 생성되어 있지 않으면 null
+        if(sessino == null) return "home";
+        
+        Member member = (Member)session.getAttribute("loginMember"); // 로그인 객체가 없는 경우
+        if(member == null) return "home";
+        
+        model.addAttribute("member", member); // 로그인 완료
+        return "loginHome"; 
+    }
+    ```
+    - getSession에서 boolean create를 파라미터로 받는다.
+      - true: 세션이 있으면 기존 세션을 반환하고 없으면 새로운 세션을 생성해서 반환한다.
+      - false: 세션이 없으면 새로운 세션을 생성하지 않고, null을 반환
+  - 로그아웃
+    ```java
+    @PostMapping("/logout")
+    public String logoutV3(HttpServletRequest request) {
+        // 세션을 삭제한다.
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        return "redirect:/";
+    }
+    ```
 
+- @SessionAttribute 으로 Member를 꺼내올 수 있다.
+  ```java
+  public String home(@SessionAttribute(name = "loginMember", required=false) Member loginMember, Model model) {
+      // ...
+  }
+  ```
+  - 해당 애노테이션을 통해 attribute를 가져올 수 있다.
+  - 생성하지는 않기 때문에 찾아올 때에 사용한다.
+
+- TrackingModes
+  - 로그인을 처음 시도하면 URL이 다음과 같이 jsessionid 를 포함하고 있는 것을 확인할 수 있다.
+    ```
+    http://localhost:8080/;jsessionid=F59911518B921DF62D09F0DF8F83F872
+    ```
+  - 웹 브라우저가 쿠키를 지원하지 않을 때 쿠키 대신 URL을 통해서 세션을 유지하는 방법으로  URL에 이 값을 계속 포함해서 전달해야 한다.
+  - 타임리프 같은 템플릿은 엔진을 통해서링크를 걸면 jsessionid 를 URL에 자동으로 포함해준다. 
+  - Tracking Mode를 URL이 아닌 Cookie를 통해 진행하기 위해서는 application.properties 에 설정
+    ```
+    server.servlet.session.tracking-modes=cookie
+    ```
+
+- Session 정보와 Timeout
+  - session 정보
+    ```java
+    @GetMapping("/session-info")
+    public String sessionInfo(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return "세션이 없습니다.";
+        }
+        //세션 데이터 출력
+        session.getAttributeNames().asIterator()
+            .forEachRemaining(name -> log.info("session name={}, value={}", name, session.getAttribute(name)));
+        log.info("sessionId={}", session.getId());
+        log.info("maxInactiveInterval={}", session.getMaxInactiveInterval());
+        log.info("creationTime={}", new Date(session.getCreationTime()));
+        log.info("lastAccessedTime={}", new Date(session.getLastAccessedTime()));
+        log.info("isNew={}", session.isNew());
+        return "세션 출력";
+    }
+    ```
+    - sessionId : 세션Id, JSESSIONID 의 값이다. 예) 34B14F008AA3527C9F8ED620EFD7A4E1
+    - maxInactiveInterval : 세션의 유효 시간, 예) 1800초, (30분)
+    - creationTime : 세션 생성일시
+    - lastAccessedTime : 세션과 연결된 사용자가 최근에 서버에 접근한 시간, 클라이언트에서 서버로
+    - sessionId ( JSESSIONID )를 요청한 경우에 갱신된다.
+    - isNew : 새로 생성된 세션인지, 아니면 이미 과거에 만들어졌고, 클라이언트에서 서버로 sessionId ( JSESSIONID )를 요청해서 조회된 세션인지 여부
+  
+  - session timeout 설정
+    - 세션과 관련된 쿠키( JSESSIONID )를 탈취 당했을 경우 오랜 시간이 지나도 해당 쿠키로 악의적인 요청을 할 수 있다.
+    - 세션은 기본적으로 메모리에 생성된다. 메모리의 크기가 무한하지 않기 때문에 꼭 필요한 경우만 생성해서 사용해야 한다. 10만명의 사용자가 로그인하면 10만게의 세션이 생성되는 것
+    - Session 종료 시점은 세션 생성 시점이 아닌 가장 최근 요청 시간을 기준으로 session timeout 시간을 주는 것
+    - application.properties에 설정을 줄 수 있다.
+      ```
+      server.servlet.session.timeout=60 // 초 단위
+      ```
+    - session.getLastAccessedTime(): 최근 세션 접근 시간
+    - timeout 시간이 지나면 WAS가 내부에서 해당 세션 제거
+    
 #### 출처
 
 - 인프런 강의: 스프링 MVC 2편 - 백엔드 웹 개발 활용 기술 (김영한님 강의)
