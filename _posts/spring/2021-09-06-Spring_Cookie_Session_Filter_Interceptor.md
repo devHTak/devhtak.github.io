@@ -314,8 +314,7 @@ category: Spring
     public class LoginCheckFilter implements Filter {
         private static final String[] whitelist = {"/", "/members/add", "/login", "/logout","/css/*"};
         @Override
-        public void doFilter(ServletRequest request, ServletResponse response,
-            FilterChain chain) throws IOException, ServletException {
+        public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
             String requestURI = httpRequest.getRequestURI();
             HttpServletResponse httpResponse = (HttpServletResponse) response;
@@ -347,6 +346,25 @@ category: Spring
     }
     ```
     - init, destroy는 Filter 인터페이스에 default로 생성되어 오버라이딩을 안해도 된다.
+    - 로그인 필요 시 redirectURL을 넘겼기 때문에 로그인 시 해당 경로로 넘어가도록 수정
+      ```java
+      @PostMapping("/login")
+      public String loginV4(@Valid @ModelAttribute LoginForm form, BindingResult bindingResult, @RequestParam(defaultValue = "/") String redirectURL, HttpServletRequest request) {
+          if (bindingResult.hasErrors()) {
+              return "login/loginForm";
+          }
+          Member loginMember = loginService.login(form.getLoginId(), form.getPassword());
+          log.info("login? {}", loginMember);
+          
+          if (loginMember == null) {
+              bindingResult.reject("loginFail", "아이디 또는 비밀번호가 맞지 않습니다.");
+              return "login/loginForm";
+          }
+          HttpSession session = request.getSession();
+          session.setAttribute(SessionConst.LOGIN_MEMBER, loginMember);
+          return "redirect:" + redirectURL;
+      }
+      ```
   - 빈 등록
     ```java
     @Bean
