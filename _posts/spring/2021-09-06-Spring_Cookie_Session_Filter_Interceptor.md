@@ -244,6 +244,9 @@ category: Spring
   - 필터 체인
     - HTTP 요청 -> WAS -> 필터1 -> 필터2 -> 필터3 -> 서블릿 -> 컨트롤러
     - 여러 필터를 chaining 할 수 있다.
+  - chain.doFilter(request, response); 호출
+    - 다음 필터 또는 서블릿을 호출할 때 request, response 를 다른 객체로 바꿀 수 있다.
+    - ServletRequest , ServletResponse 를 구현한 다른 객체를 만들어서 넘기면 해당 객체가 다음 필터 또는 서블릿에서 사용된다.
   - 필터 인터페이스
     ```java
     public interface Filter {
