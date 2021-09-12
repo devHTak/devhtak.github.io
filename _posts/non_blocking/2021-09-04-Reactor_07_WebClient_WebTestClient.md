@@ -1,6 +1,6 @@
 ---
 layout: post
-title: WebFlux
+title: WebClient와 WebTestClient
 summary: Reactive Programming
 author: devhtak
 date: '2021-08-30 21:41:00 +0900'
