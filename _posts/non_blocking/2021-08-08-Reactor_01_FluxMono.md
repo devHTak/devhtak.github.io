@@ -132,6 +132,52 @@ flux.subscribe(item->System.out.println("onNext: " + item),
     - Publisher의 subscribe를 호출할 때 인자로 받은 Subscriber객체의 onSubscribe 메서드가 실행되며, 이 때 인자로 받은 Subscription을 활용한다(request, cancel)
   - 데이터를 전달하면서 onNext() 메서드가 실행되고 만약 오류가 발생하면 onError() 메서드가 실행, 정상 완료되면 onComplete() 메서드가 실행된다.
 
+#### Flux 특징과 활용방식
+
+- Mono : 데이터를 한개만 보낼 때 사용
+- Flux: 여러개의 데이터를 보낼 때 사용한다.
+  ```java
+  @Data 
+  @AllArgsConstructor
+  public class Event {
+  	private long id;
+	private String value;
+  }
+  ```
+  ```java
+  @RestController
+  @Slf4j
+  public class MyController {
+  	@GetMapping("/event/{id}")
+  	public Mono<Event> helloMono(@PathVariable Long id) {
+  		return Mono.just(new Event(id, "event: " + id));
+  	}
+  	@GetMapping("/events")
+  	public Flux<Event> helloFlux() {
+  		return Flux.just(new Event(1, "event: 1"), new Event(2, "event: 2"));
+  	}
+  }
+  ```
+
+- Mono에 단일 데이터를 Collection으로 넣어서 여러개의 데이터를 전달할 수 있지만, Flux의 fromIterable을 사용하면, Stream 형태에 데이터를 가공할 수 있다.
+  ```java
+  @RestController
+  @Slf4j
+  public class MyController {
+  	@GetMapping("/event/{id}")
+  	public Mono<List<Event>> helloMono(@PathVariable Long id) {
+  		List<Event> list = Arrays.asList(new Event(1, "event: 1"), new Event(2, "event: 2"));
+  		return Mono.just(list);
+  	}
+  	@GetMapping(value = "/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  	public Flux<Event> helloFlux() {
+  		List<Event> list = Arrays.asList(new Event(1, "event: 1"), new Event(2, "event: 2"));
+  		return Flux.fromIterable(list).filter(event -> event.getId() % 2 == 0);
+  	}
+  }
+  ```
+
+
 
 #### Mono
 
@@ -207,13 +253,13 @@ flux.subscribe(item->System.out.println("onNext: " + item),
 - NonBlocking과 Async
   ```java
   @GetMapping("/")
-	public Mono<String> hello() {
-		  log.info("pos0");
-	    // Publisher -> (Publisher) -> (Publisher) -> Subscriber
-	    Mono<String> m = Mono.fromSupplier(() -> myService.findById(1L)).log(); 
-	    log.info("pos1");
-	    return m;
-	}
+  public Mono<String> hello() {
+  	log.info("pos0");
+  	// Publisher -> (Publisher) -> (Publisher) -> Subscriber
+  	Mono<String> m = Mono.fromSupplier(() -> myService.findById(1L)).log(); 
+  	log.info("pos1");
+  	return m;
+  }
   ```
   ```
   2021-09-08 20:55:18.650  INFO 20448 --- [ctor-http-nio-3] com.example.demo.mono.MyController       : pos0
@@ -230,17 +276,17 @@ flux.subscribe(item->System.out.println("onNext: " + item),
 - return하기 전에 subscribe() 호출
   ```java
   @GetMapping("/")
-	public Mono<String> hello() {
-		  log.info("pos0");
-	    // Publisher -> (Publisher) -> (Publisher) -> Subscriber
-	    Mono<String> m = Mono.fromSupplier(() -> myService.findById(1L))
+  public Mono<String> hello() {
+  	log.info("pos0");
+	// Publisher -> (Publisher) -> (Publisher) -> Subscriber
+	Mono<String> m = Mono.fromSupplier(() -> myService.findById(1L))
 	    		.doOnNext(c -> log.info(c))
 	    		.log(); 
 	    
-	    m.subscribe(); // 먼저 subscribe
-	    log.info("pos1");
-	    return m;
-	}
+	m.subscribe(); // 먼저 subscribe
+	log.info("pos1");
+	return m;
+  }
   ```
   ```
   2021-09-08 21:01:59.063  INFO 31860 --- [ctor-http-nio-3] com.example.demo.mono.MyController       : pos0
