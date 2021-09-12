@@ -160,6 +160,7 @@ flux.subscribe(item->System.out.println("onNext: " + item),
   ```
 
 - Mono에 단일 데이터를 Collection으로 넣어서 여러개의 데이터를 전달할 수 있지만, Flux의 fromIterable을 사용하면, Stream 형태에 데이터를 가공할 수 있다.
+  - Mono로 Collection을 보내면 한번에 보낸다, Flux는 Iterable하게 데이터를 순차적으로 보낼 수 있다.
   ```java
   @RestController
   @Slf4j
@@ -176,8 +177,26 @@ flux.subscribe(item->System.out.println("onNext: " + item),
   	}
   }
   ```
+  - text/event-stream: event stream 타입으로 "data: " 형식의 prefix가 붙는다. SSE(Server Sent Event) 참고
+  - fromIterable
 
+    ![image](https://user-images.githubusercontent.com/42403023/132988690-21f3e0e6-2dee-438f-9eb2-9a9c89c1ec5f.png)
+    
+    - 이미지 출처: https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Flux.html
 
+  - fromStream, take
+    ```java
+    @GetMapping(value = "/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<Event> helloFlux() {
+    	return Flux
+    		.fromStream(Stream.generate(() -> new Event(System.currentTimeMillis(), "events")))
+    		.delayElements(Duration.ofSeconds(1))
+    		.take(10);
+    }
+    ```
+    - take: 지정된 숫자만큼 데이터를 보낸 후 cancel()을 호출한다.
+    - delayElements: 지정된 시간만큼 대기 후 데이터 전달
+      - 메서드를 생성하는 쓰레드가 10초를 대기하는 것이 아닌 delay하는 쓰레드가 새롭게 생성되어 delay한다.
 
 #### Mono
 
