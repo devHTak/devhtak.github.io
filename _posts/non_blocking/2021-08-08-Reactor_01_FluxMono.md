@@ -198,6 +198,20 @@ flux.subscribe(item->System.out.println("onNext: " + item),
     - delayElements: 지정된 시간만큼 대기 후 데이터 전달
       - 메서드를 생성하는 쓰레드가 10초를 대기하는 것이 아닌 delay하는 쓰레드가 새롭게 생성되어 delay한다.
 
+  - 두개의 Flux 묶기
+    ```java
+    @GetMapping(value = "/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<Event> helloFlux() {
+    	Flux<Event> f = Flux.<Event, Long>generate(() -> 1L, (id, sink) -> {
+    	sink.next(new Event(id, "events: " + id));
+    		return id + 1;
+    	});
+    	Flux<Long> interval = Flux.interval(Duration.ofSeconds(1));
+    	return Flux.zip(f, interval).map(tu -> tu.getT1());
+    }
+    ```
+    - interval은 정해진 시간동안 대기 후 데이터를 전달한다.
+
 #### Mono
 
 ![image](https://user-images.githubusercontent.com/42403023/128662145-06e5d567-87a8-4ef9-adaf-9ceca39aa77a.png)
