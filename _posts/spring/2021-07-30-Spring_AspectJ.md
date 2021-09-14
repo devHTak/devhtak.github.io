@@ -31,9 +31,9 @@ category: Spring
 - dependency 추가
   ```
   <dependency>
-	  <groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-aop</artifactId>
-	</dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-aop</artifactId>
+  </dependency>
   ```
   - aspectjrt는 Rutntime 프로그램이다.
   - aspectjweaver는 aspect의 정보를 바탕으로 aspect를 구성한 코드를 생성하는 데 필요한 유틸리티 프로그램
