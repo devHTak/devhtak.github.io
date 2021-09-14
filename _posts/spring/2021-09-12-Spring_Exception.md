@@ -203,7 +203,115 @@ category: Spring
 
 #### API 예외 처리
 
-- 
+- 시작
+  - API에서는 오류 상황 시 오류 화면을 보여주는 것이 아닌, 오류 응답 스펙을 정하고 JSON 데이터를 내려주어야 한다.
+  ```java
+  @RequestMapping(produces = MediaType.TEXT_HTML_VALUE)
+  public ModelAndView errorHtml(HttpServletRequest request, HttpServletResponse response) {}
+  @RequestMapping
+  public ResponseEntity<Map<String, Object>> error(HttpServletRequest request) {}
+  ```
+  - 요청 Header의 Accept 헤더 값에 따라 ModelAndView를 통해 HTML 오류 화면을 보여줄 수도 있고, JSON 타입의 오류 데이터를 보낼 수 있다.
+
+- HandlerExceptionResolver
+  - 스프링 MVC는 컨트롤러(핸들러) 밖으로 예외가 던져진 경우 예외를 해결하고, 동작을 새로 정의할 수 있는 방법을 제공한다.
+  - 컨트롤러 밖으로 던져진 예외를 해결하고, 동작 방식을 변경하고 싶으면 HandlerExceptionResolver 를 사용하면 된다.
+  - ExceptionResolver 적용 전
+    
+    ![image](https://user-images.githubusercontent.com/42403023/133262092-2fd7df51-efa7-4bbb-b434-0836b21026f0.png)
+    
+    - 이미지 출처: 스프링 MVC 2편 - 백엔드 웹 개발 활용 기술 \[인프런 김영한님 강의]
+  - ExceptionResolver 적용 후
+    
+    ![image](https://user-images.githubusercontent.com/42403023/133262150-260a3d3f-5dc7-4ca8-8e5d-ccdcc9849c9b.png)
+    
+    - 이미지 출처: 스프링 MVC 2편 - 백엔드 웹 개발 활용 기술 \[인프런 김영한님 강의]
+
+  - HandlerExceptionResolver와 Customizing
+    ```java
+    public interface HandlerExceptionResolver {
+        ModelAndView resolveException(HttpServletRequest request, HttpServletResponse response,Object handler, Exception ex);
+    }
+    ```
+    - handler: 핸들러(컨트롤러) 정보
+    - Exception ex: 핸들러(컨트롤러)에서 발생한 예외
+    ```java
+    @Slf4j
+    public class MyHandlerExceptionResolver implements HandlerExceptionResolver {
+        @Override
+        public ModelAndView resolveException(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+            try {
+                if (ex instanceof UserException) {
+                    log.info("UserException resolver to 400");
+                    String acceptHeader = request.getHeader("accept");
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    
+                    if ("application/json".equals(acceptHeader)) {
+                        Map<String, Object> errorResult = new HashMap<>();
+                        errorResult.put("ex", ex.getClass());
+                        errorResult.put("message", ex.getMessage());
+                        String result = objectMapper.writeValueAsString(errorResult);
+                        response.setContentType("application/json");
+                        response.setCharacterEncoding("utf-8");
+                        response.getWriter().write(result);
+                        return new ModelAndView();
+                    } else {
+                        //TEXT/HTML
+                        return new ModelAndView("error/500");
+                    }
+                }
+            } catch (IOException e) {
+                log.error("resolver ex", e);
+            }
+            return null;
+        }
+    }
+    
+    // WebMvcConfigurer 를 통해 ExceptionResolver 등록
+    @Override
+    public void extendHandlerExceptionResolvers(List<HandlerExceptionResolver> resolvers) {
+        resolvers.add(new MyHandlerExceptionResolver());
+    }
+    ```
+    - ExceptionResolver 가 ModelAndView 를 반환하는 이유는 마치 try, catch를 하듯이, Exception을 처리해서 정상 흐름 처럼 변경하는 것이 목적
+    - IllegalArgumentException 이 발생하면 response.sendError(400) 를 호출해서 HTTP 상태 코드를 400으로 지정하고, 빈 ModelAndView 를 반환
+    - 빈 ModelAndView를 반환하면 뷰를 렌더링 하지 않고, 정상 흐름으로 서블릿이 리턴된다.
+    
+- 스프링이 제공하는 ExceptionResolver
+  - HandlerExceptionResolverCompsoite에 다음과 같이 스프링 부트가 제공하는 ExceptionResolver가 등록되어 있다.
+    - ExceptionHandlerExceptionResolver
+    - ResponseStatusExceptionResolver
+    - DefaultHandlerExceptionResolver
+
+  - ResponseStatusExceptionResolver
+    - 역할
+      - @ResponseStatus 가 달려있는 예외 처리
+      - ResponseStatusException 예외 처리
+
+    - @ResponseStatus 예제
+      ```java
+      @ResponseStatus(code = HttpStatus.BAD_REQUEST, reason = "잘못된 요청 오류")
+      public class BadRequestException extends RuntimeException {}
+      ```
+      - BadRequestException 이 발생하면 400 BadRequest 상태코드가 발생하고, message로 잘못된 요청 오류가 발생
+      - reason에는 MessageSource 에서 매세지 코드를 찾아서 보여주는 기능도 제공한다.
+
+    - ResponseStatusException
+      ```java
+      @GetMapping("/api/response-status-ex2")
+      public String responseStatusEx2() {
+          throw new ResponseStatusException(HttpStatus.NOT_FOUND, "error.bad", new IllegalArgumentException());
+      }
+      ```
+    
+  - DefaultHandlerExceptionResolver
+    - 스프링 내부에서 발생하는 스프링 예외를 해결
+    
+    ![image](https://user-images.githubusercontent.com/42403023/133266285-ee13ed62-414e-4d3a-9144-1e9d5dfbd41a.png)
+
+    - 이런 방식으로 내부에서 발생 가능한 예외에 대한 처리를 하고 있다.
+
+  - ExceptionHandlerExceptionResolver -> @ExceptionHandler
 
 #### 출처
 
