@@ -311,8 +311,89 @@ category: Spring
 
     - 이런 방식으로 내부에서 발생 가능한 예외에 대한 처리를 하고 있다.
 
-  - ExceptionHandlerExceptionResolver -> @ExceptionHandler
+#### ExceptionHandlerExceptionResolver -> @ExceptionHandler
 
+- HTML 오류
+  - 웹 브라우저에 HTML 화면을 제공할 때에는 오류가 발생할 경우 BasicErrorController를 사용하여 5xx, 4xx 관련 화면을 보여주면 된다.
+
+- API 오류
+  - API 에서는 응답 모양, 스펙이 모두 다르기 때문에 세밀한 제어가 필요하다.
+  - BasicErrorController를 사용하거나 HandlerExceptionResolver를 구현하려면 ModelAndView를 반환하는 등 불필요한 작업들이 있다.
+  - HttpServletResponse에 직접 응답 데이터를 넣어주는 것도 불편하다.
+
+- @ExceptionHandler
+  - Spring은 API 예외 처리를 위해 @ExceptionHandler 라는 애노테이션을 사용하면 ExceptionHandlerExceptionResolver 를 통해 편리하게 해결할 수 있다.
+  - 예제
+    - ErrorResult.java
+      ```java
+      @Data
+      @AllArgsConstructor
+      public class ErrorResult {
+          private String code;
+          private String message;
+      }
+      ```
+    - @ExceptionHandler
+      ```java
+      @ResponseStatus(HttpStatus.BAD_REQUEST)
+      @ExceptionHandler(IllegalArgumentException.class)
+      public ErrorResult illegalExHandle(IllegalArgumentException e) {
+          log.error("[exceptionHandle] ex", e);
+          return new ErrorResult("BAD", e.getMessage());
+      }
+      
+      @ExceptionHandler
+      public ResponseEntity<ErrorResult> userExHandle(UserException e) {
+          log.error("[exceptionHandle] ex", e);
+          ErrorResult errorResult = new ErrorResult("USER-EX", e.getMessage());
+          return new ResponseEntity<>(errorResult, HttpStatus.BAD_REQUEST);
+      }
+      
+      @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+      @ExceptionHandler({AException.class, BException.class})
+      public ErrorResult exHandle(Exception e) {
+          log.error("[exceptionHandle] ex", e);
+          return new ErrorResult("EX", "내부 오류");
+      }
+      ```
+      - 예외 상황에 따라 실행되는 핸들러를 지정할 수 있다.
+      - @ResponseStatus를 통해 오류에 대한 응답코드도 지정할 수 있다.
+      - @ExceptionHandler에 예외를 생략할 수 있으며, 생략하면 메서드 파라미터의 예외가 지정된다.
+      - {} 배열 형태로 다양한 예외를 지정할 수 있다.
+      - 우선순위
+        ```java
+        @ExceptionHandler(부모예외.class)
+        public String 부모예외처리()(부모예외 e) {}
+        
+        @ExceptionHandler(자식예외.class)
+        public String 자식예외처리()(자식예외 e) {}
+        ```
+        - @ExceptionHandler 에 지정한 부모 클래스는 자식 클래스까지 처리할 수 있다. 
+        - 자식예외가 발생하면 부모예외처리() , 자식예외처리() 둘다 호출 대상이 된다. 둘 중 더 자세한 것이 우선권을 가지므로 자식예외처리() 가 호출된다. 
+        - 물론 부모예외 가 호출되면 부모예외처리() 만 호출 대상이 되므로 부모예외처리() 가 호출된다.
+
+- @ControllerAdvice
+  - 예외에 대한 처리(@ExceptionHandler)를 @ControllerAdvice, @RestControllerAdvice를 사용하여 분리할 수 있다.
+  - @ControllerAdvice 는 대상으로 지정한 여러 컨트롤러에 @ExceptionHandler , @InitBinder 기능을 부여해주는 역할을 한다.
+  - @ControllerAdvice 에 대상을 지정하지 않으면 모든 컨트롤러에 적용된다. (글로벌 적용)
+  - 대상 컨트롤러를 지정할 수 있다.
+    ```java
+    // Target all Controllers annotated with @RestController
+    @ControllerAdvice(annotations = RestController.class)
+    public class ExampleAdvice1 {}
+    
+    // Target all Controllers within specific packages
+    @ControllerAdvice("org.example.controllers")
+    public class ExampleAdvice2 {}
+    
+    // Target all Controllers assignable to specific classes
+    @ControllerAdvice(assignableTypes = {ControllerInterface.class, AbstractController.class})
+    public class ExampleAdvice3 {}
+    ```
+    - annotation으로 지정할 수 있다.
+    - 패키지를 통해 지정할 수 있다.
+    - 특정 컨트롤러에 대한 클래스를 지정할 수 있다.
+    
 #### 출처
 
 - 스프링 MVC 2편 - 백엔드 웹 개발 활용 기술 \[인프런 김영한님 강의]
