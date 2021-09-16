@@ -197,7 +197,126 @@ category: Spring
       </form>
       ```
 
-#### 
+#### Formatter
+
+- Formatter는 Converter 기능에 Locale 정보를 추가하여 사용할 수 있다.
+- Locale
+  - 날짜 숫자의 표현 방법은 Locale 현지화 정보가 사용될 수 있다.
+  - 객체를 특정한 포멧에 맞추어 문자로 출력하거나 또는 그 반대의 역할을 하는 것에 특화된 기능이 바로 포맷터( Formatter )이다.
+
+- Formatter interface
+  ```java
+  public interface Printer<T> {
+      String print(T object, Locale locale);
+  }
+  public interface Parser<T> {
+      T parse(String text, Locale locale) throws ParseException;
+  }
+  public interface Formatter<T> extends Printer<T>, Parser<T> {}
+  ```
+
+  - 예시 : Price같이 Number 타입을 Locale 정보에 따른 Formatter 생성
+    ```java
+    @Slf4j
+    public class MyNumberFormatter implements Formatter<Number> {
+        @Override
+        public Number parse(String text, Locale locale) throws ParseException {
+            log.info("text={}, locale={}", text, locale);
+            NumberFormat format = NumberFormat.getInstance(locale);
+            return format.parse(text);
+        }
+        
+        @Override
+        public String print(Number object, Locale locale) {
+            log.info("object={}, locale={}", object, locale);
+            return NumberFormat.getInstance(locale).print(object);
+        }
+    }
+    ```
+    - 테스트
+      ```java
+      @Test
+      void parse() throws ParseException {
+          Number result = formatter.parse("1,000", Locale.KOREA);
+          assertThat(result).isEqualTo(1000L); //Long 타입 주의
+      }
+      @Test
+      void print() {
+          String result = formatter.print(1000, Locale.KOREA);
+          assertThat(result).isEqualTo("1,000");
+      }
+      ```
+
+- ConversionService
+  - FormattingConversionService는 Formatter를 지원하는 컨버전 서비스
+  - DefaultFormattingConversionService 는 FormattingConversionService에 기본적인 통화, 숫자관련 몇가지 기본 포맷터를 추가하여 제공
+    ```java
+    @Test
+    void formattingConversionService() {
+        DefaultFormattingConversionService conversionService = new DefaultFormattingConversionService();
+        
+        //컨버터 등록
+        conversionService.addConverter(new StringToIpPortConverter());
+        conversionService.addConverter(new IpPortToStringConverter());
+        
+        //포맷터 등록
+        conversionService.addFormatter(new MyNumberFormatter());
+        
+        //컨버터 사용
+        IpPort ipPort = conversionService.convert("127.0.0.1:8080", IpPort.class);
+        assertThat(ipPort).isEqualTo(new IpPort("127.0.0.1", 8080));
+        
+        //포맷터 사용
+        assertThat(conversionService.convert(1000, String.class)).isEqualTo("1,000");
+        assertThat(conversionService.convert("1,000", Long.class)).isEqualTo(1000L);
+    }
+    ```
+  - DefaultFormattingConversionService 상속 관계
+    - FormattingConversionService 는 ConversionService 관련 기능을 상속받기 때문에 결과적으로 컨버터도 포맷터도 모두 등록할 수 있다.
+    - 사용할 때는 ConversionService 가 제공하는 convert 를 사용하면 된다.
+    - 스프링 부트는 DefaultFormattingConversionService 를 상속 받은 WebConversionService 를 내부에서 사용한다.
+
+- 포맷터 적용하기
+  - Converter와 동일하게 등록하면 된다.
+  - FormatterRegistry 에 addFormatter를 사용하면 된다.
+  ```java
+  @Configuration
+  public class WebConfig implements WebMvcConfigurer {
+      @Override
+      public void addFormatters(FormatterRegistry registry) {
+          registry.addConverter(new StringToIpPortConverter());
+          registry.addConverter(new IpPortToStringConverter());
+          
+          //추가
+          registry.addFormatter(new MyNumberFormatter());
+      }
+  }
+  ```
+  - 우선순위: 컨버터가 우선하므로 포맷터가 적용되지 않고, 컨버터가 적용된다.
+
+- Spring 기본 제공 Formatter
+  - @NumberFormat : 숫자 관련 형식 지정 포맷터 사용, NumberFormatAnnotationFormatterFactory
+  - @DateTimeFormat : 날짜 관련 형식 지정 포맷터 사용, Jsr310DateTimeFormatAnnotationFormatterFactory
+  ```java
+  @Data
+  class Form {
+      @NumberFormat(pattern = "###,###")
+      private Integer number;
+      @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+      private LocalDateTime localDateTime;
+  }
+  ```
+  
+- 주의
+  ```
+  메시지 컨버터( HttpMessageConverter )에는 컨버전 서비스가 적용되지 않는다.
+  특히 객체를 JSON으로 변환할 때 메시지 컨버터를 사용하면서 이 부분을 많이 오해하는데, HttpMessageConverter 의 역할은 HTTP 메시지 바디의 내용을 객체로 변환하거나 객체를 HTTP 메시지 바디에 입력하는 것이다. 
+  예를 들어서 JSON을 객체로 변환하는 메시지 컨버터는 내부에서 Jackson 같은 라이브러리를 사용한다. 
+  객체를 JSON으로 변환한다면 그 결과는 이 라이브러리에 달린 것이다. 
+  따라서 JSON 결과로 만들어지는 숫자나 날짜 포맷을 변경하고 싶으면 해당 라이브러리가 제공하는 설정을 통해서 포맷을 지정해야 한다. 
+  결과적으로 이것은 컨버전 서비스와 전혀 관계가 없다.
+  컨버전 서비스는 @RequestParam , @ModelAttribute , @PathVariable , 뷰 템플릿 등에서 사용할 수 있다
+  ```
 
 #### 출처
 
