@@ -150,24 +150,24 @@ category: Spring
     @Data
     public class Item {
     	private Long id;
-	private String itemName;
-	private UploadFile attachFile;
-	private List<UploadFile> imageFiles;
+    	private String itemName;
+    	private UploadFile attachFile;
+    	private List<UploadFile> imageFiles;
     }
-    
+
     @Data
     @AllArgsConstructor
     public class UploadFile {
     	private String uploadFileName;
-	private String storeFileName;
+    	private String storeFileName;
     }
-    
+
     @Data
     public class ItemForm {
     	private Long itemId;
-	private String itemName;
-	private List<MultipartFile> imageFiles;
-	private MultipartFile attachFile;
+    	private String itemName;
+    	private List<MultipartFile> imageFiles;
+    	private MultipartFile attachFile;
     }
     ```
     - 충돌이 일어나지 않도록 업로드 파일명과 저장 파일명이 달라야 한다.
