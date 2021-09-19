@@ -126,19 +126,17 @@ category: Spring
 - 예제
   ```java
   @PostMapping("/spring/upload")
-	public String springUpload(@RequestParam String itemName, @RequestParam MultipartFile file, HttpServletRequest request) throws IOException {
-		log.info("request={}", request);
-		log.info("itemName={}", itemName);
-		log.info("multipartFile={}", file);
-
-		if(!file.isEmpty()){
-			String fullPath = filePath + file.getOriginalFilename();
-			log.info("File Path: {}", fullPath);
-			file.transferTo(new File(fullPath));
-		}
-
-		return "upload-form";
-	}
+  public String springUpload(@RequestParam String itemName, @RequestParam MultipartFile file, HttpServletRequest request) throws IOException {
+  	log.info("request={}", request);
+  	log.info("itemName={}", itemName);
+  	log.info("multipartFile={}", file);
+  	if(!file.isEmpty()){
+  		String fullPath. = filePath + file.getOriginalFilename();
+  		log.info("File Path: {}", fullPath);
+  		file.transferTo(new File(fullPath));
+  	}
+  	return "upload-form";
+  }
   ```
   - @RequestParam MultipartFile file
     - 업로드하는 HTML Form의 name에 맞추어 @RequestParam 을 적용하면 된다. 추가로 @ModelAttribute 에서도 MultipartFile 을 동일하게 사용할 수 있다.
@@ -146,6 +144,153 @@ category: Spring
     - file.getOriginalFilename() : 업로드 파일 명
     - file.transferTo(...) : 파일 저장
 
+- 예제로 구현하는 파일 업로드, 다운로드
+  - Item.java, UploadFile.java
+    ```java
+    @Data
+    public class Item {
+    	private Long id;
+	private String itemName;
+	private UploadFile attachFile;
+	private List<UploadFile> imageFiles;
+    }
+    
+    @Data
+    @AllArgsConstructor
+    public class UploadFile {
+    	private String uploadFileName;
+	private String storeFileName;
+    }
+    
+    @Data
+    public class ItemForm {
+    	private Long itemId;
+	private String itemName;
+	private List<MultipartFile> imageFiles;
+	private MultipartFile attachFile;
+    }
+    ```
+    - 충돌이 일어나지 않도록 업로드 파일명과 저장 파일명이 달라야 한다.
+  
+  - FileStore.java
+    ```java
+    @Component
+    public class FileStore {
+    	@Value("${file.dir}")
+	private String fileDir;
+	
+	public String getFullPath(String filename) {
+		return this.fileDir + filename;
+	}
+	
+	public List<UploadFile> storeFiles(List<MultipartFile> multipartFiles) throws IOException{
+		List<UploadFile> storeFileResult = new ArrayList<>();
+		for(MultipartFile multipartFile: multipartFiles) {
+			if(mulipartFile.isEmpty()) {
+				storeFileResult.add(storeFile(multipartFile));
+			}
+		}
+		return storeFileResult;
+	}
+	
+	public UploadFile storeFile(MultipartFile multipartFile) throws IOException {
+		if(multipartFile.isEmpty()){
+			return null;
+		}
+		
+		String originalFilename = multipartFile.getOriginalFilename();
+		String storeFileName = createStoreFileName(originalFilename);
+		multipartFile.transferTo(new File(getFullpath(storeFilename));
+		return new UploadFile(originalFilename, storeFilename);
+	}
+	
+	private String createStoreFilename(String originalFilename) {
+		String ext = extractExt(originalFilename);
+		String uuid = UUID.randomUUID().toString();
+		return uuid + "." + ext;
+	}
+	
+	private String extractExt(String originalFilename) {
+		int pos = originalFilename.lastIndexOf(".");
+		return originalFilename.substring(pos + 1);
+	}
+    }
+    ```
+  - ItemController.java
+    ```java
+    @Slf4j
+    @Controller
+    @RequiredArgsConstructor
+    public class ItemController {
+    	private final ItemRepository itemRepository;
+	private final FileStore fileStore;
+	
+	@GetMapping("/items/new")
+	public String newItem(@ModelAttribute ItemForm form) {
+		return "item-form";
+	}
+	
+	@PostMapping("/items/new")
+	public String saveItem(@ModelAttribute ItemForm form, RedirectAttributes redirectAttributes) throws IOException {
+		UploadFile attachFile = fileStore.storeFile(form.getAttachFile());
+		List<UploadFile> storeImageFiles = fileStore.storeFiles(form.getImageFiles());
+		
+		Item item = new Item();
+		item.setItemName(form.getItemName());
+		item.setAttachFile(attachFile);
+		item.setImageFiles(storeImageFiles);
+		itemRepository.save(item);
+		
+		redirectAttributes.addAttribute("itemId", item.getId());
+		
+		return "redirect:/items/{itemId}";
+	}
+	
+	@GetMapping("/items/{id}")
+  	public String items(@PathVariable Long id, Model model) {
+  		Item item = itemRepository.findById(id);
+  		model.addAttribute("item", item);
+  		return "item-view";
+  	}
+	//<img> 태그로 이미지를 조회할 때 사용한다. UrlResource 로 이미지 파일을 읽어서 @ResponseBody 로 이미지 바이너리를 반환한다.
+  	@ResponseBody
+  	@GetMapping("/images/{filename}")
+  	public Resource downloadImage(@PathVariable String filename) throws MalformedURLException {
+  		return new UrlResource("file:" + fileStore.getFullPath(filename));
+  	}
+  	@GetMapping("/attach/{itemId}")
+  	public ResponseEntity<Resource> downloadAttach(@PathVariable Long itemId) throws MalformedURLException {
+  		Item item = itemRepository.findById(itemId);
+  		String storeFileName = item.getAttachFile().getStoreFileName();
+  		String uploadFileName = item.getAttachFile().getUploadFileName();
+  		UrlResource resource = new UrlResource("file:" + fileStore.getFullPath(storeFileName));
+  		log.info("uploadFileName={}", uploadFileName);
+  		String encodedUploadFileName = UriUtils.encode(uploadFileName, StandardCharsets.UTF_8);
+  		String contentDisposition = "attachment; filename=\"" + encodedUploadFileName + "\"";
+  		return ResponseEntity.ok()
+  			.header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
+  			.body(resource);
+  	}
+    }
+    ```
+  - 조회 form
+    ```
+    상품명: <span th:text="${item.itemName}">상품명</span><br/>
+    첨부파일: <a th:if="${item.attachFile}" th:href="|/attach/${item.id}|" th:text="${item.getAttachFile().getUploadFileName()}" /><br/>
+    <img th:each="imageFile : ${item.imageFiles}" th:src="|/images/$ {imageFile.getStoreFileName()}|" width="300" height="300"/>
+    ```
+ 
+  - 등록 form
+    ```
+    <form th:action method="post" enctype="multipart/form-data">
+	    <ul>
+		<li>상품명 <input type="text" name="itemName"></li>
+		<li>첨부파일<input type="file" name="attachFile" ></li>
+		<li>이미지 파일들<input type="file" multiple="multiple" name="imageFiles" ></li>
+	    </ul>
+    	    <input type="submit"/>
+    </form>
+    ```
 
 #### 출처
 
