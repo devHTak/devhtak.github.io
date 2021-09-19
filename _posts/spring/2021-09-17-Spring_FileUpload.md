@@ -177,43 +177,39 @@ category: Spring
     @Component
     public class FileStore {
     	@Value("${file.dir}")
-	private String fileDir;
+    	private String fileDir;
+
+    	public String getFullPath(String filename) {
+    		return this.fileDir + filename;
+    	}
 	
-	public String getFullPath(String filename) {
-		return this.fileDir + filename;
-	}
-	
-	public List<UploadFile> storeFiles(List<MultipartFile> multipartFiles) throws IOException{
-		List<UploadFile> storeFileResult = new ArrayList<>();
-		for(MultipartFile multipartFile: multipartFiles) {
-			if(mulipartFile.isEmpty()) {
-				storeFileResult.add(storeFile(multipartFile));
-			}
-		}
-		return storeFileResult;
-	}
-	
-	public UploadFile storeFile(MultipartFile multipartFile) throws IOException {
-		if(multipartFile.isEmpty()){
-			return null;
-		}
-		
-		String originalFilename = multipartFile.getOriginalFilename();
-		String storeFileName = createStoreFileName(originalFilename);
-		multipartFile.transferTo(new File(getFullpath(storeFilename));
-		return new UploadFile(originalFilename, storeFilename);
-	}
-	
-	private String createStoreFilename(String originalFilename) {
-		String ext = extractExt(originalFilename);
-		String uuid = UUID.randomUUID().toString();
-		return uuid + "." + ext;
-	}
-	
-	private String extractExt(String originalFilename) {
-		int pos = originalFilename.lastIndexOf(".");
-		return originalFilename.substring(pos + 1);
-	}
+    	public List<UploadFile> storeFiles(List<MultipartFile> multipartFiles) throws IOException{
+    		List<UploadFile> storeFileResult = new ArrayList<>();
+    		for(MultipartFile multipartFile: multipartFiles) {
+    			if(mulipartFile.isEmpty()) {
+    				storeFileResult.add(storeFile(multipartFile));
+    			}
+    		}
+    		return storeFileResult;
+    	}
+    	public UploadFile storeFile(MultipartFile multipartFile) throws IOException {
+    		if(multipartFile.isEmpty()){
+    			return null;
+    		}
+    		String originalFilename = multipartFile.getOriginalFilename();
+    		String storeFileName = createStoreFileName(originalFilename);
+    		multipartFile.transferTo(new File(getFullpath(storeFilename));
+    		return new UploadFile(originalFilename, storeFilename);
+    	}
+    	private String createStoreFilename(String originalFilename) {
+    		String ext = extractExt(originalFilename);
+    		String uuid = UUID.randomUUID().toString();
+    		return uuid + "." + ext;
+    	}
+    	private String extractExt(String originalFilename) {
+    		int pos = originalFilename.lastIndexOf(".");
+    		return originalFilename.substring(pos + 1);
+    	}
     }
     ```
   - ItemController.java
@@ -223,7 +219,7 @@ category: Spring
     @RequiredArgsConstructor
     public class ItemController {
     	private final ItemRepository itemRepository;
-	private final FileStore fileStore;
+    	private final FileStore fileStore;
 	
 	@GetMapping("/items/new")
 	public String newItem(@ModelAttribute ItemForm form) {
@@ -274,14 +270,14 @@ category: Spring
     }
     ```
   - 조회 form
-    ```
+    ```html
     상품명: <span th:text="${item.itemName}">상품명</span><br/>
     첨부파일: <a th:if="${item.attachFile}" th:href="|/attach/${item.id}|" th:text="${item.getAttachFile().getUploadFileName()}" /><br/>
     <img th:each="imageFile : ${item.imageFiles}" th:src="|/images/$ {imageFile.getStoreFileName()}|" width="300" height="300"/>
     ```
  
   - 등록 form
-    ```
+    ```html
     <form th:action method="post" enctype="multipart/form-data">
 	    <ul>
 		<li>상품명 <input type="text" name="itemName"></li>
