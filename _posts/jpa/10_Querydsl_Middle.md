@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Querydsl 프로젝션, 동적 쿼리, 벌크 연산, 펑션 
+title: Querydsl 프로젝션, 동적 쿼리, 벌크 연산, Function 
 summary: Querydsl
 author: devhtak
 date: '2021-09-21 21:41:00 +0900'
@@ -265,6 +265,37 @@ category: JPA
     .where(member.username.eq(member.username.lower()))
     ```
 
+- Custom Function 사용 방법
+  - Dialect 설정
+    - 사용하는 DB에 따른 Dialect가 등록되어 있다.
+    - application.yml
+      ```
+      spring:
+        jpa:
+          properties:
+            hibernate:
+              dialect: org.hibernate.H2Dialect
+      ```
+  - Dialect 상속받아 커스텀 펑션 사용
+    ```java
+    public class MyH2Dialect extends H2Dialect {
+        public MyH2Dialect() {
+            super();
+            registerFunction("customFunction", new StandardSQLFunction("h2_func_ex", new StringType()));
+        }
+    }
+    ```
+  - application.yml에 다시 등록
+    ```java
+    spring:
+      jpa:
+        properties:
+          hibernate:
+            #dialect: org.hibernate.H2Dialect
+            dialect: com.querydsl.MyH2Dialect
+    ```
+
 #### 출처
 
 - 실전! Querydsl \[인프런 김영한님 강의]
+- https://055055.tistory.com/83
