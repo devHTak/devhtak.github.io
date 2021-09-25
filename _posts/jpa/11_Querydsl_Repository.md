@@ -414,8 +414,6 @@ category: JPA
   List<Member> result = query.fetch();
   ```
 
-#### 스프링 데이터 JPA가 제공하는 Querydsl 기능
-
 #### 출처
 
 - 실전! Querydsl \[인프런 김영한님 강의]
