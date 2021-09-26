@@ -129,7 +129,7 @@ category: msa
       name: client-service
     cloud:
       config:
-        uri: http://localhost:8889
+        uri: http://localhost:8888
   ```
   - spring.cloud.config.uri는 config server를 8888 기본 포트를 사용하면 설정하지 않아도 된다.
 
