@@ -367,6 +367,63 @@ category: msa
     - 각각의 데이터베이스 간의 동기화 -> Messaging Queing Server(Kafka, RabbitMQ 등) 를 활용하여 데이터 동기화를 한다.
     - Kafka Connector + DB -> Order Service 간에 발생한 트랜잭션에 대해 Messaging Queing Server에 전달, Messaging Queing Server가 따로 거대한 단일 DB를 구성하여 저장
 
+#### FeignClient 헤더 추가
+
+- Annotation 으로 헤더 정의하여 사용
+  ```java
+  @FeignClient(value="another-service", url="${external.another-service.url}", configuration=FeignErrorDecoder.class)
+  public interface AnotherClientService {
+  	@GetMapping("/account", header="key1=value1")
+	public List<Account> findAllAccount();
+	
+	@GetMapping("/account/{accountId}")
+	public Account findAccountById(@PathVariable String accountId, @RequestHeader("key") String value);
+	
+	@org.springframework.web.bind.annotation.PostMapping("/account")
+	@feign.Headers("key:value")
+	public Account saveAccount(@RequestBody RequestAccount account)
+  }
+  ```
+  - @feignHeaders를 활용하기 위해서는 Contract 를 feign 에서 제공해준 Default Contract 를 사용해야 한다.
+  - feign.Contract.Default 를 사용하는 실수
+    - 위에서 말씀드렸듯이 Contract 는 2가지 존재
+    - org.springframework.cloud:spring-cloud-starter-openfeign 을 사용하게 되면 SpringMvcContract 를 사용하게 되어 @GetMapping, @PostMapping, @RequestMapping 을 사용할 수 있습니다.
+    - Feign 에서 제공하는 Default 를 사용하게 되면, 위에 있는 것이 아닌 feign.RequestLine 을 사용해야 한다.
+    - Feign 에서 제공하는 Default Contract 를 사용하는데 @GetMapping 과 같은 것을 사용한다면 오류가 발생한다.
+  
+- RequestInterceptor
+  - RequestInterceptor는 공통으로 사용하는 header를 추가하여 사용
+    - RequestInterceptor
+      ```java
+      public interface RequestInterceptor {
+    	      /**
+	      * Called for every request. Add data using methods on the supplied {@link RequestTemplate}.
+	      */
+	      void apply(RequestTemplate template);
+      }
+      ```
+    - 구현
+      ```java
+      public class FeignInterceptorConfig {
+      	@Bean
+	public RequestInterceptor requestInterceptor() {
+		return restTemplate -> restTemplate.header('header1', 'header2');    
+	}
+      }
+      ```
+      - configuration 설정 필요
+    - BasicAuth인증
+      ```java
+      public class BasicAuthConfiguration {
+      	@Bean
+      	public BasicAuthRequestInterceptor basicAuthRequestInterceptor() {
+        	return new BasicAuthRequestInterceptor("mayaul", "1234567890");
+      	}
+      }
+      ```
+
 #### 출처
 
-- Mastering Spring Cloud 책 발췌
+- Mastering Spring Cloud 책
+- Header 정리: https://techblog.woowahan.com/2630/ (우아한 feign 적용기)
+- https://blog.leocat.kr/notes/2019/03/27/feign-open-feign-configuration
