@@ -419,7 +419,7 @@ category: msa
       public class BasicAuthConfiguration {
       	@Bean
       	public BasicAuthRequestInterceptor basicAuthRequestInterceptor() {
-        	return new BasicAuthRequestInterceptor("mayaul", "1234567890");
+      		return new BasicAuthRequestInterceptor("mayaul", "1234567890");
       	}
       }
       ```
