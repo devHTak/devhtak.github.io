@@ -297,7 +297,7 @@ category: msa
     }
     ```
     - java code를 활용한 custom filter
-    - AbstractGatewayFilterFactory fmf tkdthrqkedk tkdydgksek.
+    - AbstractGatewayFilterFactory 를 상속받아 사용한다.
     - ServletHttpRequest, ServletHttpResponse 가 아닌 ServerHttpRequest, ServerHttpResponse를 사용
     
     ```
