@@ -50,8 +50,8 @@ category: msa
 
 - Hystrix가 현재 지원을 중단하여 Resilience4j를 사용한다
   
-  |---|---|
   |Current|Replacement|
+  |---|---|
   |Hystrix|Reslience4j|
   |Hystrix Dashboard/Turbine|Micronmeter + Motnitoring System|
   
