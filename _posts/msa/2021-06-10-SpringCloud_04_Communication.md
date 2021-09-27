@@ -402,16 +402,18 @@ category: msa
 	      void apply(RequestTemplate template);
       }
       ```
+      
     - 구현
       ```java
-      public class FeignInterceptorConfig {
+      public class FeignClientInterceptor {
       	@Bean
-	public RequestInterceptor requestInterceptor() {
-		return restTemplate -> restTemplate.header('header1', 'header2');    
-	}
+      	public ReequestHeader requestHeader() {
+      		return requestTemplate -> requestTemplate.header("header1", "header2");
+      	}
       }
-      ```
-      - configuration 설정 필요
+      ```      
+      - @FeignClient에 configuration 설정 필요
+      
     - BasicAuth인증
       ```java
       public class BasicAuthConfiguration {
