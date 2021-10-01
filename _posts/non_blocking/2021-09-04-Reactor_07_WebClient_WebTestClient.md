@@ -161,6 +161,42 @@ public class AnotherServiceApplication {
       	.jsonPath("$[0].name").isEqualTo("Jane")
       	.jsonPath("$[1].name").isEqualTo("Jason");
       ```
+
+- Spring Boot Test
+  - Mock Test
+    ```java
+    @ExtendWith(SpringExtension.class)
+    @WebFluxTest(controllers = ItemFluxController.class)
+    @Import({ItemFluxService.class, ItemFluxRepository.class})
+    class ItemFluxControllerMockTest {  
+    	@MockBean ItemFluxRepository itemFluxRepository;
+    	@MockBean ItemFluxService itemFluxService;
+    	@Autowired WebTestClient webTestClient;
+    }
+    ```
+    - Test 하는 ItemFluxController에 대하여 Mock으로 사용하는 Service, Repository를 @MockBean으로 등록하여 사용가능
+    - Mockito 등을 활용하여 MockBean에 대한 값들을 세팅할 수 있다.
+      ```java
+      Mockito.when(itemFluxService.findAll()).thenReturn(Flux.fromIterable(items));
+      webTestClient.get()
+      	.uri("/webflux/items")
+      	.accept(MediaType.valueOf(MediaType.APPLICATION_JSON_VALUE))
+      	.exchange()
+      	.expectStatus().isOk()
+      	.expectBody()
+      	.jsonPath("$[0].name").isEqualTo("test1");
+      ```
+  - Random Port Test
+    ```java
+    @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+    @AutoConfigureWebFlux
+    public class ItemFluxControllerUnitTest {
+    	@Autowired WebTestClient webTestClient;
+    	@Autowired ItemFluxRepository itemFluxRepository;
+    	// ...
+    }
+    ```
+
 	
 #### 출처
 
