@@ -105,7 +105,7 @@ public class AnotherServiceApplication {
 ```
 #### WebTestClient
 
-- WebClient
+- WebTestClient
   - 여러 API 를 호출하는 WebClient를 사용하는 서버를 테스트할 때 사용한다
   - HTTP 서버를 연결하거나 WebFlux 를 사용하는 어플리케이션에 대하여 mock request, response를 테스트할 때 사용한다.
   
