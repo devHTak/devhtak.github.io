@@ -177,19 +177,19 @@ category: msa
     ```
     GET http://localhost:8083/connectors/my-source-connect/status
     {
-      "name": "my-source-connect",
-      "connector": {
-        "state": "RUNNING",
-        "worker_id": "127.0.1.1:8083"
-      },
-      "tasks": [
-        {
-            "id": 0,
+        "name": "my-source-connect",
+        "connector": {
             "state": "RUNNING",
             "worker_id": "127.0.1.1:8083"
-        }
-      ],
-      "type": "source"
+        },
+        "tasks": [
+            {
+                "id": 0,
+            	"state": "RUNNING",
+            	"worker_id": "127.0.1.1:8083"
+            }
+      	],
+      	"type": "source"
     }
     ```
   
