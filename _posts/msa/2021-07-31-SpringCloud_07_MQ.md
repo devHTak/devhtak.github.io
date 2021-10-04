@@ -191,7 +191,6 @@ category: msa
       ],
       "type": "source"
     }
- 
     ```
   
 - Kafka Sink Connect 사용
