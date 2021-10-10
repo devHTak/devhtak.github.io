@@ -157,7 +157,126 @@ category: No SQL
   
   - 선정된 NoSQL에 최적화된 하드웨어 디자인까지 해야 한다.
 
+#### MongoDB
+
+- MongoDB 특징
+  - 메모리맵 형태의 파일 엔진 DB이기 때문에 메모리에 의존적
+    - 메모리 크기가 성능을 좌우
+    - 메모리를 넘어서는 경우 성능이 급격히 저하
+  - 쌓아놓고 삭제가 없는 경우 적합
+    - 로그 데이터
+    - 이벤트 참여 내역
+    - 세션
+  - 트랜잭션이 필요한 금융, 결제, 빌링, 회원 정보등에는 부적합
+  - 도큐먼트 데이터 모델(데이터 설계를 종이문서 설계하듯이 설계해야 한다)
+    - 속성의 이름과 값으로 이뤄진 쌍의 집합
+    - 속성은 문자열이나 숫자, 날짜 가능
+    - 배열 또는 다른 도큐먼트를 지정하는 것도 가능
+    - 하나의 document에 필요한 정보를 모두 담아야 함
+    - one query 로 모두 해결이 되게끔 collection model 설계를 해야 한다
+    - join이 불가능하므로 미리 embedding 시켜야 함
+  - JSON 형태로 되어 있다
+  - 예제
+    ```
+    * Posts: id, title, body, published, created, updated, tags, comments: comment_id, author, email, body, created
+    {
+      "id": 1,
+      "title": "Welcome to Mongo DB",
+      "body": "Today, we...",
+      "published": true,
+      "created": "2021-10-10 13:00",
+      "updated": "2021-10-10 13:00",
+      "tags": ["databases", "MongoDB", "awesome"],
+      "comments": [
+        { comment_id: 2, "author": "Bob", "email": "bob@test.com", "body": "Good!", "created": "2021-10-10 13:05" }
+      ]
+    }
+    ```
+
+- 장점
+  - Schema-less 구조
+    - 다양한 형태의 데이터 저장 가능
+    - 데이터 모델의 유연한 변화 기능(데이터 모델 변경, 필드 확장 용이)
+  - Read/Write 성능 뛰어남
+  - Scale out 구조
+    - 많은 데이터 저장이 가능하며 장비 확장이 간단하다
+  - Json 구조
+  - 사용 방법이 쉽고, 개발이 편리하다. 
+
+- 단점
+  - 데이터 업데이트 중 장애 발생 시, 데이터 손실 가능
+  - 많은 인덱스 사용 시, 충분한 메모리 확보 필요
+  - 데이터 공간 소모가 RDBMS에 비해 많음 (비효율적인 Key 중복 입력)
+  - 복잡한 JOIN 사용 시 성능 제약이 따름
+  - Transactions 지원이 RDBMS 대비 미약함
+  - 제공되는 MapReduce 작업이 Hadoop에 비해 성능이 떨어짐
+
+- 빅데이터 처리 특화
+  - Memory Mapped(데이터 쓰기 시에 OS의 가상 메모리에 데이터를 넣은 후 비동기로 디스크에 기록하는 방식)을 사용
+  - 방대한 데이터 빠르게 처리 가능
+  - OS의 메모리를 활용하기 때문에 메모리가 차면 하드디스크로 데이터 처리하여 속도가 급격히 느려짐
+  - 하드웨어적인 측면에서 투자 필요
+
+- MongoDB 불안전성
+  - 데이터 양이 많을 경우 (중간 중간 일부 데이터를 유실할 수 있다)
+    - 일부 데이터가 손실 가능성이 존재
+    - 샤딩의 비정상적인 동작 가능성
+    - 레플리카 프로세스의 비정상 동작 가능성
+
+  - 하지만, 동일한 데이터를 가지고 CRUD를 할 때 RDBMS보다 빠르게 진행하며 Single Node와 Multi Node간에 성능 차이가 없다.
+    - 쓰기: 100배, 읽기: 3배 정도 빠르다.
+
+- 주요 기능
+  - Query
+    - Create: db.person.save({'name': 'John'});
+    - Read: db.person.find();
+    - Update: db.person.update({'name':' 'John'}, {'name': 'Cash', 'languages': ['English']});
+    - Delete: db.person.remove({'name':' 'John'});
+
+  - 인덱스
+    - 다수 인덱스 설정 가능하며 복합 인덱스를 지원
+    - 빠른 검색 지원
+    - 도큐먼트에 저장된 데이터와 중복 저장 문제
+    - 메모리가 부족한 시스템에서는 검색 속도 저하 문제
+
+  - 복제
+    - Master-Slave 구조 구성
+    - 데이터 복사본을 Slave에 배치
+    - Master 장애에 따른 데이터 손실 없이 Slave 데이터 사용 가능
+    - ReplicaSet 사용 시 Master 장애가 발생했을 때, Slave에서 master를 선출 가능(중단없이 서비스 가능)
+    - 데이터 손실을 최소화하기 위해 저널링 지원(MongoDB의 데이터 변화에 따른 모든 연산에 대한 로그 적재, 데이터 손실 발생 시 로그를 통한 복구 가능)
+
+  - 샤딩
+  
+    ![image](https://user-images.githubusercontent.com/42403023/136687236-35f32889-a0ec-40e5-bc2c-d80871aed33b.png)
+    
+    - 대용량의 데이터를 저장하기 위한 방법
+      - 소프트웨어 적으로 데이터베이스를 분산시켜 처리하는 구조
+    - 샤딩 방식
+      - 데이터베이스가 저장하고 있는 테이블을 테이블 단위로 분리하는 방법
+      - 데이터베이스가 저장하고 있는 테이블 자체를 분할하는 방법
+    - 분산 데이터베이스의 전통적인 분할 3계층 구조 지원
+      - 응용 계층, 중개자 계층, 데이터 계층
+      - 응용 계층은 데이터에 접근하기 위해 중개자를 통해 모든 데이터의 출력을 처리
+      - 추상화된 한개의 데이터베이스가 존재하는 것처럼 운용
+      
+  - MapReduce
+
+    ![image](https://user-images.githubusercontent.com/42403023/136687357-9d2b07d5-fd91-44ff-81a8-f213b34c1486.png)
+
+    - 대용량의 데이터를 안전하고 빠르게 처리하기 위한 방법
+      - 데이터를 분산하여 연산하고 다시 합치는 기술
+      - 맵과 리듀스 단계로 나누어 처리, 사용자가 임의 코딩 가능
+      - 입/출력 데이터는 Key-Value 형태로 구성
+    - 한대 이상의 하드웨어를 활용하는 분산 프로그래밍 모델
+      - 분산을 통해 분할된 조각으로 처리한 다음, 다시 모아서 훨씬 짧은 시간에 계산완료
+    - 대용량 파일에 대한 로그 분석, 색인 구축 검색등에 활용
+    - 일괄처리 방식으로 전체 데이터 셋을 분석할 필요가 있는 문제에 적합
+    - input data를 split한 후, 각 서버에서 Map함수를 통해 각각 output을 만들고, shuffle/sort를 진행한 후 reduce하여 최종 output을 만들어 낸다.
+
 #### 출처
 
 - CAP 이론: https://itwiki.kr/w/CAP_%EC%9D%B4%EB%A1%A0
-
+- shading 이미지 파일 출처: https://sudarlife.tistory.com/entry/mongodb-Sharding-%EB%AA%BD%EA%B3%A0%EB%94%94%EB%B9%84-%EC%83%A4%EB%94%A9-%EC%A0%81%EC%9A%A9%ED%95%98%EA%B8%B0-config-sever-replica-set
+- map reduce 이미지 파일 출처: https://medium.com/@ekiny018/mongodb-and-mapreduce-64af7efd038
+- T아카데미 유투브 강의, MongoDB 프로그래밍(https://www.youtube.com/playlist?list=PL9mhQYIlKEheyXIEL8RQts4zV_uMwdWFj)
