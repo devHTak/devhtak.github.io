@@ -279,4 +279,4 @@ category: No SQL
 - CAP 이론: https://itwiki.kr/w/CAP_%EC%9D%B4%EB%A1%A0
 - shading 이미지 파일 출처: https://sudarlife.tistory.com/entry/mongodb-Sharding-%EB%AA%BD%EA%B3%A0%EB%94%94%EB%B9%84-%EC%83%A4%EB%94%A9-%EC%A0%81%EC%9A%A9%ED%95%98%EA%B8%B0-config-sever-replica-set
 - map reduce 이미지 파일 출처: https://medium.com/@ekiny018/mongodb-and-mapreduce-64af7efd038
-- T아카데미 유투브 강의, MongoDB 프로그래밍(https://www.youtube.com/playlist?list=PL9mhQYIlKEheyXIEL8RQts4zV_uMwdWFj)
+- T아카데미 유투브 강의, MongoDB 프로그래밍: https://www.youtube.com/playlist?list=PL9mhQYIlKEheyXIEL8RQts4zV_uMwdWFj
