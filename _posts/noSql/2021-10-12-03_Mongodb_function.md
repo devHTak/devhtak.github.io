@@ -43,6 +43,7 @@ category: No SQL
   
 - B-Tree
   
+  ![image](https://user-images.githubusercontent.com/42403023/136956370-797d993a-0986-4fd1-aace-265617a7e655.png)
 
   - 트리구조와 유사한 데이터 구조
   - 각 노드는 여러 개의 키를 갖는 것이 가능
@@ -53,7 +54,118 @@ category: No SQL
     - 정확한 일치, 범위 조건, 정렬, 프리픽스 일치 등 다양한 쿼리를 용이하게 처리하도록 도와준다
     - 키가 추가되거나 삭제되더라도 밸런스 유지에 좋다
     
-  
+#### Mongodb index 활용
 
+- index 확인
+  ```
+  > db.scores.getIndexes();
+  [ { "v" : 2, "key" : { "_id" : 1 }, "name" : "_id_" } ]
+  ```
+  
+- index 생성
+  ```
+  > db.scores.createIndex({"name": 1})
+  {
+    "numIndexesBefore" : 1,
+    "numIndexesAfter" : 2,
+    "createdCollectionAutomatically" : false,
+    "ok" : 1
+  }
+  > db.scores.getIndexes();
+  [
+    {
+      "v" : 2,
+      "key" : {
+        "_id" : 1
+      },
+      "name" : "_id_"
+    },
+    {
+      "v" : 2,
+      "key" : {
+        "name" : 1
+      },
+      "name" : "name_1"
+    }
+  ]
+  
+  # db.scores.createIndex({"name": 1}, {unique: true})
+  # db.scores.createIndex({"name": 1}, {unique: true, dropDups: true})
+  ```
+  - 오름차순이면 1, 내림차순이면 -1을 지정
+  - unique를 사용하여 고유 인덱스를 생성할 수 있다.
+    - unique 속성을 지정해서 중복 데이터가 저장되지 못하도록 하면, 데이터가 저장과 검색속도를 늘리는데 도움이 된다
+  - dropDups(중복 데이터 삭제): 특정 필드를 Unique를 하게 했을 때 기존에 이미 중복된 데이터가 있을 경우에 대한 정책이 필요. dropDups를 하면 기존에 중복 데이터를 삭제하고 인덱스 저장이 가능
+
+- index 삭제
+  ```
+  > db.scores.dropIndex({"name": 1})
+  > db.scores.dropIndex()
+  ```
+  - 지정된 인덱스만 삭제가 가능하고, 모든 인덱스 삭제도 가능하다( \_id는 제외 ) 
+
+#### 샤딩
+
+- 목적
+  - 데이터 분산 저장
+    - 단 한대의 서버에 빅데이터를 저장하는 것을 불가능
+    - 서비스의 성능 저하 유발: 초당 발생하는 엄청난 양의 Insert 동작시 Write Scaling 문제 발생
+    - 디스크를 사용하는 하드웨어 한계성
+    - 데이터를 분산하여 순차적으로 저장한다면 한 대 이상에서 트래픽을 감당하기 때문에 부하를 분산하는 효과가 있다.
+
+  - 백업과 복구 전략
+    - 데이터 분산이라는 샤딩의 가장 대표적인 기능을 통해 얻는 효과
+    - 시스템의 성능 향상
+    - 데이터 유실 가능성으로부터 보호
+    - 서버의 데이터가 유실된다면 그 데이터 양은 상상을 초월할 것이고 시스템 복구에 엄청난 시간과 비용 소요
+    - 미리 데이터를 분산하여 저장해둔다면 리스크로부터 보호받고 효과적인 시스템 운영이 가능해진다.
+
+  - 빠른 성능
+    - 여러 대의 독립된 프로세스가 병렬로 작업을 동시에 수행하기 때문에 이상적으로 빠른 처리 성능을 보장받는다.
+
+- 샤딩 시스템 구조
+
+  ![image](https://user-images.githubusercontent.com/42403023/136961245-ac99aba9-1b8e-41bc-aec4-99760c7153d4.png)
+  
+  - 특징
+    - 샤딩 시스템은 분산처리를 통한 효율 향상
+      - 가능한 성능 보장을 위해 3대 이상의 서버를 샤드로 활용하는 것을 추천
+      - 최소 2대만 있으면 샤드 서버 구축 가능
+    - 기존에 한대의 서버보다 메모리를 20~30% 추가로 사용하게 된다
+      - 샤드 시스템 구축 시 사용하는 라우팅 서버인 mongos, OpLog, Balancer 프로세스가 추가로 메모리를 사용
+      - 기존에 싱글서버보다 20~30% 정도 추가 메모리 준비가 필요하다
+
+- Config 서버 개요
+  - Config 서버는 샤드 시스템에 대한 메타 데이터 저장/관리 역할
+  - 샤드 서버의 인덱스 정보를 빠르게 검색 가능케 함
+  - 샤드 서버와 별도의 서버에 구축이 기본
+  - 장애 발생에 대비하여 최소 3대 이상 사용(최소 1대만으로 운영 가능)
+  - 샤드 서버에 비해 저사양 서버 사용 가능
+
+- Mongos 서버 특징
+  - 하나 이상의 프로세스 사용
+  - Config 서버의 Meta-data를 캐시한다.
+  - 빅데이터를 샤드 서버로 분산해주는 프로세스
+  ```
+  - Config 서버는 각 샤드 서버에 어떤 데이터들일 어떤 식으로 분산 저장되어 있는지에 대한 Meta 데이터가 저장
+  - mongos 서버를 통해 데이터를 쓰고 읽는 작업 가능
+  - 또한 mongos 는 각 서버에서 어떤 일을 하는지 개발자가 모르게 해주는 역할을 한다.
+  - 지금 샤딩 상태인지 리플리케이션 상태인지 개발자는 알 필요가 없다.
+  ```
+  
+- Shading System layer
+  - 중개자 계층: 샤딩 시스템의 가장 핵심적인 부분, 메타정보 저장 및 application과 data간에 적절한 질의 및 결과를 반환한다
+
+- Shard Key
+  - 샤딩 시스템을 구축할 때 가장 중요
+  - 여러 개의 Shard 서버로 분할될 기준 필드를 가리키며, partition, load balancing에 기준이 된다.
+  - shard key는 cardinality를 보고 적절한 선택이 필요하다. 데이터 분포가 넓으면 low cardinality라고 표현하고, 분포가 높으면 high cardinality라고 부른다
+
+
+
+#### 출처
+
+- B-Tree: https://ichi.pro/ko/mongodb-indegseu-simcheung-bunseog-indegseu-ihae-171312403020454
+- shading: https://www.infoq.com/news/2010/08/MongoDB-1.6
   
   
