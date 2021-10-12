@@ -159,9 +159,13 @@ category: No SQL
 - Shard Key
   - 샤딩 시스템을 구축할 때 가장 중요
   - 여러 개의 Shard 서버로 분할될 기준 필드를 가리키며, partition, load balancing에 기준이 된다.
-  - shard key는 cardinality를 보고 적절한 선택이 필요하다. 데이터 분포가 넓으면 low cardinality라고 표현하고, 분포가 높으면 high cardinality라고 부른다
-
-
+  - shard key는 cardinality를 보고 적절한 선택이 필요하다. 
+    - 데이터 분포가 넓으면 low cardinality라고 표현하고, 분포가 높으면 high cardinality라고 부른다
+  - chunk migration의 횟수와 빈도 결정
+    - 하나의 서버에 저장되는 데이터들을 여러 개의 논리적 구조로 분할 저장하다가 일정한 양에 도달했을 때 2~3번째 서버로 데이터를 분할하여 저장하며, 분할 저장단위가 chunk이다.
+    - chunk의 기본 단위는 64MB 단위로 분할되며, 필요시 64MB 이상의 Chunk 크기를 갖는 것도 가능
+    - 기본설정 단위보다 빈번하게 Chunk Migration이 발생한다면 Chunk 크기를 더우 크게 설정해야 한다
+    - 하나의 서버에만 데이터가 집중되고 골고루 분산되지 않으면 Chunk 크기를 더 작게 설정해야 한다
 
 #### 출처
 
