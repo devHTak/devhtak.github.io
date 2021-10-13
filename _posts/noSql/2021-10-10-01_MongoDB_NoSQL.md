@@ -134,7 +134,7 @@ category: No SQL
   - 패턴을 이용한 데이터 모델링
     - NoSQL은 Sorting, Grouping, Join 등의 연산을 제공하지 않기 때문에 Get/Put으로만 데이터를 처리할 수 있는 형태로 데이터 모델 재정의
     - 예시
-      |Table|Key||Value|
+      |Table|Key|Value|
       |---|---|---|
       |Category|userId:categoryID|categoryName(value)|
       |Posting|userID:postID|categoryName(value), title(value), date(value), contents(value)|
