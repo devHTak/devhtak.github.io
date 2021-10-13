@@ -167,9 +167,108 @@ category: No SQL
     - 기본설정 단위보다 빈번하게 Chunk Migration이 발생한다면 Chunk 크기를 더우 크게 설정해야 한다
     - 하나의 서버에만 데이터가 집중되고 골고루 분산되지 않으면 Chunk 크기를 더 작게 설정해야 한다
 
+#### Replication
+
+- 복제
+  - 고성능 DB에서 가장 핵심이 되는 기능
+  - 같은 데이터를 갖는 여러개의 Mongodb 서버를 설계하는 과정
+  - 고성능의 미러링 기능
+  - 성능과 높은 가용성의 장점 제공
+  - Master/Slave Replication
+    - 자동 장애 조치 불가능(수동)
+    - 13개 이상 노드까지 구성 가능
+
+- 복제의 용도
+  - 데이터 일관성
+  - 읽기 분산
+  - 운영 중 분산
+  - 오프라인 일괄 적업용 데이터 소스
+
+- Mongodb 복제 동작 원리
+
+  ![image](https://user-images.githubusercontent.com/42403023/137127182-a4642f03-1705-42df-92c9-56095a84b7e0.png)
+
+  - 몽고디비의 마스터는 쓰기 연산을 담당
+  - 일반 마스터-슬레이브 방식과 동일하게 쓰기는 마스터에서만 이뤄짐, 슬레이브에서는 쓰기 명령을 사용할 수 없다.
+  - 몽고디비에서 쓰기 연산이 실행되면 데이터 저장소와 Oplog 영역에 저장
+  - B+ Tree로 구성된 데이터 저장소는 쓰기 연산을 수행한 결과만을 저장
+  - Oplog에는 연산 수행과 관련된 명령어 자체를 타임스탬프와 함께 저장
+  - 몽고디비의 슬레이브는 주기적으로 마스터에게 자신의 optime 보다 큰 oplog를 요청
+  - 5초 안에 마스터에서 쓰기 연산이 발생하면 바로 데이터를 응답
+  - 5초 안에 쓰기 연산이 발생하지 않으면, 데이터가 존재하지 않는다는 응답을 보내줌
+  - 슬레이브는 요구한 Oplog 데이터가 존재하면 자신의 Oplog에 데이터를 저장한 다음 바로 마스터에 다시 Oplog 요청
+
+- 시스템 구성
+  - 서버 실행
+    ```
+    > mongod -dbpath 경로 -port 10000 -master # 마스터 서버 실행
+    > mongod -dbpath 경로 -port 10001 -slave -source localhost:10000 
+    > mongod -dbpath 경로 -port 10002 -slave -source localhost:10000 # 슬레이브 서버 실행
+  
+  - 데이터 저장
+    ```
+    # 마스터에 접속 및 입력
+    > mongo localhost:10000
+    > show dbs;
+    > use test;
+    > db.users.insert({name: 'Shin': phone: '010-1234-1234'});
+    > db.users.find(); # shin 조회
+    # slave에 접속 및 확인
+    > mongo localhost:10001
+    > user test;
+    > db.users.find(); # shin replication 되어 조회 # 입력 등 write는 불가능
+    ```
+
+#### ReplicaSet
+
+- ReplicaSet
+  - primary server: ReplicaSet에서 첫번 째 입력을 담당하는 서버
+  - secondary server: primary server를 제외한 나머지 서버
+  - 만약 privary server에 문제가 생기면 자동으로 secondary server에서 데이터 입/출력을 담당
+  
+- 주요 특징
+  - primary server는 secondary server를 2초 단위로 상태를 체크하여 데이터 동기화를 위한 heardbeat 를 확인
+  - heartbeat의 수신 결과, secondary server를 사용할 수 없는 상황이 되더라도 데이터 복제만 중단 될 뿐 primary server는 데이터 수신/저장을 계속 담당
+  - secondary server가 복구되면 그간의 밀린 데이터를 복구해주기 위해 primary server는 oplog를 저장하게 되는데, 이후 secondary가 복구되면 자동으로 동기화한다.
+  - 만일 primary server가 장애 상황이 된다면, secondary server를 primary server로 만듦
+
+- 동작 원리
+
+  ![image](https://user-images.githubusercontent.com/42403023/137129896-fff506ac-12b3-4807-8722-775c0d166f3f.png)
+
+  - 복제 집합은 한 개의 primary와 두 개의 secondary로 구성
+  - 복제 집합으로 구성된 각각의 노드는 자신을 제외한 다른 노드들이 heartbeat를 이용하여 주기적으로 검사
+  - 몽고디비의 heartbeat는 2초 단위로 수행되며, heartbeat를 받는 서버는 자신의 상태 코드를 heartbeat를 요청한 서버에 보내줌
+  - primary server 의 heartbeat는 항상 복제 집합을 구성하고 있는 노드 개수의 과반수만큼을 유지하고 있어야 한다
+  - 만약 primary server가 과반수의 heartbeat를 가지고 있지 않는다면, 해당 서버는 secondary 서버로 전환되고 전체 복제 집합은 primary server 부재에 따른 투표를 시행
+  - primary가 될 수 있는 자격 조건으로는 priority(마스터가 될 수 있는 우선순위), votes(자신을 포함한 복제 집합의 노드 개수의 과반수 투표) 등을 가지고 있다.
+
+- 한계
+  - 한 복제 집합을 구성할 수 있는 노드의 최대 갯수는 12개
+  - 한 복제 집합에서 투표를 할 수 있는 노드의 최대 갯수는 7개
+  - 슬레이브가 아무리 빨리 데이터를 동기화 한다고 해도, 마스터와의 통신 지연 시간만큼의 차이를 가질 수 있음
+  - 부하를 견디지 못해서 마스터 서버가 죽었을 경우, Oplog에 동기화 되지 않은채 남아있는 데이터 연산을 잃어버리는 현상이 발생할 수 있음
+  - 저널링 파일에 데이터를 저장하는 방법의 경우에도 group commits 주기(100ms) 안에 데이터가 존재하는데도 시스템이 다운되어 메모리에 저장된 데이터가 날아갔을 경우에는 복구가 불가능함
+
+- replicaset 구성
+  - 서버 실행
+    ```
+    mongod —replSet downSet -dbpath c:\mongodb\var -port 10000 # primary server 실행
+    mongod —replSet downSet -dbpath c:\mongodb\var2 -port 10001 # Secondary 서버 실행 1
+    mongod —replSet downSet -dbpath c:\mongodb\var3 -port 10002 # Secondary 서버 실행 2
+    ```
+
+  - 리플리카셋 환경 설정
+    ```
+    $ mongo localhost:10000 # Primary 서버에 접속
+    > var config = {_id:'downSet', members:[{_id:0, host:'localhost:'10000'}, {_id:1, host:'localhost:'10001'}, {_id:2, host:'localhost:'10002'}]);
+    # 리플리카셋 환경 설정
+    > rs.initiate(config); # 리플리카셋 초기화
+    ```
+
 #### 출처
 
 - B-Tree: https://ichi.pro/ko/mongodb-indegseu-simcheung-bunseog-indegseu-ihae-171312403020454
 - shading: https://www.infoq.com/news/2010/08/MongoDB-1.6
-  
-  
+- replication 동작 원리: https://givemesource.tistory.com/88
+- replicaset 구성: https://eunsour.tistory.com/75
