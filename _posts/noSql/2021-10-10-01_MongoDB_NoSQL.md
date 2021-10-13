@@ -138,7 +138,7 @@ category: No SQL
       |---|---|---|
       |Category|userId:categoryID|categoryName(value)|
       |Posting|userID:postID|categoryName(value), title(value), date(value), contents(value)|
-      |Attechment|userID:postID:fileID|filename(value), date(value), location(value)|
+      |Attachment|userID:postID:fileID|filename(value), date(value), location(value)|
       |comment|userID:postID:commentID|commentUser(value), date(value), comment(value)|
       
   - 기능 최적화
