@@ -136,10 +136,10 @@ category: Spring
       }
       
       public boolean isValidation(final CacheData cacheData) {
-          return ObjectUtils.isNotEmpty(cacheData)
-              && ObjectUtils.isNotEmpty(cacheData.getExpirationDate())
-              && StringUtils.isNotEmpty(cacheData.getValue())
-              && cacheData.getExpirationDate().isAfter(LocalDateTime.now());
+          return !ObjectUtils.isEmpty(cacheData)
+                && !ObjectUtils.isEmpty(cacheData.getExpirationDate())
+                && StringUtils.hasText(cacheData.getValue())
+                && cacheData.getExpirationDate().isAfter(LocalDateTime.now());
       }
   }
   ```
@@ -174,6 +174,37 @@ category: Spring
   
 
 #### Test
+
+```java
+@SpringBootTest
+class CacheServiceTest {
+
+    @Autowired CacheService cacheService;
+
+    @Test
+    @DisplayName("cache data test")
+    void getCacheTest() {
+        String key = "testKey";
+        String value = "testValue";
+        CacheData cacheData = cacheService.getCacheData(key);
+
+        if(!cacheService.isValidation(cacheData)) {
+            cacheData = cacheService.updateCacheData(key, value);
+        }
+        System.out.println(cacheData.toString());
+
+        CacheData returnData = cacheService.getCacheData(key);
+        System.out.println(returnData.toString());
+
+        assertThat(cacheData.getValue()).isEqualTo(returnData.getValue());
+        assertThat(cacheData.getExpirationDate()).isEqualTo(returnData.getExpirationDate());
+
+        cacheService.expireCacheData(key);
+        CacheData emptyData = cacheService.getCacheData(key);
+        assertThat(emptyData.getValue()).isNull();
+    }
+}
+```
 
 #### 출처
 
