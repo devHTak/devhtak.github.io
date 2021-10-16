@@ -191,7 +191,7 @@ category: No SQL
   - 데이터 입력
    ```
    db.actors.save({'actor': "Ricard Gere", 'movies': ["Pretty woman", "Runaway bride", "Chicago"]});
-   db.actors.save({actor: "Julia Roberts", movies: ["Pretty woman", "Runnaway bride", "Erin brockovich"]});
+   db.actors.save({actor: "Julia Roberts", movies: ["Pretty woman", "Runaway bride", "Erin brockovich"]});
    ```
   
   - map
@@ -208,7 +208,7 @@ category: No SQL
   - reduce
     ```javascript
     reduce = function(key, values) {
-        actor_list = [];
+        actor_list = { actors: [] };
         for(var i in values) {
             actor_list.actors = values[i].actors.concat(actor_list.actors);
         }
@@ -224,11 +224,10 @@ category: No SQL
   - 결과 확인
     ```
     db.pivot.find();
-    { "_id" : { "movie" : "Runaway bride" }, "value" : [ [ "Ricard Gere", undefined ] ] }
-    { "_id" : { "movie" : "Pretty woman" }, "value" : [ [ "Ricard Gere", "Julia Roberts", undefined ] ] }
-    { "_id" : { "movie" : "Erin brockovich" }, "value" : [ [ "Julia Roberts", undefined ] ] }
-    { "_id" : { "movie" : "Runnaway bride" }, "value" : [ [ "Julia Roberts", undefined ] ] }
-    { "_id" : { "movie" : "Chicago" }, "value" : [ [ "Ricard Gere", undefined ] ] }
+    { "_id" : { "movie" : "Runaway bride" }, "value" : { "actors": [ "Ricard Gere", "Julia Roberts" ] } }
+    { "_id" : { "movie" : "Pretty woman" }, "value" : { "actors": [ "Ricard Gere", "Julia Roberts"] } }
+    { "_id" : { "movie" : "Erin brockovich" }, "value" : { "actors": [ "Julia Roberts" ] } }
+    { "_id" : { "movie" : "Chicago" }, "value" : { "actors": [ "Ricard Gere" ] } }
     ```
 
 #### 출처
