@@ -78,21 +78,7 @@ category: No SQL
     V2 = Get(collection1.key) from collection2
     return {V1, V2};
     ```
-
-- General Modeling Techniques
-  - Composite Key
-    - 하나 이상의 필드를 deliminator를 이용하여 구분 지어 사용하는 방법
-    - Ordered KV Store 의 경우에는 이를 이용하여 order by와 같은 sorting 기능이나 grouping 구현 가능
-    - NoSQL N개의 서버로 구성된 클러스터로 동작하고 데이터는 Key를 기준으로 N개의 서버에 나누어 저장
-    - Key를 선정할 때는 전체 서버에 걸쳐서 부하가 골고루 분산될 수 있는 Key를 선정
-
-  - Inverted Search Index
-    - Value 의 내용을 Key로 하고, Key의 내용을 반대로 value로 하는 패턴
-    - 검색엔진에서 많이 사용하는 방법
-      - 검색엔진은 사이트의 모든 페이지를 검색 로봇이 검색해서 문서내의 단어들을 색인하여 URL 에 매핑해서 저장
-      - 검색은 단어를 Key로 검색하기 때문에, value에 검색 키워드들이 들어가 있을 경우에는 효과적인 검색이 불가능함
-      - 검색 키워드를 키로 해서 URL을 value로 하는 테이블을 다시 만든 다음, 검색 키워드로 검색을 하면 신속하게 검색 키워드를 가지고 있는 URL을 찾아낼 수 있음
-
+    
 - 계층 데이터 구조 모델링 패턴
   - NOSQL은 다양한 데이터 모델이 있지만, 기본적으로 row, column을 가지고 있는 테이블 구조의 저장 구조를 갖는다.
   - 어플리케이션 개발 중, 이런 테이블 구조뿐 아니라 Tree와 같은 계층형 데이터 구조를 저장해야 할 경우가 있는데, NOSQL은 이런 계층형 구조를 저장하는 것이 쉽지 않음
@@ -100,28 +86,25 @@ category: No SQL
   - NoSQL에서 계층형 구조를 저장하는 기법은 RDBMS에서 사용하는 기법들을 참고하여 구현함
 
   - Tree Aggregation
-    - Tree 구조 자체를 하나의 Value에 저장하는 방식
-    - JSON이나 XML 등을 이용하여 트리 구조를 정의하고, Value에 저장
+    - Tree 구조 자체를 하나의 Value에 JSON, XML등을 활용(nested)하여 저장하는 방식
     - Tree 자체가 크지 않고, 변경이 많이 없는 경우에 적합
-    - Blog Post -> Content -> Comments1 -> Comments1-1...
 
   - Materialized Path
     - Tree 구조를 테이블에 저장할 때, root에서부터 현재 노드까지의 전체 경로를 key로 저장하는 방법
-    - 구현에 드는 노력에 비해 매우 효율적인 저장 방식
-    - Key에 대한 Search를 할 때 Regular Expression을 사용할 수 있으면, 특정 노드의 하위 트리등을 쿼리해 오는 기능 등 다양한 쿼리가 가능
+    - Key를 Search 할 때 Regular Expression 사용하여 특정 노드의 하위 트리 쿼리해 오는 기능 등 다양한 쿼리 가능
 
 - 데이터 모델링 예시
-  - 도메인 모델 파악
+  - 순서 1. 도메인 모델 파악
     - 어떤 데이터 개체가 있는지, 개체간의 관계 분석
     - 저장할 데이터를 명확하게 이해하기 위해 필요(RDBMS와 동일)
 
-  - 쿼리 결과(데이터 출력 형태) 디자인
+  - 순서 2. 쿼리 결과(데이터 출력 형태) 디자인
     - 도메인 모델 기반으로 어플리케이션에서 쿼리가 수행되는 결과값을 먼저 정함
     - 출력 형식을 기반으로 필요한 쿼리 정의
     - 출력 데이터를 기반으로 테이블 추출
     - RDBMS와는 정반대의 순서를 가지고 있다.
 
-  - 패턴을 이용한 데이터 모델링
+  - 순서 3. 패턴을 이용한 데이터 모델링
     - NoSQL은 Sorting, Grouping, Join 등의 연산을 제공하지 않기 때문에 Get/Put으로만 데이터를 처리할 수 있는 형태로 데이터 모델 재정의
     - 예시
       
@@ -132,43 +115,23 @@ category: No SQL
       |Attachment|userID:postID:fileID|filename(value), date(value), location(value)|
       |comment|userID:postID:commentID|commentUser(value), date(value), comment(value)|
       
-  - 기능 최적화
-    - 첨부파일: 포스팅에 의존적이며 변경이 적고, 개수가 많지 않기 때문에 하나의 필드에 모아서 저장하는 것이 나음
-    - 분류에 따른 포스팅 출력
-      - 현재는 포스팅 순서대로만 출력 가능
-      - 포스팅에 분류 필드를 별도로 넣고, 필드에 따라 where문으로 select 할 수 있어야 함(Secondary Index)
-      - Posting: userID:postID : categoryName(value), title(value), date(value), contents(value), attach(value), categoryID(value)
+  - 순서 3. 기능 최적화
 
-  - NoSQL 선정 및 테스트
-    - 모델링한 데이터 구조를 효과적으로 실행할 수 있는 NoSQL 검토
-    - NoSQL 특성 분석 및 부하테스트, 안정성/확장성 테스트 수행
-    - 경우에 따라서 여러 개의 NoSQL을 복잡하여 사용
-    - 하나의 NoSQL만으로 모든 데이터를 처리하려고 하지 말고, RDBMS와 혼용하거나 다른 NoSQL을 사용하여 최적의 시스템 설계
+  - 순서 4. NoSQL 선정 및 테스트
+    - 모델링한 데이터 구조를 효과적으로 실행할 수 있는 NoSQL 검토, NoSQL 특성 분석 및 부하테스트, 안정성/확장성 테스트 수행
   
-  - 선정된 NoSQL에 최적화된 하드웨어 디자인까지 해야 한다.
+  - 순서 5. 선정된 NoSQL에 최적화된 하드웨어 디자인까지 해야 한다.
 
 #### MongoDB
 
 - MongoDB 특징
   - 메모리맵 형태의 파일 엔진 DB이기 때문에 메모리에 의존적
     - 메모리 크기가 성능을 좌우
-    - 메모리를 넘어서는 경우 성능이 급격히 저하
   - 쌓아놓고 삭제가 없는 경우 적합
-    - 로그 데이터
-    - 이벤트 참여 내역
-    - 세션
-  - 트랜잭션이 필요한 금융, 결제, 빌링, 회원 정보등에는 부적합
-  - 도큐먼트 데이터 모델(데이터 설계를 종이문서 설계하듯이 설계해야 한다)
-    - 속성의 이름과 값으로 이뤄진 쌍의 집합
-    - 속성은 문자열이나 숫자, 날짜 가능
-    - 배열 또는 다른 도큐먼트를 지정하는 것도 가능
-    - 하나의 document에 필요한 정보를 모두 담아야 함
-    - one query 로 모두 해결이 되게끔 collection model 설계를 해야 한다
-    - join이 불가능하므로 미리 embedding 시켜야 함
-  - JSON 형태로 되어 있다
-  - 예제
+    - 로그 데이터, 이벤트 참여 내역, 세션
+  - 트랜잭션이 필요한 금융, 결제 등에는 부적합하기 때문에 RDBMS와 혼용
+  - JSON형태의 도큐먼트 데이터 모델(데이터 설계를 종이문서 설계하듯이 설계해야 한다)
     ```
-    * Posts: id, title, body, published, created, updated, tags, comments: comment_id, author, email, body, created
     {
       "id": 1,
       "title": "Welcome to Mongo DB",
@@ -185,13 +148,9 @@ category: No SQL
 
 - 장점
   - Schema-less 구조
-    - 다양한 형태의 데이터 저장 가능
-    - 데이터 모델의 유연한 변화 기능(데이터 모델 변경, 필드 확장 용이)
   - Read/Write 성능 뛰어남
-  - Scale out 구조
-    - 많은 데이터 저장이 가능하며 장비 확장이 간단하다
-  - Json 구조
-  - 사용 방법이 쉽고, 개발이 편리하다. 
+    - 쓰기: 100배, 읽기: 3배 정도 빠르다.
+  - Scale out 구조 
 
 - 단점
   - 데이터 업데이트 중 장애 발생 시, 데이터 손실 가능
@@ -208,65 +167,11 @@ category: No SQL
   - 하드웨어적인 측면에서 투자 필요
 
 - MongoDB 불안전성
-  - 데이터 양이 많을 경우 (중간 중간 일부 데이터를 유실할 수 있다)
-    - 일부 데이터가 손실 가능성이 존재
+  - 데이터 양이 많을 경우 중간 중간 일부 데이터를 유실할 수 있다
     - 샤딩의 비정상적인 동작 가능성
     - 레플리카 프로세스의 비정상 동작 가능성
-
-  - 하지만, 동일한 데이터를 가지고 CRUD를 할 때 RDBMS보다 빠르게 진행하며 Single Node와 Multi Node간에 성능 차이가 없다.
-    - 쓰기: 100배, 읽기: 3배 정도 빠르다.
-
-- 주요 기능
-  - Query
-    - Create: db.person.save({'name': 'John'});
-    - Read: db.person.find();
-    - Update: db.person.update({'name':' 'John'}, {'name': 'Cash', 'languages': ['English']});
-    - Delete: db.person.remove({'name':' 'John'});
-
-  - 인덱스
-    - 다수 인덱스 설정 가능하며 복합 인덱스를 지원
-    - 빠른 검색 지원
-    - 도큐먼트에 저장된 데이터와 중복 저장 문제
-    - 메모리가 부족한 시스템에서는 검색 속도 저하 문제
-
-  - 복제
-    - Master-Slave 구조 구성
-    - 데이터 복사본을 Slave에 배치
-    - Master 장애에 따른 데이터 손실 없이 Slave 데이터 사용 가능
-    - ReplicaSet 사용 시 Master 장애가 발생했을 때, Slave에서 master를 선출 가능(중단없이 서비스 가능)
-    - 데이터 손실을 최소화하기 위해 저널링 지원(MongoDB의 데이터 변화에 따른 모든 연산에 대한 로그 적재, 데이터 손실 발생 시 로그를 통한 복구 가능)
-
-  - 샤딩
-  
-    ![image](https://user-images.githubusercontent.com/42403023/136687236-35f32889-a0ec-40e5-bc2c-d80871aed33b.png)
-    
-    - 대용량의 데이터를 저장하기 위한 방법
-      - 소프트웨어 적으로 데이터베이스를 분산시켜 처리하는 구조
-    - 샤딩 방식
-      - 데이터베이스가 저장하고 있는 테이블을 테이블 단위로 분리하는 방법
-      - 데이터베이스가 저장하고 있는 테이블 자체를 분할하는 방법
-    - 분산 데이터베이스의 전통적인 분할 3계층 구조 지원
-      - 응용 계층, 중개자 계층, 데이터 계층
-      - 응용 계층은 데이터에 접근하기 위해 중개자를 통해 모든 데이터의 출력을 처리
-      - 추상화된 한개의 데이터베이스가 존재하는 것처럼 운용
-      
-  - MapReduce
-
-    ![image](https://user-images.githubusercontent.com/42403023/136687357-9d2b07d5-fd91-44ff-81a8-f213b34c1486.png)
-
-    - 대용량의 데이터를 안전하고 빠르게 처리하기 위한 방법
-      - 데이터를 분산하여 연산하고 다시 합치는 기술
-      - 맵과 리듀스 단계로 나누어 처리, 사용자가 임의 코딩 가능
-      - 입/출력 데이터는 Key-Value 형태로 구성
-    - 한대 이상의 하드웨어를 활용하는 분산 프로그래밍 모델
-      - 분산을 통해 분할된 조각으로 처리한 다음, 다시 모아서 훨씬 짧은 시간에 계산완료
-    - 대용량 파일에 대한 로그 분석, 색인 구축 검색등에 활용
-    - 일괄처리 방식으로 전체 데이터 셋을 분석할 필요가 있는 문제에 적합
-    - input data를 split한 후, 각 서버에서 Map함수를 통해 각각 output을 만들고, shuffle/sort를 진행한 후 reduce하여 최종 output을 만들어 낸다.
 
 #### 출처
 
 - CAP 이론: https://itwiki.kr/w/CAP_%EC%9D%B4%EB%A1%A0
-- shading 이미지 파일 출처: https://sudarlife.tistory.com/entry/mongodb-Sharding-%EB%AA%BD%EA%B3%A0%EB%94%94%EB%B9%84-%EC%83%A4%EB%94%A9-%EC%A0%81%EC%9A%A9%ED%95%98%EA%B8%B0-config-sever-replica-set
-- map reduce 이미지 파일 출처: https://medium.com/@ekiny018/mongodb-and-mapreduce-64af7efd038
 - T아카데미 유투브 강의, MongoDB 프로그래밍: https://www.youtube.com/playlist?list=PL9mhQYIlKEheyXIEL8RQts4zV_uMwdWFj
