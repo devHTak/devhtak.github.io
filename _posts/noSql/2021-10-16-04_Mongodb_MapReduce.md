@@ -122,11 +122,12 @@ category: No SQL
 - Mongodb는 관계형 데이터베이스에서 제공하는 데이터 그룹함수들을 지원하고 있지 않다
 - MapReduce 를 통해서 집계 함수 구현 가능
 
-- WordCounting
-  - 입력파일의 텍스트 내용에 포함된 단어의 수를 세는 프로그램
-  - 두가지 함수의 사용자 인터페이스 구현
-    - map(in_key, in_value) -> (inter_key, inter_value) list
-    - reduce(inter_key, inter_value) -> (out_key, out_value) list
+#### MapReduce 활용 1. WordCounting
+
+- 입력파일의 텍스트 내용에 포함된 단어의 수를 세는 프로그램
+- 두가지 함수의 사용자 인터페이스 구현
+  - map(in_key, in_value) -> (inter_key, inter_value) list
+  - reduce(inter_key, inter_value) -> (out_key, out_value) list
 
 - 구현
   - 데이터 입력
@@ -174,7 +175,62 @@ category: No SQL
     { "_id" : { "word" : "book" }, "value" : { "count" : 2 } }
     { "_id" : { "word" : "write" }, "value" : { "count" : 1 } }
     ```
+
+#### MapReduce 활용 2. Inverted Search Index
+
+- value의 내용을 키로 하고, key의 내용을 반대로 value로 하는 패턴으로 inverting한 collection을 새로 만든다.
+- 만약크롤링을 통해 URL에 대한 키워드를 저장한다면 key 는 URL, value 는 keyword가 된다.
+  - 검색할 때에는 keyword로 검색하기 때문에 key는 keyword, value는 URL로 inverting 한 컬렉션을 다시 생성하는 것
+
+- 두가지 함수의 사용자 인터페이스 구현
+  - Inverted Mapper
+    - 데이터셋을 key, value의 리스트로 변경하는 map() 함수
+  - Combine Reducer
+
+- 구현
+  - 데이터 입력
+   ```
+   db.actors.save({'actor': "Ricard Gere", 'movies': ["Pretty woman", "Runaway bride", "Chicago"]});
+   db.actors.save({actor: "Julia Roberts", movies: ["Pretty woman", "Runnaway bride", "Erin brockovich"]});
+   ```
   
+  - map
+    ```javascript
+    map = function() {
+        for(var i in this.movies) {
+            key = {movie: this.movies[i]};
+            value = {actors: [this.actor]};
+            emit(key, value);
+        }
+    }
+    ```
+
+  - reduce
+    ```javascript
+    reduce = function(key, values) {
+        actor_list = [];
+        for(var i in values) {
+            actor_list.actors = values[i].actors.concat(actor_list.actors);
+        }
+        return actor_list;
+    }
+    ```
+
+  - MapReduce 실행
+    ```
+    db.actors.mapReduce(map, reduce, 'pivot');
+    ```
+    
+  - 결과 확인
+    ```
+    db.pivot.find();
+    { "_id" : { "movie" : "Runaway bride" }, "value" : [ [ "Ricard Gere", undefined ] ] }
+    { "_id" : { "movie" : "Pretty woman" }, "value" : [ [ "Ricard Gere", "Julia Roberts", undefined ] ] }
+    { "_id" : { "movie" : "Erin brockovich" }, "value" : [ [ "Julia Roberts", undefined ] ] }
+    { "_id" : { "movie" : "Runnaway bride" }, "value" : [ [ "Julia Roberts", undefined ] ] }
+    { "_id" : { "movie" : "Chicago" }, "value" : [ [ "Ricard Gere", undefined ] ] }
+    ```
+
 #### 출처
 
 - MapReduce 동작 원리: https://mrsence.tistory.com/16
