@@ -230,6 +230,99 @@ category: No SQL
     { "_id" : { "movie" : "Chicago" }, "value" : { "actors": [ "Ricard Gere" ] } }
     ```
 
+#### 집계 함수
+
+- count
+  ```
+  db.person.count()
+  db.person.find({name: "neo"}).count()
+  ```
+  - 컬렉션 내 문서 갯수 조회
+
+- distinct
+  ```
+  db.runCommand({"distinct": "person", "key": "age"})
+  db.phones.distinct('components.number', {'components.number': {$lt 5550005})
+  ``
+  - 지정된 키에 대한 중복 제거(주어진 키의 고유한 값 찾기)
+  - 컬렉션과 키를 반드시 지정해야 한다
+
+- group
+  ```
+  db.person.group({key: {age: 1}, initial: {count,0}, $reduce: "function(obj, result) { result.count++; }" } )
+  // key는 age에 해당하는 출력값은 count 이고, reduce함수를 통해 count 증가
+  // 출력: [{"age": 21, "count": 2}] 
+  ```
+  - 지정된 키에 대한 그룹핑
+  - RDBMS의 gruop by와 같은 기능
+  - 속도가 느리기 때문에 꼭 필요한 곳에만 사용하는 것이 좋은
+  - sort/limit 등을 사용하기 어려움
+  - 샤드 클러스터 환경에서는 동작하지 않는다
+  - reduce 함수를 직접 지정이 가능하여 좀 더 유연한 처리가 가능하다
+
+
+#### 집계 프레임워크(Aggregation Framework)
+
+- mongodb 2.1 부터 지원
+- 내부적으로 MapReduce를 사용하며 제공하며 빠른 성능을 보장한다
+- 집계 결과는 16MB 데이터로 제한한다.
+- 처리할 작업이 단순한 경우 mongodb 내장함수(gruop, count ...)를 쓰는 것이 무방하나 처리가 복잡할 수록 Aggregation framework, MapReduce 함수를 쓰는 것이 좋다
+- 주요 개념
+  - pipelines
+    - unix의 pipe와 동일
+    - mongodb pipeline은 document를 stream 화
+    - pipeline operators는 document의 stream을 처리
+    - MapReduce 와 같은 원리
+  - expressions
+    - input document를 수행한 계산값을 기반으로 output document를 생성
+    - $addToSet, $first, $last, $max, $min, $avg, $push, $sum 등의 명령어 지원
+
+- pipeline 주요 명령어
+  - $project(select)
+  - $match(where)
+  - $gruop(group by)
+  - $sort(order by)
+  - $limit(limit)
+  - $skip
+  - $unwind
+  - $geoNear
+
+  - 참고
+    - sql은 dbms안에서 수행, mongodb는 sharding 기반에서 수행
+
+- 예제
+  - 잡지 기사 콜렉션에서 가장 많은 기사를 쓴 기자 다섯명 찾기
+  - 파이프라인 연산자 매칭
+    - {"$project": {"author": 1}}
+      - 각 문서의 기자(작성자) 필드를 선출한다
+    - {"$group": {"_id": "$author", "count": {"$sum": 1}}}
+      - 이름으로 작성자들을 묶고 작성자가 나타난 각 문서에 대해 count 증가
+    - {"$sort": {"count": -1}}
+      - 결과 문서를 count 필드 기준의 내림차순으로 정렬
+    - {"$limit": 5}
+      - 결과 셋을 처음 5개의 결과 문서로 제한
+  - mongodb에서 aggregate() 함수에 각 연산 전달
+    ```
+    db.articles.aggregate(
+        {"$project": {"author": 1}},
+        {"$group": {"_id": "author", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 5});
+    ```
+    
+#### eval 리모트 명령
+
+- 리모트 명령
+  - 로컬 mongodb 콘솔에서 수정 명령어를 입력하면 원격 mongodb에서 데이터를 로컬로 불러와 처리한뒤 다시 원격지에 저장
+  - eval 명령어를 사용하면 원격지에서 바로 명령어를 실행한뒤 결과를 받는것이 가능
+  - 예시
+    - 명령어를 로컬에서 실행하면 모든 100,000개의 전화번호 데이터를 각각 로컬로 읽고 처리하면서 하나씩 다시 원격 서버에 저장
+    - 이 경우 eval 명령어를 사용하면 효율을 높일수 있다.
+    ```
+    > db.eval(update_area);
+    > db.eval("distinctDigits(db.phones.findOne({'components.number': 5551213}))");
+    ```
+
 #### 출처
 
 - MapReduce 동작 원리: https://mrsence.tistory.com/16
