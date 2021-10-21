@@ -79,17 +79,16 @@ category: No SQL
     return {V1, V2};
     ```
     
-- 계층 데이터 구조 모델링 패턴
-  - NOSQL은 다양한 데이터 모델이 있지만, 기본적으로 row, column을 가지고 있는 테이블 구조의 저장 구조를 갖는다.
-  - 어플리케이션 개발 중, 이런 테이블 구조뿐 아니라 Tree와 같은 계층형 데이터 구조를 저장해야 할 경우가 있는데, NOSQL은 이런 계층형 구조를 저장하는 것이 쉽지 않음
+- 계층 데이터 구조 모델링 패턴 (Tree 구조에 대한 모델링)
+  - NOSQL은 다양한 데이터 모델이 있지만, 기본적으로 row, column을 가지고 있는 테이블 구조의 저장 구조를 갖지만 Tree와 같은 계층형 데이터 구조를 저장해야 할 경우 NOSQL은 이런 계층형 구조를 저장하는 것이 쉽지 않음
   - RDBMS의 경우에도 이런 계층형 구조를 저장하기 위해서 많은 고민을 해왔기 떄문에, 솔루션에서 기능적으로 자체 지원하기도 하고 데이터 모델링을 통해서 계층형 구조를 저장할 수 있음
   - NoSQL에서 계층형 구조를 저장하는 기법은 RDBMS에서 사용하는 기법들을 참고하여 구현함
 
-  - Tree Aggregation
+  - 방법 1. Tree Aggregation
     - Tree 구조 자체를 하나의 Value에 JSON, XML등을 활용(nested)하여 저장하는 방식
     - Tree 자체가 크지 않고, 변경이 많이 없는 경우에 적합
 
-  - Materialized Path
+  - 방법2. Materialized Path
     - Tree 구조를 테이블에 저장할 때, root에서부터 현재 노드까지의 전체 경로를 key로 저장하는 방법
     - Key를 Search 할 때 Regular Expression 사용하여 특정 노드의 하위 트리 쿼리해 오는 기능 등 다양한 쿼리 가능
 
