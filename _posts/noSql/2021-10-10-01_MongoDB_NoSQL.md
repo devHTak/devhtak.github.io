@@ -89,6 +89,9 @@ category: No SQL
     - Tree 자체가 크지 않고, 변경이 많이 없는 경우에 적합
 
   - 방법2. Materialized Path
+  
+    ![image](https://user-images.githubusercontent.com/42403023/138253874-5d9483d1-3a38-485b-8f22-8f8fc5a465ea.png)
+
     - Tree 구조를 테이블에 저장할 때, root에서부터 현재 노드까지의 전체 경로를 key로 저장하는 방법
     - Key를 Search 할 때 Regular Expression 사용하여 특정 노드의 하위 트리 쿼리해 오는 기능 등 다양한 쿼리 가능
 
