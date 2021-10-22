@@ -1,7 +1,7 @@
 ---
 layout: post
 title: 도커를 활용한 MongoDB 설치 및 쉘 사용
-summary: JUnit 사용법
+summary: NoSQL - MongoDB
 author: devhtak
 date: '2021-10-11 21:41:00 +0900'
 category: No SQL
