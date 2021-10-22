@@ -153,7 +153,7 @@ category: No SQL
   
   ![image](https://user-images.githubusercontent.com/42403023/138533812-1facd66b-8520-4313-8fb5-095beffc3c09.png)
   
-  - 샤딩 시스템을 구축할 때 가장 중요
+  - unique 한 단일 또는 복합 인덱스로 shard key 사용(default \_id)
   - 여러 개의 Shard 서버로 분할될 기준 필드를 가리키며, partition, load balancing에 기준이 된다.
   - shard key는 cardinality를 보고 적절한 선택이 필요하다. 
     - 데이터 분포가 넓으면 low cardinality라고 표현하고, 분포가 높으면 high cardinality라고 부른다
