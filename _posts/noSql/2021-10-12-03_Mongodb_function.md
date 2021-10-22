@@ -150,6 +150,9 @@ category: No SQL
   - 중개자 계층: 샤딩 시스템의 가장 핵심적인 부분, 메타정보 저장 및 application과 data간에 적절한 질의 및 결과를 반환한다
 
 - Shard Key
+  
+  ![image](https://user-images.githubusercontent.com/42403023/138533812-1facd66b-8520-4313-8fb5-095beffc3c09.png)
+  
   - 샤딩 시스템을 구축할 때 가장 중요
   - 여러 개의 Shard 서버로 분할될 기준 필드를 가리키며, partition, load balancing에 기준이 된다.
   - shard key는 cardinality를 보고 적절한 선택이 필요하다. 
