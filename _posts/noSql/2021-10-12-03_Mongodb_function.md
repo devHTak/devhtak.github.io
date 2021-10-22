@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Mongodb - index, shading, replica
-summary: JUnit 사용법
+summary: NoSQL - MongoDB
 author: devhtak
 date: '2021-10-11 21:41:00 +0900'
 category: No SQL
