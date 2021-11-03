@@ -1,9 +1,9 @@
 ---
 layout: post
-title: SQL Tuning. index 기본 및 튜닝
+title: SQL Tuning. index 기본
 summary: SQL Tuning
 author: devhtak
-date: '2021-10-24 21:41:00 +0900'
+date: '2021-11-03 21:41:00 +0900'
 category: SQL
 ---
 
@@ -68,6 +68,8 @@ category: SQL
     - 인덱스를 사용할 수 있지만, 스캔 시작점을 찾을 수 없고, 멈출 수도 없이 리프 블록 전체를 스캔해야 되는 것
     - 예시) 사전에서 '인덱스'가 포함된 단어를 찾는다면 시작점을 찾을 수 없고, 멈출 수 없고 색인 전체를 스캔해야 한다.
   - index range scan 을 사용하지 못하는 경우
+    - 인덱스 컬럼을 가공하는 경우 range scan을 하지 못한다.
+    
     ```
     - SUBSTR(BIRTHDAY, 2, 5) = '05' // 생년월일(YYYYMMDD)이 index이지만 생년 월일이 5월인 학생을 찾을 때
     - NVL(ORD_COUNT, 0) < 100 // NULL값이 0으로 치환한 값
@@ -75,9 +77,167 @@ category: SQL
     - PHONE_NUMBER = :phoneNumber OR CUSTOMER_NAME = :customerName // OR 연산에 경우 어느 한 시작점을 찾을 수 없다
      // OR 연산, IN 연산에 경우 Index Full Scan 이 발생하기 때문에 UNION ALL로 해결할 수 있다
     ```
+    - 결합 인덱스
+      ```
+      -- index: [TEAM + MEMBER_NAME + MEMBER_AGE]
+      SELECT MEMBER_ID, TEAM, MEMBER_AGE, JOIN_DATE, PHONE_NUMBER
+      FROM MEMBER
+      WHERE MEMBER_NAME = '홍길동';
+      ```
+      - 인덱스 구성에 의해 TEAM 순으로 정렬 -> MEMBER_NAME 순으로 정렬 -> MEMBER_AGE 순으로 정렬되었다
+      - MEMBER_NAME이 아닌 TEAM이 기준이기 때문에 하나의 시작점을 찾을 수 없다. 즉 전체 리프 블록을 모두 스캔해야 한다
 
+  - index scan이 가능한 경우
+    - 인덱스 선두 컬럼이 가공되지 않은 상태로 조건절에 있으면 index range scan이 가능하다
+
+- 인덱스를 활용한 소트 연산 생략
+  - 인덱스를 통해 데이터가 기본적으로 sorting이 되어 있다.
+  - 그렇기 때문에 옵티마이저는 인덱스의 속성을 활용하여 ORDER BY가 있어도 정렬 연산을 따로 수행하지 않는다.
+  - ASC(오름차순)에 경우 좌측으로 수직적 탐색을 한 후 우측으로 수평적 탐색을 한다
+  - DESC(내림차순)에 경우 가장 큰 값을 찾기 위해 우측으로 수직적 탐색을 한 후 좌측으로 수평적 탐색을 한다.
+  
+- ORDER BY 에서 컬럼 가공
+  
+- SELECT - LIST 에서 컬럼 가공
+
+- 자동 형변환
+
+#### 인덱스 확장기능 사용법
+
+- Index Range Scan
+  
+  ![image](https://user-images.githubusercontent.com/42403023/140049598-2610ec30-8aec-4cc8-b5a7-5925ee56aad9.png)
+  
+  ```
+  SELECT * FROM EMP WHERE DEPT_NO = 20;
+
+  Execution Plan
+  0   SELECT STATEMENT Optimizer=ALL_ROWS
+  1 0 TABLE ACCESS (BY INDEX ROWID) OF 'EMP' (TABLE)
+  2 1 INDEX (RANGE SCAN) OF 'EMP_DEPTNO_IDX' (INDEX)
+  ```
+  
+  - 리프 블록까지 수직적으로 탐색한 후 필요한 범위만 스캔
+  
+- Index Full Scan
+  
+  ![image](https://user-images.githubusercontent.com/42403023/140050107-bc7028ce-db43-4106-95f9-e926a7fa2326.png)
+  
+  
+  ```
+  CREATE INDEX EMP_ENAME_SAL_IDX ON EMP(ename, sal);
+  SELECT * FROM EMP WHERE SAL > 2000 ORDER BY ENAME;
+
+  Execution Plan
+  0   SELECT STATEMENT Optimizer=ALL_ROWS
+  1 0 TABLE ACCESS (BY INDEX ROWID) OF 'EMP' (TABLE)
+  2 1 INDEX (FULL SCAN) OF 'EMP_ENAME_SAL_IDX' (INDEX)
+  ```
+  
+  - 인덱스 스캔없이 인덱스 리프 블록을 처음부터 끝까지 수평 탐색하는 방식
+  - 데이터 검색을 위한 최적의 인덱스가 없을 때 차선으로 선택
+  - index full scan의 효용성
+    - 예제처럼 ENAME이 조건절에 없으면 옵티마이저는 먼저 TABLE FULL SCAN을 고려하지만 데이터가 많은 경우 부담이 크다.
+    - 이런 경우 index를 full scan을 통해 필터링하는 효과를 볼 수 있다.
+    - index range scan 보다는 효과가 작지만 table full scan보다 큰 효과를 볼 수 있다.
+  - 인덱스를 이용한 소트 전략 생략
+    - index full scan을 하면 결과 집합이 인덱스 컬럼 순으로 소팅되기 때문에 sort order by 연산이 생략된다.
+
+- Index Unique Scan
+  
+  ![image](https://user-images.githubusercontent.com/42403023/140052140-a679386f-5fed-45b8-b774-3b47dd81700c.png)
+  
+  ```
+  create unique index pk_emp on emp(empno);
+  select empno, ename from emp where empno = 7788;
+  
+  Execution Plan
+  0   SELECT STATEMENT Optimizer=ALL_ROWS
+  1 0 TABLE ACCESS (BY INDEX ROWID) OF 'EMP' (TABLE)
+  2 1 INDEX (UNIQUE SCAN) OF 'PK_EMP' (INDEX)
+  ```
+  
+  - Unique index 를 '=' 조건으로 탐색하는 경우에 동작
+  - Unique index라 해도 범위 조건을 활용하면 index range scan이 활용된다.
+
+- Index Skip Scan
+  
+  ![image](https://user-images.githubusercontent.com/42403023/140053654-4e91dfa2-52eb-4680-82f0-5336c6c7b4cc.png)
+
+  - Oracle 9i 버전부터 생성
+  - 인덱스 선두 컬럼의 Distinct Value 개수가 적고, 후행 컬럼의 Distinct Value 개수가 많을 때 유용하다
+  - 예시
+  
+    ![image](https://user-images.githubusercontent.com/42403023/140052310-1ddb11d0-da54-4130-93e6-9e419ac2874c.png)
+
+    ```
+    SELECT /*+ index_ss(사원 사원_IDX) */
+    FROM 사원
+    WHERE 연봉 BETWEEN 2000 AND 4000;
+
+    Execution Plan
+    0   SELECT STATEMENT Optimizer=ALL_ROWS
+    1 0 TABLE ACCESS (BY INDEX ROWID) OF 'EMP' (TABLE)
+    2 1 INDEX (UNIQUE SCAN) OF 'PK_EMP' (INDEX)
+    ```
+    - 1 ~ 2 번 블록에 경우 가능성이 없기 때문에 SKIP하고, 3번 블록은 가능성이 있기 때문에 스캔한다.
+    - 4 ~ 5 번 블록에 경우 가능성이 없기 때문에 SKIP하고, 6번 블록은 가능성이 있기 때문에 스캔한다.
+      - 조건은 남&10000 이상이지만 여성&3000미만이 있을 수 있기 때문에 스캔해야 한다.
+    - 7 ~ 9 번 블록에 경우 가능성이 없기 때문에 SKIP하고, 10번 블록은 가능성이 있기 때문에 스캔한다.
+      - 비록 여&10000 이상이지만 여성을 제외한 다른 조건이 있을 수 있기 때문에 스캔해야 한다.
+
+  - Index Skip Scan 조건
+    - Distinct Value 개수가 적은 선두 컬럼이 조건절에 없고, 후행 컬럼의 Distinct Value 개수가 많을 때 효과적 
+  
+- Index Fast Full Scan
+
+  ![image](https://user-images.githubusercontent.com/42403023/140054758-f416c878-089a-4f22-bf34-7529991bfb0f.png)
+  
+  - 논리적인 인덱스 트리 구조를 무시하고 인덱스 세그먼트 전체를 Multiblock I/O 방식으로 스캔
+  - 특징
+    - Multiblock I/O 방식 사용(디스크로부터 대량의 인덱스 블록을 읽어야 할 때 큰 효과 발휘)
+    - 인덱스 키 순서대로 정렬되지 않음(속도는 빠르나 인덱스 리프 노드가 갖는 연결 리스트 구조를 무시한 채 데이터를 읽기 때문에 결과집합이 인덱스 키 순서대로 정렬되지 않는다)
+    - 쿼리에 사용한 컬럼이 모두 인덱스에 포함돼 있을 때 사용 가능
+    - 인덱스가 파티션 돼 있지 않더라도 병렬 쿼리가 가능(Index Range Scan 또는 Index Full Scan과 달리)
+    - 병렬 쿼리 시에는 Direct I/O방식 사용하기 때문에 I/O 속도가 더 빨라짐
+  - Index Full Scan vs Index Fast Full Scan
+    - Index Full	Scan
+      - I/O 방식:	Single Block I/O
+      - 정렬: 정렬 보장
+      - 속도: 느림
+      - 병렬읽기: 지원안됨
+    - Index Fast Full Scan
+      - I/O 방식: Multi Block I/O
+      - 정렬: 정렬 안됨
+      - 속도: 빠름
+      - 병렬읽기: 지원됨
+
+- Index Range Scan Descending
+  ```
+  SELECT * FROM EMP WHERE EMPNO > 0 ORDER BY EMPNO DESC;
+
+  Execution Plan
+  0   SELECT STATEMENT Optimizer=ALL_ROWS
+  1 0 TABLE ACCESS (BY INDEX ROWID) OF 'EMP' (TABLE)
+  2 1 INDEX (RANGE SCAN DESCENDING) OF 'PK_EMP' (INDEX (UNIQUE))
+  ```
+  - index range scan과 동일한 방식이지만 내림차순으로 정렬된 결과집합을 얻고자 할 때 사용
+  ```
+  SELECT DEPTNO, DNAME, LOC
+      , (SELECT MAX(SAL) FROM EMP WHERE DEPTNO = A.DEPTNO)
+  FROM DEPT D;
+
+  Execution Plan
+  0   SELECT STATEMENT Optimizer=ALL_ROWS
+  1 0   SORT (AGGREGATE)
+  2 1     FIRST ROW
+  3 2       INDEX (RANGE SCAN (MIN/MAX) OF 'EMP_02' (INDEX)
+  4 0 TABLE ACCESS (FULL) OF 'EMP' (TABLE)
+  ```
+  - MAX 값을 구할 때에도 해당 컬럼에 인덱스가 있는 경우 descending이 사용된다
 
 #### 참고
 
-- 조시형 저자의 친절한 SQL 튜닝 교재
+- 조시형 저자의 개발자를 위한 SQL 튜닝 입문서 친절한 SQL 튜닝
+  - https://url.kr/fjm9l2
 - sequential & randomaccess: https://m.cafe.daum.net/Oracle-/DHl0/94?listURI=%2FOracle-%2F_rec
