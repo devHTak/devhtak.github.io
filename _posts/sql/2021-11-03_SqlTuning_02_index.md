@@ -97,10 +97,154 @@ category: SQL
   - DESC(내림차순)에 경우 가장 큰 값을 찾기 위해 우측으로 수직적 탐색을 한 후 좌측으로 수평적 탐색을 한다.
   
 - ORDER BY 에서 컬럼 가공
-  
-- SELECT - LIST 에서 컬럼 가공
+  - 조건절이 아닌 order by 또는 select list 에서 컬럼을 가공함으로 인해 인덱스를 정상적으로 사용할 수 없는 경우가 발생한다.
+    - select list란? select from 사이에 원하는 컬럼만 조회하는 방식
+  - 예시 index: \[장비번호 + 변경일자 + 변경순번]
+    - 장비번호가 C인 데이터를 변경일자, 변경순번으로 정렬하여 출력
+      ```
+      SELECT *
+      FROM 상태변경이력
+      WHERE 장비번호 = 'C'
+      ORDER BY 변경일자, 변경순번
+      ```
+      - 수직적 탐색을 통해 장비번호가 'C'인 데이터를 찾아 인덱스 리프블록을 스캔하면 변경일자 + 변경순번으로 정렬된 데이터를 얻기 때문에 정렬 연산을 생략할 수 있다.
+    - 만약 order by 절을 가공한다면 인덱스는 가공하지 않은 상태로 저장했기 때문에 정렬 연산이 필요하다
+      ```
+      SELECT *
+      FROM 상태변경 이력
+      WHERE 장비번호 = 'C'
+      ORDER BY 변경일자 || 변경순번
+      ```
+    - 아니면 select list로 가공한 컬럼을 통해 정렬한다면 
+      ```
+      SELECT *
+      FROM (
+          SELECT TO_CHAR(A.주문번호, 'FM000000') AS 주문번호 /* 0 여섯개로 시작하는 문자 값 변환 */
+            , A.업체번호, A.주문금액
+          FROM 주문 A
+          WHERE A.주문일자 = :searchDate
+            AND A.주문번호 > NVL(:nextOerderNo, 0)
+          ORDER BY 주문번호
+      )
+      WHERE ROWNUM <= 30
+      -----------------------------------------------
+      |ID|OPERATION                        |NAME    |
+      |0 | SELECT STATEMENT                |        |
+      |1 |  COUNT STOPKEY                  |        |
+      |2 |   VIEW                          |        |
+      |3 |    SORT ORDER BY STOPKEY        |        |
+      |4 |     TABLE ACCESS BY INDEX ROWID | 주문   |
+      |5 |      INDEX RANGE SCAN           | 주문PK |
+      -----------------------------------------------
+      ```
+      - 이런 경우 ORDER BY A.주문번호로 하면 SORT ORDER BY STOPKEY 연산이 이뤄지지 않는다
+        
+- SELECT LIST 에서 컬럼 가공
+  - 인덱스로 구성된 컬럼의 MIN, MAX를 구한다면 정렬 sort을 따로 수행하지 않는다.
+    ```
+    /* index 장비번호 + 변경일자 + 변경순번 */
+    SELECT MIN(변경순번)
+    FROM 상태변경이력
+    WHERE 장비번호 = 'C'
+      AND 변경일자 = '20180316'
+    ------------------------------------------------------------------------------
+    ROWS | ROW Source Operation
+    0    | Statement
+    1    |  SORT AGGREGATE (cr=6, pr=0, pw=0, time=81us)
+    1    |   FIRST ROW (cr=6, pr=0, pw=0, time=59 us)
+    1    |    INDEX RANGE SCAN (MIN/MAX) 상태변경이력_PK (cr=6, pr=0, pw = 0 ...)
+    // 인덱스 리프블록의 왼쪽/오른쪽에서 레코드 하나(FIRST ROW)만 읽고 멈춘다.
+    ```
+    
+    - 인덱스 컬럼의 MIN, MAX여도 가공을 한다면 sort 연산이 진행된다.
+      ```
+      /* index 장비번호 + 변경일자 + 변경순번 */
+      SELECT NVL(MAX(TO_NUMBER(변경순번)), 0)
+      FROM 상태변경이력
+      WHERE 장비번호 = 'C'
+        AND 변경일자 = '20180316'
+      ------------------------------------------------------------------------------
+      ROWS | ROW Source Operation
+      0    | Statement
+      1    |  SORT AGGREGATE (cr=4, pr=0, pw=0, time=81us)
+      1    |   FIRST ROW (cr=4, pr=0, pw=0, time=59 us)
+      1    |    INDEX RANGE SCAN (MIN/MAX) 상태변경이력_PK (cr=4, pr=0, pw = 0 ...)
+      ```
+    - min, max를 구한 후 가공하면 된다
+      ```
+      /* index 장비번호 + 변경일자 + 변경순번 */
+      SELECT NVL(TO_NUMBER(MAX(변경순번)), 0)
+      FROM 상태변경이력
+      WHERE 장비번호 = 'C'
+        AND 변경일자 = '20180316'
+      ------------------------------------------------------------------------------
+      ROWS   | ROW Source Operation
+      0      | Statement
+      1      |  SORT AGGREGATE (cr=1670 pr=0 pw=0 time=101326 us)
+      131577 |   INDEX RANGE SCAN 상태변경이력_PK (cr=1670, pr=0, pw = 0 ...)
+      ```
+     
+  - SELECT LIST 내에 scalar subquery 사용하면 MIN/MAX, FIRST ROW 방식으로 정렬연산없이 실행하게 된다.
+    ```
+    SELECT 장비번호, 장비명, 상태코드
+      , ( SELECT MAX(변경일자)
+          FROM 상태변경이력
+          WHERE 장비번호 = P.장비번호) 최종변경일자
+    FROM 장비 P
+    WHERE P.장비구분코드 = 'P00001'
+    ------------------------------------------------------------------------------
+    ROWS   | ROW Source Operation
+    10     | SORT AGGREGATE (cr=22 pr=0 pw=0 time=0us)
+    10     |  FIRST ROW (cr=22 pr=0 pw=0 time=0us cost=3 size=12 card=1)
+    10     |   INDEX RANGE SCAN (MIN/MAX) 상태변경이력_PK (cr=22 pr=0 pw=0 time=0us)
+    10     |  TABLE ACCESS BY INDEX ROWID 장비 (cr=4 pr=0 pw=0 time=0us)
+    10     |   INDEX RANGE SCAN 장비_N1 (cr=2 pr=0 pw=0 time=153 us)
+    ```
+    - 만약 여러개의 데이터를 scalar subquery로 조회하게 된다면동일한 테이블을 여러번 읽어야 하므로 비효율적이다.
+      ```
+      SELECT 장비번호, 장비명, 상태코드
+        , ( SELECT MAX(변경일자)
+            FROM 상태변경이력
+            WHERE 장비번호 = P.장비번호) 최종변경일자
+        , ( SELECT MAX(변경순번)
+            FROM 상태변경이력
+            WHERE 장비번호 = P.장비번호
+              AND 변경일자 = (SELECT MAX(변경일자) FROM 상태변경이력 WHERE 장비번호 = P.장비번호)) 최종변경순번
+      FROM 장비 P
+      WHERE P.장비구분코드 = 'A00001'
+      ```
+    - 만약 데이터를 가공하여 하나의 scalar subquery로 하여도 가공하기 때문에 데이터가 많은 경우 성능이 떨어진다.
+      ```
+      SELECT 장비번호, 장비명, 상태코드
+        , ( SELECT MAX(변경일자 || 변경순번)
+            FROM 상태변경이력
+            WHERE 장비번호 = P.장비번호) 최종변경일자
+      FROM 장비 P
+      WHERE P.장비구분코드 = 'P00001'
+      ```
+    - Top N 알고리즘을 통해 해결 가능 
 
 - 자동 형변환
+  ```
+  SELECT *
+  FROM 고객
+  WHERE 생년월일 = 19900216
+  ------------------------------------------------------------------------------
+  ROWS   | ROW Source Operation
+  0      | SELECT STATEMENT Optimizer=ALL_ROWS(Cost = 3 Card = 1 Bytes = 38)
+  1      |  TABLE ACCESS (FULL) OF '고객' (TABLE) (Cost = 3 Card = 1 Bytes = 38)
+  ------------------------------------------------------------------------------
+  -- Optimizer가 조건절을 변환하여 결과적으로 인덱스 컬럼이 가공된다.
+  -- TO_NUMBER(생년월일) = 19900216
+  ```
+  
+  - 날짜형과 문자형
+    - 오라클 기준으로 날짜형과 문자형이 만나면 날짜형이 이간다
+  - 숫자형과 문자형
+    - 오라클 기준으로 숫자형과 문자형이 만나면 숫자형이 이간다
+    - 다만 LIKE 연산에서는 다르다
+
+  - Oracle의 성능은 연산횟수 보다 블록 I/O를 줄이는 것에 판단되기 때문에 자동형변환을 통한 성능 이슈보다 TO_NUMBER, TO_CHAR, TO_DATE 등에 형변환으로 의도적으로 사용해야 한다.
 
 #### 인덱스 확장기능 사용법
 
