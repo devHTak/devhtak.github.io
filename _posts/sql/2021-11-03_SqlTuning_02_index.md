@@ -158,6 +158,16 @@ category: SQL
     // 인덱스 리프블록의 왼쪽/오른쪽에서 레코드 하나(FIRST ROW)만 읽고 멈춘다.
     ```
     
+    - 참고
+      - rows: 각 수행단계에 출력된 row수
+      - cr: consistent 모드 블록 읽기 (Query가 시작된 시점을 기준으로 Commit된 데이터를 읽는 )
+      - pr(r): 디스크 블록 읽기
+      - pw(w): 디스크 블록 쓰기
+      - time: 소요시간
+      - cost: Cost Based Optimizer(CBO)에서 예측한 비용
+      - size: 리턴한 데이터 size(bytes)
+      - card: cardinality, Cost Based Optimizer(CBO)에서 예측한 row수
+
     - 인덱스 컬럼의 MIN, MAX여도 가공을 한다면 sort 연산이 진행된다.
       ```
       /* index 장비번호 + 변경일자 + 변경순번 */
