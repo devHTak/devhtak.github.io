@@ -39,13 +39,58 @@ category: SQL
   - 테이블 액세스 단계 필터 조건에 의해 버려지는 레코드가 많을 때, 인덱스에 컬럼을 추가함으로써 성능 효과를 볼 수 있다.
   
 - 인덱스만 읽고 처리
+  - Covered 인덱스
+    ```
+    SELECT 부서번호, SSUM(수량)
+    FROM 부서
+    WHERE 부서번호 LIKE '12%'
+    GROUP BY 부서번호
+    ```
+    - index가 부서번호인 경우 12로 시작하는  index leaf node를 찾고 해당하는 Table Access한다.
+    - 해당에 경우 처럼 Table Access 한만큼 데이터를 가져오는 경우에는 index에 문제가 아닌 일의 양이 많은 것
+    - 이럴 때에는 인덱스만 읽어서 처리하도록 사용하는 컬럼을 모두 index로 하는 것을 covered index라고 하며, 이런 경우 성능이 향상된다.
+    - 하지만, 사용하는 컬럼이 많으면 실제 적용하기 어렵다
+    
+  - Include index
+    - 인덱스 키 외에 미리 지정한 컬럼을 리프 레벨에 함께 저장하는 기능
+      ```
+      CREATE INDEX emp_x01 ON EMP (DEPTNO) INCLUDE(SAL)
+      CREATE INDEX emp_x02 ON EMP (DEPTNO, SAL)
+      ```
+      - emp_x01은 모든 노드들은 DEPTNO가 있으며 리프 레벨에 노드에는 SAL 컬럼과 함께 저장된다.
+      - emp_x02 는 DEPTNO와 SAL 컬럼 모두 루트와 브랜치 블록에 저장한다. 
+    - include index는 Table Random Access 횟수를 줄이는 용도로만 사용한다
   
-- 인덱스 구조 테이블
+- 인덱스 구조 테이블(Index-Organized Table)
+  
+  ![image](https://user-images.githubusercontent.com/42403023/141116443-f888d7f6-e5b5-4206-9957-32f44f232dc8.png)
 
-- 클러스터 
+  ```
+  CREATE TABLE INDEX_ORT_T(A NUMBER, B VARCHAR(10), CONTRAINT INDEX_ORG_T_PK PRIMARY KEY(A))
+  ORGANIZATION INDEX;
+  ```
+  - Rand Access가 발생하지 않도록 Table을 index 구조로 생성하는 방법
+  - index leaf block이 곧 data block이 되며 정렬 상태를 유지하며 데이터를 입력한다.
+  - Clustering Factor를 좋게 만드는 방법 중 하나
 
 #### 부분범위 처리 활용
 
+- 부분 범위 처리
+  - 전체 쿼리 결과 집합을 쉼없이 연속적으로 전송하지 않고 사용자로부터 Fetch Call이 있을 때마다 일정량씩 나누어 전송하는 것 
+  - DBMS가 클라이언트에게 데이터를 전송할 때 일정량씩 나누어 전송한다.
+    - 전체 결과집합 중 아직 전송하지 않은 분량이 많이 남아있어도 서버 프로세스는 클라이언트로부터 추가 Fetch Call을 받기 전까지 멈춰 기다린다.
+    - 전체 데이터를 보내는 것이 아닌 일정량만 보낸 후 CPU를 OS에 반환하고 대기 큐에서 대기하다 Fetch Call을 받으면 대기 큐에서 나와 그 다음 데이터를 전송한다.
+  
+  - 정렬 조건이 있을 때 부분범위 처리
+    ```
+    SELECT NAME 
+    FROM BIG_TABLE
+    ORDER BY CREATED
+    ```
+    - CREATED 컬럼으로 정렬하게 되면 부분범위 처리가 가능할까?
+      - 모든 데이터를 읽은 후 CREATED 순으로 정렬을 마친 후 클라이언트에게 데이터를 전송하기 때문에 전체범위처리다.
+      - 만약 CREATED 컬럼이 선두 index에 경우 부분범위 처리가 가능하다
+  
 #### 인덱스 스캔 활용화
 
 #### 인덱스 설계
