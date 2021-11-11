@@ -343,7 +343,8 @@ category: SQL
       - 비록 여&10000 이상이지만 여성을 제외한 다른 조건이 있을 수 있기 때문에 스캔해야 한다.
 
   - Index Skip Scan 조건
-    - Distinct Value 개수가 적은 선두 컬럼이 조건절에 없고, 후행 컬럼의 Distinct Value 개수가 많을 때 효과적 
+    - Distinct Value 개수가 적은 선두 컬럼이 조건절에 없고, 후행 컬럼의 Distinct Value 개수가 많을 때 효과적
+    - hint에 index_ss 작성(ss: skip scan)
   
 - Index Fast Full Scan
 
