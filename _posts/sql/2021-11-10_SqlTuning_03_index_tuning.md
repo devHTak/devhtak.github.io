@@ -233,11 +233,66 @@ category: SQL
   
 - IN 조건은 '='이 아니다. 
   - IN 조건은 '=' 조건이 아니기 때문에 인덱스를 어떻게 구성하느냐에 따라 성능도 달라질 수 있다.
-  - IN 조건이 '='이 되려면 IN-List Iterator 방식으로 풀려야만 한다. 그렇지 않으면, IN 조건은 필터 조건이다.
-  - IN 조건을 '=' 조건으로 만들기 위해, 즉 액세스 조건으로 만들기 위해 IN-List Iterator 방식으로 푸는 것이 항상 효과적인 것은 아니다.
+    ```
+    SELECT *
+    FROM 고객별가입상품
+    WHERE 고객번호 = :custNo
+    AND   상품ID in ('NG0037', 'NH0041', 'NH0050')
+    ```
+  - 만약 \[상품ID + 고객번호] 로 이루어져 있는 경우 노드에 데이터가 상품ID로 나누어져 있기 때문에 sequential scan에 범위가 넓어진다.
+    - IN 조건이 '='이 되려면 IN-List Iterator 방식으로 풀려야만 한다. 그렇지 않으면, IN 조건은 필터 조건이다.
+  - 해당 index가 \[고객번호 + 상품ID] 로 되어 있는 경우에는 index에 대한 스캔이 한번 이뤄진다.
+    - IN 조건을 '=' 조건으로 만들기 위해, 즉 액세스 조건으로 만들기 위해 IN-List Iterator 방식으로 푸는 것이 항상 효과적인 것은 아니다.
   - NUM_INDEX_KEYS 힌트 활용
+    - IN-List 를 액세스 조건 또는 필터 조건으로 유도하는 방법
+    ```
+    SELECT * /*+ num_index_keys(a 고객별가입상품_X1 1) */
+    FROM 고객별가입상품 a
+    WHERE 고객번호 = :custNo
+    AND   상품ID in ('NG0037', 'NH0041', 'NH0050')
+    ```
     - /*+ num_index_keys(a 고객별가입상품_X1 1) */는 세 번째 인자 값의 인덱스 컬럼까지만 액세스 조건으로 사용하라는 의미다.
   
+- BETWEEN과 LIKE 스캔 범위 비교
+  - LIKE와 BETWEEN은 둘 다 범위검색 조건으로 앞에서 설명한 범위검색 조건을 사용할 때의 비효율 원리가 똑같이 적용한다
+
+  ![image](https://user-images.githubusercontent.com/42403023/141430484-3317c8f8-2a38-401f-bd4b-d3c39a393102.png)
+
+  - 다만, BETWEEN이 LIKE 보다 효율이 약간 좋다
+
+- 다양한 옵션 조건 처리 방식의 장단점 비교
+  - OR 조건 활용
+    ```
+    AND (:custId IS NULL OR CUST_ID = :custId)
+    ```
+    - 옵티마이저에 의한 OR Expansaion 쿼리 변환은 기본적으로 작동하지 않기 때문에 인덱스 선두 컬럼에 대한 옵션 조건에 OR 조건을 사용해서는 안된다.
+    - OR 조건
+      - 인덱스 액세스 조건으로 사용 불가
+      - 인덱스 필터 조건으로 사용 불가
+      - 테이블 액세스 조건으로만 사용 가능
+      
+  - LIKE/BETWEEN 조건 활용
+    ```
+    AND CUST_ID LIKE :custId || '%'
+    ```
+    - 사용 전 점검 사항
+      - 인덱스 선두 컬럼인 경우 성능에 큰 영향을 준다
+      - NULL 허용 컬럼인 경우 ( NULL LIKE '%') 이 되어 NULL인 데이터가 누락된다.
+      - 숫자형 컬럼인 경우 자동 형변환이 발생하여 CUST_ID가 필터링 된다
+      - 가변 길이 컬럼인 경우 예기치 않은 데이터가 조회될 수 있다
+      
+  - UNION ALL 활용
+    - 성능적으로 가장 최적으로 사용된다.
+    - 단점으로는 코드량이 길어지며 가독성이 떨어진다.
+    
+  - NVL/DECODE 활용
+    - UNION ALL 보다 보기 간편하지만 같은 성능을 낸다.
+    - 하지만, NULL이 허용된 컬럼에 경우 NULL 데이터가 누락된다
+    - 또한 OR Expansion이 일어날 수 있기 때문에 인덱스 구성컬럼이어도 필터조건이 될 수 있다.
+
+- 함수호출부하 해소를 위한 인덱스 구성
+  - PL/SQL 함수의 성능적 특성
+  - 효과적인 인덱스 구성을 통한 함수호출 최소화
 
 #### 인덱스 설계
 
@@ -245,3 +300,4 @@ category: SQL
 
 - 조시형 저자의 개발자를 위한 SQL 튜닝 입문서 친절한 SQL 튜닝
   - https://url.kr/fjm9l2
+- http://wiki.gurubee.net/pages/viewpage.action?pageId=26743000
