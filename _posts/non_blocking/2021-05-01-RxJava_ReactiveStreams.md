@@ -64,16 +64,41 @@ paradigm concerned with data streams and the propagation of change.
   - Context Switching을 줄일 수 있고 여러 요청을 한번에 처리할 수 있다.
 
 - blocking & non-blocking
+  ```
+  이 그룹은 호출되는 함수에 대한 제어권을 바로 반납하느냐 마느냐가 관심사이다.
+  ```
   - 행위자가 취한 행위 자체가, 또는 그 행위로 인해 다른 무엇이 막혀버린, 제한된, 대기하는 상태.
   - 대개의 경우에는 나 이외의 대상으로 하여금 내가 Block 당하겠지만(Blocked), 어찌 되었든 문자 자체로는 나라는 단일 개체 스스로의 상태를 나타낸다.
   - 호출된 함수가 자신이 할 일을 모두 마칠 때까지 제어권을 계속 가지고서 호출한 함수에게 바로 돌려주지 않으면 Block
   - 호출된 함수가 자신이 할 일을 채 마치지 않았더라도 바로 제어권을 건네주어(return) 호출한 함수가 다른 일을 진행할 수 있도록 해주면 Non-block
   
 - synchronous & asynchronous
+ ```
+ 이 그룹은 호출되는 함수의 작업 완료 여부를 누가 신경쓰느냐가 관심사이다.
+ ```
   - 동시에 발생하는 것들(always plural, can never be singular).
   - 동시라는 것은 즉, 시(time)라는 단일계(system)에서 같이, 함께 무언가가 이루어지는 두 개 이상의 개체 혹은 이벤트를 의미한다고 볼 수 있겠습니다.
   - 호출된 함수의 수행 결과 및 종료를 호출한 함수가(호출된 함수뿐 아니라 호출한 함수도 함께) 신경 쓰면 Synchronous
   - 호출된 함수의 수행 결과 및 종료를 호출된 함수 혼자 직접 신경 쓰고 처리한다면(as a callback fn.) Asynchronous
+
+- 조합
+  ![image](https://user-images.githubusercontent.com/42403023/141741806-f440f561-1653-4c43-bc50-7c32abef5542.png)
+
+  ** 이미지 출처: https://velog.io/@kjh3865/BlockingNon-Blocking-SyncAsync-%EC%A1%B0%ED%95%A9-%EC%A0%95%EB%A6%AC
+  
+  - blocking + Synchronous
+    - 결과가 처리되어 나올때까지 기다렸다가 return 값으로 결과를 전달한다.
+    
+  - blocking + asynchronous
+    - 호출되는 함수가 바로 return하지 않고, 호출하는 함수는 작업 완료 여부를 신경쓰지 않는다.
+    - 이 조합은 사실 이점이 없어서 일부러 이 방식을 사용하진 않는다고 한다.)
+
+  - non-blocking + Asynchronous
+    - 작업 요청을 받아서 별도의 프로세서에서 진행하게 하고 바로 return(작업 끝)한다. 결과는 별도의 작업 후 간접적으로 전달(callback)한다.
+  
+  - non-blocking + synchronous
+    - 결과가 없다면 바로 return한다. 결과가 있으면 바로 결과를 return 한다.
+    - polling: 결과가 생길때까지 계속 완료 되었는지 확인
 
 #### Reactive Programming 기반 기술
 
