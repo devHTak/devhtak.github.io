@@ -217,6 +217,41 @@ category: No SQL
 
 #### 관계 정의
 
+- Mongodb는 @OneToMany와 같은 형태의 선언이 필요 없다.
+- RDB table <-> java object 간 데이터 맵핑을 위한 설정이 필요 없는 이유는 하위 관계까지 java object 형태 그대로 Collection에 저장할 수 있기 때문이다.
+- 다만 Collection에 저장할지 혹은 개별 Collection을 참조할지에 대해 선언을 해주는 @DBRef annotation을 지원한다.
+
+- @DBRef
+  - DBRef는 참조할 도큐먼트의 \_id 필드의 값과 옵션으로서의 데이터베이스 이름을 이용하여 어느 하나의 도큐먼트가 다른 도큐먼트를 참조하는 것이다.
+  - 옵션
+    - $ref: 참조할 도큐먼트가 존재하는 컬렉션의 이름.
+    - $id: 참조된 도큐먼트 내 _id 필드의 값.
+    - $db: 참조할 도큐먼트가 존재하는 데이터베이스의 이름.
+    - 예시
+      ```
+      > db.users.insert({"_id" : "mike", "display_name" : "Mike D"})
+      > db.users.insert({"_id" : "kristina", "display_name" : "Kristina C"})
+      
+      > db.notes.insert({"_id" : 5, "author" : "mike", "text" : "MongoDB is fun!"})
+      > db.notes.insert({"_id" : 20, "author" : "kristina", "text" : "... and DBRefs are easy, too", "references": [{"$ref" : "users", "$id" : "mike"}, {"$ref" : "notes", "$id" : 5}]})
+
+      > db.users.find().pretty()
+      { "_id" : "mike", "display_name" : "Mike D" }
+      { "_id" : "kristina", "display_name" : "Kristina C" }
+
+      > db.notes.find().pretty()
+      { "_id" : 5, "author" : "mike", "text" : "MongoDB is fun!" }
+      {
+          "_id" : 20,
+          "author" : "kristina",
+          "text" : "... and DBRefs are easy, too",
+          "references" : [
+              DBRef("users", "mike"),
+              DBRef("notes", 5)
+          ]
+      }
+      ```
+
 #### 출처
 
 - https://data-make.tistory.com/679
