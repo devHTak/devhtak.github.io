@@ -222,9 +222,9 @@ category: No SQL
   - $gruop(group by)
   - $sort(order by)
   - $limit(limit)
-  - $skip
-  - $unwind
-  - $geoNear
+  - $skip(건너 뛰는 갯수 선택)
+  - $unwind(배열의 확장(join))
+  - $geoNear(지리 공간위치 근처 도큐먼트 선택)
 
   - 참고
     - sql은 dbms안에서 수행, mongodb는 sharding 기반에서 수행
