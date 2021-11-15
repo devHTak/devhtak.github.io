@@ -63,6 +63,8 @@ paradigm concerned with data streams and the propagation of change.
 - Reactive Stream에서의 데이터 처리 방식은 1thread에 여러 요청을 처리할 수 있다.
   - Context Switching을 줄일 수 있고 여러 요청을 한번에 처리할 수 있다.
 
+#### Blocking/Non-Blocking vs Synchronous/Asynchronous
+
 - blocking & non-blocking
   ```
   이 그룹은 호출되는 함수에 대한 제어권을 바로 반납하느냐 마느냐가 관심사이다.
@@ -73,9 +75,9 @@ paradigm concerned with data streams and the propagation of change.
   - 호출된 함수가 자신이 할 일을 채 마치지 않았더라도 바로 제어권을 건네주어(return) 호출한 함수가 다른 일을 진행할 수 있도록 해주면 Non-block
   
 - synchronous & asynchronous
- ```
- 이 그룹은 호출되는 함수의 작업 완료 여부를 누가 신경쓰느냐가 관심사이다.
- ```
+  ```
+  이 그룹은 호출되는 함수의 작업 완료 여부를 누가 신경쓰느냐가 관심사이다.
+  ```
   - 동시에 발생하는 것들(always plural, can never be singular).
   - 동시라는 것은 즉, 시(time)라는 단일계(system)에서 같이, 함께 무언가가 이루어지는 두 개 이상의 개체 혹은 이벤트를 의미한다고 볼 수 있겠습니다.
   - 호출된 함수의 수행 결과 및 종료를 호출한 함수가(호출된 함수뿐 아니라 호출한 함수도 함께) 신경 쓰면 Synchronous
