@@ -80,7 +80,27 @@ category: No SQL
       ```
       logging.level.org.springframework.data.mongodb.core.ReactiveMongoTemplate=DEBUG
       ```
+      
+#### MongoDB 의 \_id
+
+- MongoDB의 \_id 속성
+  - MongoDB는 Collection별로 document를 저장한다. (db의 table의 1 row를 저장하는 것과 비슷)
+  - document별로 \_id 속성이 있는데 이는 Collection에 저장된 여러 document에 대해 유일함을 식별하기 위한 기본 key이다.
+  - 별다른 선언이 없으면 ObjectId type을 사용한다.
+
+- ObjectId
+  - ObjectId는 BSON type으로 12 byte로 이루어져 있다.
+  - ObjectId layout
     
+    ![image](https://user-images.githubusercontent.com/42403023/141745338-4577c785-3a0a-488d-93d6-645897677396.png)
+    
+    - MongoDB는 _id를 client에서 만든다. ( 분산 database 환경 )
+    - 동일 time에 동일 machine에서 동일 process id에서 만드는 경우 0 ~ 8까지 동일한 값이 나오지만 마지막 3 byte inc가 중복이 되는 것을 막는다. 
+
+- @Id 애노테이션
+  - @Id로 지정된 field가 있으면 MongoDB의 \_id로 맵핑된다.
+  - 만약 @Id로 지정된 field가 없다면 id란 이름의 field가 MongoDB의 _id로 맵핑된다.
+
 #### Spring Boot 에서 MongoDB 접근 API
 
 - 예제 Collection 생성
@@ -202,3 +222,4 @@ category: No SQL
 - https://data-make.tistory.com/679
 - https://jsonobject.tistory.com/559
 - https://gofnrk.tistory.com/38
+- https://luvstudy.tistory.com/62
