@@ -76,6 +76,10 @@ category: No SQL
                 core:
                   MongoTemplate: DEBUG
     ```
+    - reactive mongo db logging
+      ```
+      logging.level.org.springframework.data.mongodb.core.ReactiveMongoTemplate=DEBUG
+      ```
     
 #### Spring Boot 에서 MongoDB 접근 API
 
@@ -156,7 +160,43 @@ category: No SQL
         }
     }
     ```
-    
+
+#### MongoRepository 사용 시 SELECT 에 다양한 방법
+
+- 메소드 명으로 정의하기
+  ```java
+  // db.city.find({'name': '서울', 'year': 2021})
+  List<City> findByNameAndYear(String name, int year); 
+  
+  // db.city.find({'createdAt' : {'$gte': '2021-12-01 00:00:00'}, 'city': '서울'})
+  List<CovidStatus> findByCreatedAtGreaterThanAndCity(LocalDateTime createdAt, String city);
+  ```
+  - 해당 방식과 같이 메소드 명을 컬럼명, 조건, AND/OR 조건등으로 연결할 수 있다.
+
+- @Query Annotation
+  ```
+  @Query("{'name': :#{#name}, 'year': :#{#year} }")
+  List<City> findCityByNameAndYear(@Param("name") String name, @Param("year") int year);
+  
+  @Query(values="{'name': :#{#name}, 'year': :#{#year} }", fields= {"name", "year", "number"}
+  List<City> findFieldsByNameAndYear(@Param("name") String name, @Param("year") int year);
+  ```
+  - @Query 애노테이션을 활용하여 필요한 쿼리, 조회하고자 하는 필드 등을 지저할 수 있다.
+  - 이외
+    - count: 쿼리의 개수를 리턴하도록 설정(true/false)
+    - exists: 쿼리에 대한 데이터가 존재하는 지 설정(true/false)
+    - sort: sorting 기준 설정 (sort = "{title: 1}") or (sort= "{title: -1}")
+    - delete: 조회한 데이터를 삭제할지 설정. true로 설정할 시 쿼리 일치 데이터를 삭제하고 삭제된 행 수를 반환합니다.
+
+- 페이징 처리
+  ```java
+  @Query("{'author' : ?0}")
+  Page<Book> findBy(String author, Pageable pageable);
+  ```
+  - Pageable 을 넘겨주면 paging 처리가 가능하다
+
+#### 관계 정의
+
 #### 출처
 
 - https://data-make.tistory.com/679
