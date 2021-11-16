@@ -126,8 +126,81 @@ category: SQL
                   TABLE ACCESS (BY INDEX ROWID) OF '고객' (TABLE)
       ```
       
-#### 
+#### 소트 머지 조인
 
+- 조인 컬럼에 인덱스가 없거나 대량 데이터 조인이어서 인덱스가 효과적이지 않을 때 소트 머지 조이, 해쉬 조인을 선택한다
+
+- SGA vs PGA
+		- SGA
+			 - 공유 메모리 영역인 SGA 에 캐시된 데이터는 여러 프로세스가 공유할 수 있지만, 동시에 액세스할 수 없다
+			 - 동시에 액세스하는 프로세스를 직렬화하기 위한 Lock 매커니즘으로 Latch가 존재한다
+		- PGA
+			 - 오라클 서버 프로세스는 SGA 에 공유된 데이터를 읽고 쓰면서 동시에 자신만의 고유 메모리 영역을 갖는 데 해당 메모리 영역을 PGA라고 한다
+			 - 다른 프로세스와 공유하지 않기 때문에 래치 메커니즘이 불필요하며 같은 양의 데이터를 읽더라도 SGA 버퍼캐시에서 읽을 때 보다 빠르다
+
+- 기본 메커니즘
+		- 두 단계로 진행
+			 - 소트 단계: 양쪽 집합을 조인 컬럼 기준으로 정렬
+			 - 머지 단계: 정렬한 양쪽 집합을 서로 머지
+		- 예시
+    ```
+    SELECT /*+ ordered use_merge( c ) */
+      *
+    FROM 사원 e, 고객 c
+    WHERE c.관리사원번호 = e.사원번호
+    AND e.입사일자>= TO_DATE('20210101', 'YYYYMMDD')
+    AND e.부서코드 = 'Z123'
+    AND c.최종주문금액 >= 20000
+    ```
+    
+    - 힌트
+      - Use_merge(table) 로 힌트를 작성한다
+    - 사원 테이블에 대한 조건을 바탕으로 읽은 후 조인 컬럼인 사원번호 순으로 정렬하고 해당 결과 집합은 PGA 영역에 할당된 Sort Area에 저장
+			 - 고객 테이블에 대한 조건을 바탕으로 읽은 후 조인 컬럼인 관리사원번호 순으로 저장, PGA 영역에 저장
+			 - 정렬한 결과가 PGA에 담을 수 없을 정도로 크면, Temp 테이블스페이스에 저장
+			 - PGA에 저장한 사원테이블을 스캔하며 PGA or Temp에 있는 고객 데이터와 조인
+
+   ```
+   Begin
+      for outer in (select * from PGA_sorted_사원) 
+      loop -- outer
+          for inner in (select * from PGA_sorted_고객 where 관리사원번호=outer.사원번호)
+          loop -- inner
+              dbms_output.putline('…');    
+          end loop;
+      end loop;
+   end
+   ```
+
+    - 사원 데이터를 기준으로 고객 데이터를 매번 full scan 할 필요가 없다
+			 - 조인 대상 레코드가 시작되는 지점을 쉽게 찾을 수 있다
+			 
+- 소트 머지 조인이 빠른 이유
+		- 소트 머지 조인과 NL 조인에 차이점은 미리 정렬해 둔 자료구조를 이용한다는 점
+		- 하지만 NL 조인은 조인과정에서 액세스 하는 모든 블록을 랜덤 액세스 방식으로 db buffer cache를 경유해서 읽는다 (래치 획득 및 캐시 버퍼 체인 스캔 과정)
+		- 소트 연산이 추가로 수행하기 때문에 소트에 대한 부하로 소량에 데이터에는 이슈가 있을 수 있다
+		- 조인 컬럼에 대한 인덱스 유무에도 영향을 받지 않는다.
+		
+- 소트 머지 조인의 주용도
+		- 소트 머지 조인보다 성능이 좋은 해쉬 조인이 나타나면서 소트 머지 조인에 인기는 줄어들었다.
+		- 다만, 아래와 같은 경우에는 소트 머지 조인이 주로 사용된다.
+			 - 조인 조건식이 등치(=) 조건이 아닌 대량 데이터 조인
+			 - 조인 조건식이 아에 없는 조인(Cross Join)
+			 
+- 소트 머지 조인 제어하기
+	 - 실행 계획
+    ```
+    SELECT STATEMENT OPTIMIZER=ALL_ROWS
+      MERGE JOIN
+        SORT (JOIN)
+            TABLE ACCESS (BY INDEX ROWID) OF '사원' (TABLE)
+                INDEX (RANGE SCAN) OF '사원_X1' (INDEX)
+        SORT (JOIN)
+            TABLE ACCESS (BY INDEX ROWID) OF '고객' (TABLE)
+                INDEX (RANGE SCAN) OF '고객_X1' (INDEX)
+    ```
+			 
+    - 양쪽 테이블을 각각 소트한 후, 위쪽 사원 테이블 기준으로 아래쪽 고객 테이블과 머지 조인한다
 
 #### 참고
 
