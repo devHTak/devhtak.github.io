@@ -1,9 +1,9 @@
 ---
 layout: post
-title: SQL Tuning. index 기본
+title: SQL Tuning. index 튜닝
 summary: SQL Tuning
 author: devhtak
-date: '2021-11-03 21:41:00 +0900'
+date: '2021-11-10 21:41:00 +0900'
 category: SQL
 ---
 
