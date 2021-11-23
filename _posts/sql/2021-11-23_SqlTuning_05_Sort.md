@@ -108,19 +108,90 @@ category: SQL
 
 #### Sort 가 발생하지 않도록 SQL 작성
 
+- Union, Minus, Distinct 연산은 중복 레코드를 제거하기 위해 소트 연산을 발생시키므로 필요한 경우에 사용해야 한다.
+
 - Union VS Union ALL
-  - Union, Minus, Distinct 연산은 중복 레코드를 제거하기 위해 소트 연산을 발생시키므로 필요한 경우에 사용해야 한다.
   - Union vs Union ALL
     - Union은 중복 데이터를 삭제하기 위해 sort 연산을 진행하며 Union ALL은 sort 연산 없이 데이터를 합친다.
   - 즉, Union은 데이터 중복이 있을 경우에만 사용해야 하며, 중복이 없는 경우에는 성능을 위해서 Union ALL을 사용해야 한다.
     
 - Exists 활용
-  - 
+  - distinct, minus 연산은 전체 데이터를 읽어서 작업해야 하는데, 대부분 Exists 서브쿼리로 변환이 가능하다.
+  - Exists를 사용하면 전체 데이터를 읽지 않고 존재 여부만 확인하면 되기 때문에 성능 향상이 가능하다
+  - Distinct 튜닝
+    ```
+    SELECT DISTINCT p.상품번호, p.상품명, ...
+    FROM 상품 p, 계약 c
+    WHERE p.상품유형코드 = :pclscd
+    AND   c.상품번호 = p.상품번호
+    AND   c.계약일자 between :dt1 and :dt2
+    AND   c.계약구분코드 = :cptcd
+    
+    SELECT p.상품번호, p.상품명, ...
+    FROM 상품 p
+    WHERE p.상품유형코드 = :pclscd
+    AND   EXISTS ( SELECT 'x' FROM 계약 c
+                   WHERE c.상품번호 = p.상품번호
+                   AND   c.계약일자 between :dt1 and :dt2
+                   AND   c.계약구분코드 = :cptcd)
+    ```
+    - 계약 테이블에 인덱스를 \[상품번호 + 계약일자] 일 때, DISTINCT를 사용하면 상품번호, 계약일자에 대한 모든 계약데이터를 읽어야 한다.
+    - Exists 서브쿼리를 사용하면 계약 테이블에 상품번호, 계약일자에 대한 데이터가 있는지만 확인하면 된다.
+  - MINUS 튜닝
+    - 상품 테이블에 데이터 중 계약 테이블에 해당하는 계약일자, 계약 코드 등을 제외한 데이터를 구한다
+    - 기존 (상품 데이터) MINUS (계약일자, 계약코드에 해당하는 상품 데이터) 쿼리에서 (상품 데이터 NOT EXISTS (계약절차, 계약코드에 해당하는 상품 데이터)) 로 변경할 수 있다.
 
 - 조인 방식 변경
-
+  - Index를 활용하여 sort가 필요없는 경우에도 hash join에 경우에는 sort 연산이 발생한다.
+  - 이런 경우, nl 조인이나 sort merge 조인을 사용하면 sort연산(sort order by) 없이 결과를 가져올 수 있다.
 
 #### Index를 이용한 Sort 연산 생략
+
+- sort order by 생략
+  ```
+  SELECT 거래일시, 체결건수, 체결수량, 거래대금
+  FROM   종목거래
+  WHERE  종목코드 = 'KR123456'
+  ORDER BY 거래일시
+  ```
+  - 인덱스를 \[종목코드 + 거래일시]로 구성하지 않은 경우
+    ```
+    ID  OPERATION            NAME    ROWS    BYTES    COST
+    0   SELECT STATEMENT             4000    315K     1372
+    1    SORT ORDER BY               4000    315K     1372
+    2     TABLE ACCESS FULL  종목    4000    315K     1372
+    3      INDEX RANGE SCAN  종목_n1 4000             258
+    ```
+    - Sort Order By가 필요하며 종목코드에 해당하는 레코드를 인덱스에서 모두 읽고, 그만큼 테이블 랜덤 액세스가 발생하며, 거래일시에 대한 sorting 작업또한 발생한다. 
+  - 인덱스를 \[종목코드 + 거래일시]로 구성한 경우
+    ```
+    ID  OPERATION            NAME    ROWS    BYTES    COST
+    0   SELECT STATEMENT             4000    315K     1372
+    1    TABLE ACCESS FULL   종목    4000    315K     1372
+    2      INDEX RANGE SCAN  종목_pk 4000             258
+    ```
+    - Sort Order By가 생략된다.
+    - 종목코드에 해당하는 전체 레코드를 읽지 않고도 바로 결과 집합을 출력할 수 있기 때문에 부분범위 처리가 가능한 상태가 되었다.
+
+- Top N 쿼리
+  - Top N 쿼리는 전체 결과집합 중 상위 N개 레코드만 선택하는 쿼리이며, Oracle에 경우 rownum 으로 처리한다.
+  - Top N Stopkey 알고리즘
+    - 실행계획에서 COUNT(STOPKEY) 로 표현되며 조건절에 부합하는 레코드가 많아도, 그 중 rownum에 해당하는 건수만큼 결과 레코드를 얻으면 멈춘다는 뜻이다.
+  - 페이징 처리
+    - 대량의 데이터를 조회할 때 사용하며, 뒤쪽 페이지로 이동할수록 읽는 데이터량이 많아지지만, 보통 앞부분만 읽기 때문에 많이 사용된다.
+    - 부분범위 처리 가능하도록 SQL을 작성해야 한다.
+      - 인덱스를 사용 가능하도록 조건절을 구사하고, 조인은 NL 조인 위주로 처리, Order By 절이 있어도 소트 연산을 생략할 수 있도록 인덱스를 구성해주는 것을 의미한다.   
+  - 페이징 처리 ANTI Pattern
+    - 잘못된 페이징 처리 ROWNUM 쿼리를 하게 되면, 데이터는 N개의 데이터를 내보내지만, 전체 데이터를 스캔하는 경우가 발생한다.
+    - Execution plan을 돌려 확인해보자
+      - 기존 Top N Stopkey Execution plan: COUNT(STOPKEY)
+      - paging 처리가 적용되지 않은 Execution plan: COUNT /* NO SORT + NO STOP */
+
+- 최소값, 최대값 처리
+
+- 이력 조회
+
+- sort group by 생략
 
 #### Sort Area 를 적게 사용하도록 SQL 작성
  
