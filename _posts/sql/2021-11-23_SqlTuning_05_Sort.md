@@ -271,6 +271,32 @@ category: SQL
     - 실행계획에 SORT GROUP BY NOSORT라고 표시된다.
 
 #### Sort Area 를 적게 사용하도록 SQL 작성
+
+- 소트 데이터 줄이기
+  ```
+  SELECT *
+  FROM 예수금원장
+  ORDER BY 총예수금 DESC
+
+  SELECT 계좌번호, 총예수금
+  FROM 예수금원장
+  ORDER BY 총예수금 DESC
+  ```
+  - SELECT - LIST 가 Sort Area에 영향을 준다.
+  - 위 쿼리보다 아래 쿼리가 더 데이터 영역을 조금 사용한다.
+		
+- TOP N 쿼리의 소트 부하 경감 원리
+  - TOP N SORT 알고리즘
+    - 최대값 10개를 구한다고 했을 때, 정렬되지 않은 상태에서 10명을 가져오고 순차적으로 비교하면서 가장 큰 10개의 값을 유지하도록 하는 알고리즘
+  - 페이징 쿼리에서 인덱스를 통한 소트 연산 생략을 진행할 수 없을 때 Table Full Scan을 실행하지만 이 때 TOP N SORT 알고리즘을 진행한다.
+    - 실행계획에 SORT ORDER BY STOPKEY 로 표현된다
+  - TOP N SORT 알고리즘을 사용하면 메모리를 페이징 개수만큼 사용하기 때문에 physical area(Tablespace)를 사용하지 않아도 된다.
+
+- TOP N 쿼리가 아닐 때 발생하는 소트 부하
+  - ROWNUM 조건을 생략하면 TOP N STOP 알고리즘이 작동하지 않기 때문에 디스크를 읽는 경우가 발생한다(Tablespace)
+
+- 분석함수에서의 TOP N 소트
+  - Rank나 row_number 함수는 TOP N 알고리즘이 적용되기 때문에 max함수보다 소트 부하가 적다
  
 #### 참고
 
