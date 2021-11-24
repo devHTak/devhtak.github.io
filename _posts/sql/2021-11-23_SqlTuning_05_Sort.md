@@ -240,9 +240,9 @@ category: SQL
           , TO_NUMBER(SUTSTR(최종이력, 9, 4)) 최종변경순번
       FROM (SELECT 장비번호, 장비명, 상태코드
                 , ( SELECT MAX(H.변경일자 || LPAD(H.변경순번, 4)) FROM 상태변경이력 H WHERE 장비번호 = P.장비번호) 최종이력
-                    FROM 장비 P
-                    WHERE 장비구분코드 = 'A001'
-                   )
+            FROM 장비 P
+            WHERE 장비구분코드 = 'A001'
+      )
       ```
       - 해당 방식으로는 인덱스 컬럼을 가공했기 때문에 FIRST ROW STOPKEY 가 적용되지 않는다.
       ```
