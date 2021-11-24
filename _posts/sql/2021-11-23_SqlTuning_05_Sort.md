@@ -191,33 +191,33 @@ category: SQL
     - 인덱스는 정렬돼 있으므로 인덱스를 이용하면 전체 데이터를 읽지 않고도 쉽게 찾을 수 있다.
     - 인덱스를 이용해 최소/최대값 구하기 위한 조건
       - 인덱스를 이용해 최소/최대값을 구하려면, 조건절 컬럼과 MIN/MAX 함수 인자 컬럼이 모두 인덱스에 포함돼 잇어야 한다.
-			```
-			SELECT MAX(SAL)
-			FROM EMP
-			WHERE DEPT_NO='30'
-			AND    MGR = '7698';
-			```
-      - 인덱스를 [DEPT_NO, MGR, SAL] 구성 또는 [DEPT_NO, SAL, MGR 구성]
+        ```
+        SELECT MAX(SAL)
+        FROM EMP
+        WHERE DEPT_NO='30'
+        AND    MGR = '7698';
+        ```
+      - 인덱스를 \[DEPT_NO, MGR, SAL] 구성 또는 \[DEPT_NO, SAL, MGR 구성]
         - 조건을 만족하는 레코드 하나를 찾았을 때 바로 멈추는 것을 의미 (FIRST ROW STOPKEY 알고리즘)
         - INDEX RANGE SCAN으로 탐색한다
-      - 인덱스 [SAL, DEPT_NO, MGR] 구성
+      - 인덱스 \[SAL, DEPT_NO, MGR] 구성
         - 조건절 컬럼이 모두 인덱스 선두 컬럼이 아니므로 INDEX FULL SCAN이 발생한다
         - FIRST ROW STOPKEY 알고리즘은 적용된다.
-      - 인덱스 [DEPT_NO, SAL] 구성
+      - 인덱스 \[DEPT_NO, SAL] 구성
         - MGR 컬럼이 인덱스로 구성되어 있지 않기 때문에 MGR에 대한 조건은 테이블 필터를 거처야 한다
         - 즉, FIRST ROW STOPKEY 알고리즘은 적용되지 않는다.
 				
   - Top N 쿼리를 이용해 최소/최대값 구하기
-			```
-			SELECT *
-			FROM (
-			    SELECT SAL
-			    FROM EMP
-			    WHERE DEPT_NO='30' AND MGR = '7968'
-			    ORDER BY SAL DESC
-			) 
-			WHERE ROWNUM <= 1;
-			```
+    ```
+    SELECT *
+    FROM (
+        SELECT SAL
+        FROM EMP
+        WHERE DEPT_NO='30' AND MGR = '7968'
+        ORDER BY SAL DESC
+    ) 
+    WHERE ROWNUM <= 1;
+    ```
     - 인덱스 [DEPT_NO, SAL] 구성
       - TOP N STOPKEY 알고리즘을 사용하여 모든 컬럼이 인덱스에 포함되어 있지 않아도 잘 작동한다.
       - 테이블 액세스할 때 MGR= '7968'을 만족하는 값을 찾으면 바로 멈춘다.
@@ -226,47 +226,47 @@ category: SQL
     - 예시 - 장비 테이블과 해당 이력 관리 테이블인 상태변경이력 테이블 2개를 조회
       - 상태변경이력 테이블에 인덱스를 [장비번호 + 변경일자 + 변경순번] 로 구성
     - 가장 단순한 이력 조회
-		  ```
-		  SELECT 장비번호, 장비명, 상태코드
-		      , ( SELECT MAX(변경일자) FROM 상태변경이력 WHERE 장비번호 = P.장비번호) 최종변경일자
-		  FROM 장비 P
-		  WHERE 장비구분코드 = 'A001'
-		  ```
+      ```
+      SELECT 장비번호, 장비명, 상태코드
+          , ( SELECT MAX(변경일자) FROM 상태변경이력 WHERE 장비번호 = P.장비번호) 최종변경일자
+      FROM 장비 P
+      WHERE 장비구분코드 = 'A001'
+      ```
       - 인데스에 장비번호, 변경일자가 있기 때문에 FIRST ROW STOPKEY 알고리즘 적용
     - 점점 복잡해지는 이력 조회
-		  ```
-		  SELECT 장비번호, 장비명, 상태코드
-		      , SUBSTR(최종이력, 1, 8) 최종변경일자
-		      , TO_NUMBER(SUTSTR(최종이력, 9, 4)) 최종변경순번
-		  FROM (SELECT 장비번호, 장비명, 상태코드
-		          , ( SELECT MAX(H.변경일자 || LPAD(H.변경순번, 4)) FROM 상태변경이력 H WHERE 장비번호 = P.장비번호) 최종이력
-		        FROM 장비 P
-		        WHERE 장비구분코드 = 'A001'
-		  )
-		  ```
+      ```
+      SELECT 장비번호, 장비명, 상태코드
+          , SUBSTR(최종이력, 1, 8) 최종변경일자
+          , TO_NUMBER(SUTSTR(최종이력, 9, 4)) 최종변경순번
+      FROM (SELECT 장비번호, 장비명, 상태코드
+                , ( SELECT MAX(H.변경일자 || LPAD(H.변경순번, 4)) FROM 상태변경이력 H WHERE 장비번호 = P.장비번호) 최종이력
+                    FROM 장비 P
+                    WHERE 장비구분코드 = 'A001'
+                   )
+      ```
       - 해당 방식으로는 인덱스 컬럼을 가공했기 때문에 FIRST ROW STOPKEY 가 적용되지 않는다.
-		  ```
-		  SELECT 장비번호, 장비명, 상태코드
-		       , ( SELECT MAX(H.변경일자) 
-		           FROM 상태변경이력 H WHERE 장비번호 = P.장비번호) 최종변경일자
-		       , ( SELECT MAX(H.변경순번) 
-		          FROM 상태변경이력 H 
-		          WHERE 장비번호 = P.장비번호
-		          AND 변겨일자 =  ( SELECT MAX(H.변경일자) FROM 상태변경이력 H WHERE 장비번호 = P.장비번호) ) 최종변경순번
-		  FROM 장비 P
-		  WHERE 장비구분코드 = 'A001'
-		  ```
+      ```
+      SELECT 장비번호, 장비명, 상태코드
+           , ( SELECT MAX(H.변경일자) 
+               FROM 상태변경이력 H WHERE 장비번호 = P.장비번호) 최종변경일자
+           , ( SELECT MAX(H.변경순번) 
+              FROM 상태변경이력 H 
+              WHERE 장비번호 = P.장비번호
+              AND 변겨일자 =  ( SELECT MAX(H.변경일자) FROM 상태변경이력 H WHERE 장비번호 = P.장비번호) ) 최종변경순번
+      FROM 장비 P
+      WHERE 장비구분코드 = 'A001'
+      ```
       - 상태변경이력을 3번 조회하는 비효율이 있지만, FIRST ROW STOPKEY 알고리즘이 잘 작동하므로 성능을 비교적 좋다
     - INDEX_DESC 힌트 사용
       - 인덱스 컬럼을 가공하여 사용한다면 TOP N 알고리즘을 사용하고 INDEX_DESC 를 사용하면 좋은 성능을 가져올 수 있다
       - 인덱스 컬럼의 구성이 바뀌면 결과집합에 문제가 생길 수 있다.
 			
   - Sort Group By 생략
-	  ```
-	  SELECT REGION, AVG(AGE), COUNT(*)
-	  FROM CUSTOMER
-	  GROUP BY REGION
-	  ```
+    ```
+    SELECT REGION, AVG(AGE), COUNT(*)
+    FROM CUSTOMER
+    GROUP BY REGION
+    ```
     - GROUP BY 연산에도 인덱스를 사용하면 Sort Group BY 연산을 생략할 수 있다.
     - 실행계획에 SORT GROUP BY NOSORT라고 표시된다.
 
