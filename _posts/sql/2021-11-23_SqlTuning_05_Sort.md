@@ -1,6 +1,6 @@
 ---
 layout: post
-title: SQL Tuning. Join
+title: SQL Tuning. Sort
 summary: SQL Tuning
 author: devhtak
 date: '2021-11-16 21:41:00 +0900'
