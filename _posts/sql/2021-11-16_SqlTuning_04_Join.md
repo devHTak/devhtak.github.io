@@ -24,7 +24,7 @@ category: SQL
     - 기본적인 Nested Loop Join 방식으로 PL/SQL로 중접루프문의 수행구조는 아래와 같다
       ```
       begin
-          For outer in ( select 사원번호, 사원명 from 사원 where 입사일자 >= TO_DATE('2020', 'YYYY') )
+          for outer in ( select 사원번호, 사원명 from 사원 where 입사일자 >= TO_DATE('2020', 'YYYY') )
           loop -- outer loop
               for inner in (select 고객명, 전화번호 from 고객 where 관리사원번호 = outer.사원번호)
                  loop
@@ -65,7 +65,7 @@ category: SQL
       *
   FROM 사원 e, 고객 c
   WHERE c.관리사원번호 = e.사원번호  -- 1
-  AND       e.입사일자 >= TO_DATE('20210101', 'YYYYMMDD') -- 2
+  AND    e.입사일자 >= TO_DATE('20210101', 'YYYYMMDD') -- 2
   AND    e.부서코드 = 'Z123' -- 3
   AND    c.최종주문금액 >= 20000 -- 4
 
