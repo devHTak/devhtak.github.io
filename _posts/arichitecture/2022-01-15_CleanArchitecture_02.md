@@ -1,0 +1,135 @@
+---
+layout: post
+title: Clean Architecture 03. 설계원칙
+summary: Clean Architecture 
+author: devhtak
+date: '2022-01-15 21:41:00 +0900'
+category: Architecture
+---
+
+### Clean Architecture 03부 설계 원칙
+
+- SOLID 원칙은 함수와 데이터 구조를 클래스로 배치하는 방법으로 이들 클래스를 서로 결합하는 방법을 설명해준다
+- SOLID 원칙의 목적
+  - 변경에 유연하다
+  - 이해하기 쉽다
+  - 많은 소프트웨어 시스템에 사용될 수 있는 컴포넌트의 기반이 된다
+
+#### SRP(Single Responsibility Principal) - 단일 책임 원칙
+
+- SRP란 의미가 잘 전달되지 못한다
+  - 하나의 일만 하는 것은 함수에서 사용되며 이는 리팩토링하는 저수준에서 사용된다
+- SRP 의미에 대한 이해
+  - SRP에서 하나의 책임이란 모듈을 변경하는 이유가 하나뿐이어야 한다는 의미이다
+  - 즉, 하나의 모듈은 변경을 요청하는 하나의 집단에 대해서만 책임져야 한다는 의미이다
+  - 여기서 모듈이란 함수와 데이터 구조로 구성된 응집된 집합으로 단일 집단을 책임지는 코드를 함께 묶어주는 힘이 바로 응집성(cohesion)이다
+
+- 징후1. 우발적 중복
+  - EX. Employee class 내에 3가지 기능이 있다
+    - calculatePay() -> 회계팀에서 기능을 정의하며, CFO 보고를 위해 사용
+    - reportHours() -> 인사팀에서 기능을 정의하며, COO 보고를 위해 사용
+    - save() -> DBA 가 기능을 정의하며, CTO 보고를 위해 사용
+  - 세개의 메서드를 하나의 클래스에 배치하여 세개의 집단이 서로 결합되었다
+    - 메서드 간에 편의 메서드를 호출하는 데, 한 집단에 요구사항 변경이 다른 집단에 영향을 미치게 된다
+  - 서로다른 액터가 의존하는 코드를 서로 분리해야 한다
+
+- 징후2. 병합
+  - 서로 다른 집단에서 요구사항을 내어 다른 개발자가 개발을 시작하였다
+  - 병합 과정에서 충돌(conflict)가 이뤄질 수 있다
+  - 충돌은 해당 클래스를 사용하는 집단에 영향을 미칠 수 있다
+
+- 해결책 1. 데이터와 메서드 분리
+  - 아무런 메서드가 없는 간단한 데이터 구조인 EmployeeData를 만들고, 세 개의 클래스가 공유하도록 한다
+    - PayCalculator(+calculatePay) -> EmployeeData
+    - HourReporter(+reportHours) -> EmployeeData
+    - EmployeeSaver(+saveEmployee) -> EmployeeData
+  - 각 클래스는 자신이 메서드에 반드시 필요한 소스 코드만을 포함, 세 클래스는 서로의 존재를 몰라야 한다.
+    - 따라서 우연한 중복을 피할 수 있다
+  - 단점으로 해당 해결책은 개발자가 세가지 클래스를 인스턴스화하고 추적해야 한다
+
+- 해결책 2. 퍼사드(Farcade) 패턴
+  - 퍼사드 패턴은 단순화된 인터페이스를 통해서 서브시스템을 더 쉽게 사용할 수 있도록 하기위한 용도로 쓰인다.
+    - EmployeeFacade(+calculatePay, +reportHours, +saveEmployee) -> PayCalculator(+calculatePay) -> EmployeeData
+    - EmployeeFacade(+calculatePay, +reportHours, +saveEmployee) -> HourReporter(+reportHours) -> EmployeeData
+    - EmployeeFacade(+calculatePay, +reportHours, +saveEmployee) -> EmployeeSaver(+saveEmployee) -> EmployeeData
+  - EmployeeFacade에서는 요청에 대한 3가지 객체를 생성하고 호출하는 기능만 구현되어 있다
+
+#### OCP(Open-Closed Principal) - 개방 폐쇄 원칙
+
+- OCP 의미
+  - 소프트웨어 개체는 확장에는 열려있고, 변경에는 닫혀있어야 한다 
+  - 소프트웨어 개체의 행위는 확장할 수 있어야 하지만, 해당 개체를 변경해서는 안된다는 의미
+
+- 사고실험
+  - EX. 재무제표를 웹 페이지로 보여주는 시스템
+    - 웹 페이지에 표시되는 데이터는 스크롤 할 수 있고, 음수는 빨간색으로 출력한다.
+    - 보고서 형태로 변환해서 흑백 프린터로 출력 기능 요청
+      - 이 보고서에는 페이지 번호가 있어야 하고, 페이지마다 저절한 머리글과 바닥글이 있어야 하며, 표의 각 열에는 레이블이 있어야 하고, 또한 음수는 괄호로 감싸야 한다고 한다.
+  - 소프트웨어 아키텍처가 훌륭하다면 추가 요구사항에 대한 변경되는 코드의 양이 가능한 한 최소화된다.
+    - 변경량을 없애기 위해서는 서로 다른 목적으로 변경되는 요소를 적절하게 분리하고(SRP), 이들 요소 사이의 의존성을 체계화함으로써(DIP) 변경량을 최소화할 수 있다.
+  - 단일 책임 원칙 SRP 를 적용하면 데이터 흐름을 다음과 같이 할 수 있다.
+    - 재무 데이터 -> 재무 분석기 -> 보고서용 재무 데이터 -> 1. 보고서를 웹에 표시, 2. 보고서를 프린터 출력
+    - 이처럼 책임을 분리했다면, 두 책임 중 하나에서 변경이 발생하더라도 다른 하나는 변경되지 않도록 소스 코드 의존성도 확실히 조직화해야 한다.
+    - 새로 조직화한 구조에서는 행위가 확장될 때 변경이 발생하지 않음을 보장해야 한다.
+    - 이를 달성하려면 처리 과정을 클래스 단위로 분할하고, 이들 클래스를 컴포넌트 단위를 구분해야 한다.
+
+  ![image](https://user-images.githubusercontent.com/42403023/149607251-5ff011f2-4572-4eba-acee-303648d59ef3.png)
+
+  - 모든 컴포넌트 관계는 단방향으로 이루어진다는 뜻이다.
+    - 이들 화살표는 변경으로부터 보호하려는 컴포넌트를 향하도록 그려진다.
+      - A 컴포넌트에서 발생한 변경으로부터 B컴포넌트를 보호하려면 반드시 A컴포넌트가 B컴포넌트에 의존해야 한다.
+  
+  - Interator 는 DB, Controller, Presenter, View 에서 발생한 어떤 변경에도 영향을 받지 않는다.
+    - 그 이유는 바로 Interactor 가 업무 규칙을 포함하기 때문이다.
+    - Interactor 는 앱에서 가장 높은 수준의 정책을 포함한다.
+    - Interactor 이외의 컴포넌트는 모두 주변적인 문제를 처리한다. 가장 중요한 문제는 Interactor 가 담당한다.
+
+  - 보호 계층구조가 수준(level)이라는 개념을 바탕으로 어떻게 생성되는지 주목하자.
+    - Interactor 는 가장 높은 수준의 개념이며, 따라서 최고의 보호를 받는다.
+    - View는 가장 낮은 수준의 개념 중 하나이며, 따라서 거의 보호를 받지 못한다
+    - Presenter 는 View보다는 높고 Controller 나 Interactor 보다는 낮은 수준에 위치한다.
+
+  - 이것이 아키텍처 수준에서 OCP 가 동작하는 방식이다.
+    - 아키텍트는 기능이 어떻게(how), 왜(why), 언제(when) 발생하는지에 따라서 기능을 분리하고, 분리한 기능을 컴포넌트의 계층구조로 조직화한다.
+    - 컴포넌트 계층구조를 이와 같이 조직화하면 저수준 컴포넌트에서 발생한 변경으로부터 고수준 컴포넌트를 보호할 수 있다.
+
+- 방향성 제어
+  - FinancialDataGateway 인터페이스는 FinancialReportGenerator 와 FinancialDataMapper 사이에 위치하는데, 이는 의존성을 역전시키기 위해서다.
+  - 이 인터페이스가 없다면 의존성이 Interactor 컴포넌트에서 Database 컴포넌트로 바로 향하게 된다.
+
+- 정보 은닉
+  - FinancialReportRequester 인터페이스는 방향성 제어와는 다른 목적을 가진다.
+  - 이 녀석은 FinancialReportController 가 Interactor 내부에 대해 너무 많이 알지 못하도록 막기 위해 존재한다.
+  - 만약 이 인터페이스가 없었다면, Controller 는 FinancialEntities 에 대해 추이 종속성(transitive dependency)을 가지게 된다.
+  - 추이 종속성을 가지게 되면, 소프트웨어 엔티티는 '자신이 직접 사용하지 않는 요소에는 절대로 의존해서는 안 된다'는 소프트웨어 원칙을 위반하게 된다.
+  - 다시 말해 Controller 에서 발생한 변경으로부터 Interactor 를 보호하는 일의 우선순위가 가장 높지만,
+  - 반대로 Interactor 에서 발생한 변경으로부터 Controller 도 보호되기를 바란다.
+  - 이를 위해 Interactor 내부를 은닉한다.
+
+#### LSP(Liskov Substitution Principal) - 리스코프 치환 원칙
+
+- 치환 원칙 정의
+  ```
+  S 타입의 객체 o1 각각에 대응하는 T 타입의 객체 o2가 있고, T 타입을 이용해서 정의한 모든 프로그램 P에서 o2의 자리에 o1을 치환하더라도 P의 행위가 변하지 않는다면,
+  S 는 T의 하위타입이다
+  ```
+- 상속을 사용하도록 가이드하기
+  - License 타입의 클래스는 calcFee()라는 메서드를 가지며 Billing 애플리케이션에서 호출한다
+  - 요구사항에 따라 License 객체는 PersonalLicense, Buisiness License를 상속하고 있다
+  - 이는 LSP 원칙을 준수하는데, Billing 의 행위가 License 하위 타입 중 무엇을 지에 전혀 의존하지 않기 때문이다
+  - 이들 하위 타입은 License 타입으로 모두 치환할 수 있다
+
+- 정사각형/직사각형 문제
+  - LSP를 위반하는 대표적인 문제
+  - Rectangle 클래스는 Square 클래스의 하위 타입으로 적합하지 않다
+    - Rectangle 클래스는 높이, 너비가 서로 독립적으로 변경될 수 있다
+    - Square 클래스는 높이와 너비는 반드시 함께 변경된다
+
+- LSP와 아키텍처
+  - 잘 정의된 인터페이스와 그 인트페이스의 구현체끼리의 상호 치환 가능성에 대한 기대
+
+#### IRP(Interface Segregation Principal) - 인터페이스 분리 원칙
+ 
+#### DIP(Dependency Inversion Principal) - 의존성 역전 원칙
+
+#### Robert C. Martin의 Clean Archiecture 책
