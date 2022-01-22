@@ -301,16 +301,13 @@ category: JPA
   
   - Interface
     ```java
-    Page<MemberTeamDto> searchPageSimple(MemberSearchCondition condition,
-    Pageable pageable);
-    Page<MemberTeamDto> searchPageComplex(MemberSearchCondition condition,
-    Pageable pageable);
+    Page<MemberTeamDto> searchPageSimple(MemberSearchCondition condition, Pageable pageable);
+    Page<MemberTeamDto> searchPageComplex(MemberSearchCondition condition, Pageable pageable);
     ```
   
   - Implements
     ```java
-    Page<MemberTeamDto> searchPageSimple(MemberSearchCondition condition,
-    Pageable pageable) {
+    Page<MemberTeamDto> searchPageSimple(MemberSearchCondition condition, Pageable pageable) {
         QueryResults<MemberTeamDto> results = queryFactory
             .select( new QMemberTeamDto(
             
@@ -329,8 +326,7 @@ category: JPA
         
         return new PageImpl<>(content, pageable, total);
     }
-    Page<MemberTeamDto> searchPageComplex(MemberSearchCondition condition,
-    Pageable pageable) {
+    Page<MemberTeamDto> searchPageComplex(MemberSearchCondition condition, Pageable pageable) {
         List<MemberTeamDto> content = queryFactory
             .select(new QMemberTeamDto(
             
