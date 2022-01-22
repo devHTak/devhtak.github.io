@@ -229,7 +229,7 @@ category: JPA
       .execute();
   /*
   PersistenceContext: Member1 // DB: non-user
-  PersistenceContext: Member2 // DB: non-user
+  PersistenceContext: Member2 // DB: non-user
   PersistenceContext: Member3 // DB: Member3
   PersistenceContext: Member4 // DB: Member4
   해당 쿼리가 진행하면 PersistenceContext와 DB에 대한 결과가 다르다
