@@ -208,8 +208,8 @@ category: JPA
 
   - 사용자 정의 리포지 터리 구성
     ```
-    <<Interface>> Member Repository -(extends)-> <<Interface>> JpaRepository
-      -(extends)-> <<Interface>> MemberRepositoryCustom -(implements)-> MemberRepositoryImpl
+    - <<Interface>> MemberRepository -(extends)-> <<Interface>> JpaRepository 
+    - <<Interface>> MemberRepositoryCustom -(implements)-> MemberRepositoryImpl
     ```
     - 주의! MemberRepositoryCustom.java의 이름은 상관없다. 하지만 MemberRepositoryImpl.java의 이름은 구현Repository + Impl 로 정해져 있다.
     
