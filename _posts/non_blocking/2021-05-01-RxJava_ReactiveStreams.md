@@ -84,6 +84,7 @@ paradigm concerned with data streams and the propagation of change.
   - 호출된 함수의 수행 결과 및 종료를 호출된 함수 혼자 직접 신경 쓰고 처리한다면(as a callback fn.) Asynchronous
 
 - 조합
+
   ![image](https://user-images.githubusercontent.com/42403023/141741806-f440f561-1653-4c43-bc50-7c32abef5542.png)
 
   ** 이미지 출처: https://velog.io/@kjh3865/BlockingNon-Blocking-SyncAsync-%EC%A1%B0%ED%95%A9-%EC%A0%95%EB%A6%AC
