@@ -23,9 +23,27 @@ category: No SQL
   - 두 개의 index가 필요하다면 복합 index를 사용
     - a, b 필드로 구성된 복합 index를 가지고 있다면 a에 대해 단일 index는 제거해도 됨
     - 복합 index에서 키의 순서는 매우 중요
-  - _id는 기본적으로 생성되는 index로 도큐먼트를 가르키는 유일한 키값으로 사용
+  - \_id는 기본적으로 생성되는 index로 도큐먼트를 가르키는 유일한 키값으로 사용
     - 도큐먼트에 빠르게 접근하기 위해서 각 _id는 index로 관리
-    
+
+- index type
+  - single-field indexes
+  - compound indexes
+  - multikey indexes: single key가 array 구조(sub-document)로 되어 있는 것
+  - geospatial indexes
+  - wildcard indexes
+  - hash indexes: b-tree 인덱스가 아닌 해시 구조로 저장, 정렬되지 않는다
+    - db.people.createIndex({name: "hashed"})
+
+- 실행계획
+  - find(), aggregate(), count(), update(), remove() 에 explain()을 두어 실행계획을 볼 수 있다.
+  - queryPlanner : 수행은 일어나지 않고 쿼리에 대한 계획을 보여준다
+    - db.collection.find(query..).explain()
+  - executionStats: 수행을 직접하면서 스테이지 별 수행 정보를 나타낸다
+    - db.collection.find(query..).explain("executionStats")
+  - allPansExecution: 옵티마이저가 판단하는 내용을 추가하여 볼 수 있다.
+    - db.collection.find(query..).explain("allPlansExecution")
+
 - 효율
   - 어떤 데이터가 도큐먼트에 추가되거나 수정될 때마다 그 컬렉션에 대해 생성된 index도 그 새로운 도큐먼트를 포함시키도록 수정되어야 함
   - 최악의 경우에는 결국 데이터를 다시 정렬해야 하는 상황 발생
@@ -89,6 +107,12 @@ category: No SQL
   - 오름차순이면 1, 내림차순이면 -1을 지정
   - unique를 사용하여 고유 인덱스를 생성할 수 있다.
     - unique 속성을 지정해서 중복 데이터가 저장되지 못하도록 하면, 데이터가 저장과 검색속도를 늘리는데 도움이 된다
+    - null도 unique에 포함된다, 첫번째 null은 가능, 두번째부터 불가능
+  - sparse: 필드가 없거나, 필드에 값이 null인 것을 true면 인정하지 않는다.
+  - partialFilterExpression: 부분 인덱싱으로 특정 조건에 다큐먼츠에만 인덱스를 걸 수 있다
+    - db.orders.createIndex({customer: 1, store:1}, {partialFilterExpression: {archived: false}})
+      - archived 필드가 false인 다큐먼츠만 customer, store에 대한 인덱스를 생성
+    - index size를 줄일 수 있다
   - dropDups(중복 데이터 삭제): 특정 필드를 Unique를 하게 했을 때 기존에 이미 중복된 데이터가 있을 경우에 대한 정책이 필요. dropDups를 하면 기존에 중복 데이터를 삭제하고 인덱스 저장이 가능
 
 - index 삭제
