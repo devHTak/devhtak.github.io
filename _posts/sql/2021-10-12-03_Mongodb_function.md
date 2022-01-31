@@ -29,7 +29,7 @@ category: No SQL
 - index type
   - single-field indexes
   - compound indexes
-  - multikey indexes: single key가 array 구조(sub-document)로 되어 있는 것
+  - multikey indexes: single key가 array 구조(sub-document)로 되어 있는 필드에 대한 인덱스
   - geospatial indexes
   - wildcard indexes
   - hash indexes: b-tree 인덱스가 아닌 해시 구조로 저장, 정렬되지 않는다
