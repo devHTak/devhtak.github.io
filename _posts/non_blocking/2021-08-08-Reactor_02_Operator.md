@@ -31,7 +31,7 @@ Publisher<Integer> publisher = new Publisher<Integer>() {
   }
 };
 
-Subscriber<Integer> sub = new Subscriber<Integer>() {
+Subscriber<Integer> subscriber = new Subscriber<Integer>() {
   @Override
   public void onSubscribe(Subscription s) { s.request(Long.MAX_VALUE); }
   @Override
