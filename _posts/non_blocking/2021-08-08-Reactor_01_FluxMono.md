@@ -47,7 +47,7 @@ category: Reactive
 - Flux를 생성하는 방법
   - just
     ```java
-    Flux<Integer> flux = Flux.jst("Hello", "Reactor", "Flux", "Mono");
+    Flux<String> flux = Flux.jst("Hello", "Reactor", "Flux", "Mono");
     ```
     - just 내에 들어가는 값들로 Flux를 생성한다.
   
