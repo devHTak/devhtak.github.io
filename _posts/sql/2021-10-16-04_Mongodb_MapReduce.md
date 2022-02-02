@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Mongodb Map Reduce
+title: Mongodb - Map Reduce, Aggregation
 summary: NoSql - Mongodb
 author: devhtak
 date: '2021-10-16 21:41:00 +0900'
@@ -203,6 +203,8 @@ category: No SQL
 #### 집계 프레임워크(Aggregation Framework)
 
 - mongodb 2.1 부터 지원
+- Collection의 데이터를 변환하거나 분석하기 위해 사용하는 Framework
+  - SQL의 Group By, Join, AS 구문, Data Set을 계산하는 기능 등
 - 내부적으로 MapReduce를 사용하며 제공하며 빠른 성능을 보장한다
 - 집계 결과는 16MB 데이터로 제한한다.
 - 처리할 작업이 단순한 경우 mongodb 내장함수(gruop, count ...)를 쓰는 것이 무방하나 처리가 복잡할 수록 Aggregation framework, MapReduce 함수를 쓰는 것이 좋다
@@ -218,14 +220,21 @@ category: No SQL
 
 - pipeline 주요 명령어
   - $project(select)
+    - documents 형태를 지정하거나 처리하고 싶은 key 지정
   - $match(where)
+    - find와 유사하며 Aggregation 대상 document 조회
   - $gruop(group by)
   - $sort(order by)
   - $limit(limit)
   - $skip(건너 뛰는 갯수 선택)
-  - $unwind(배열의 확장(join))
+  - $lookup + $unwind(배열의 확장(join))
+    - SQL의 left outer join과 같이 다른 collection을 이용하기 위해 사용
   - $geoNear(지리 공간위치 근처 도큐먼트 선택)
-
+  - pipeline을 array 상태로 넣고 사용할 수 있다.
+    ```
+    pipeline=[$stage, $stage, $stage]
+    db.collection.aggregate(pipeling, {options})
+    ```
   - 참고
     - sql은 dbms안에서 수행, mongodb는 sharding 기반에서 수행
 
