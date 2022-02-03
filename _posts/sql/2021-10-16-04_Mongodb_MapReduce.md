@@ -229,6 +229,8 @@ category: No SQL
   - $skip(건너 뛰는 갯수 선택)
   - $lookup + $unwind(배열의 확장(join))
     - SQL의 left outer join과 같이 다른 collection을 이용하기 위해 사용
+  - $unwind
+    - 하나의 document에서 배열로 구성된 필드를 펼쳐서 여러개의 Document로 변환하는 처리 수행
   - $geoNear(지리 공간위치 근처 도큐먼트 선택)
   - pipeline을 array 상태로 넣고 사용할 수 있다.
     ```
