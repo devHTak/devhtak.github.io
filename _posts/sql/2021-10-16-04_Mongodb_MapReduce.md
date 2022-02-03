@@ -240,6 +240,12 @@ category: No SQL
   - 참고
     - sql은 dbms안에서 수행, mongodb는 sharding 기반에서 수행
 
+- View
+  - Aggregation Pipeline을 통해 View를 생성할 수 있다.
+  - 데이터 추상화, 데이터 보호를 위해 사용한다
+  - 생성 방법
+    - db.createView(<view>, <source>, <pipeline>, <collation>)
+
 - 예제
   - 잡지 기사 콜렉션에서 가장 많은 기사를 쓴 기자 다섯명 찾기
   - 파이프라인 연산자 매칭
