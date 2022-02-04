@@ -169,7 +169,11 @@ category: No SQL
   - 또한 mongos 는 각 서버에서 어떤 일을 하는지 개발자가 모르게 해주는 역할을 한다.
   - 지금 샤딩 상태인지 리플리케이션 상태인지 개발자는 알 필요가 없다.
   ```
-  
+
+- Shard Primaries vs Primary Shard
+  - Shard Primaries: Shard 내에 Primary server(replica set)
+  - Primary Shard: Collection 중 Sharding 되지 않은 Collection(단일 Shard에만 저장되는 Collection)을 갖는 Shard
+
 - Shading System layer
   - 중개자 계층: 샤딩 시스템의 가장 핵심적인 부분, 메타정보 저장 및 application과 data간에 적절한 질의 및 결과를 반환한다
 
