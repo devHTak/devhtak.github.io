@@ -184,6 +184,12 @@ category: No SQL
   - unique 한 단일 또는 복합 인덱스로 shard key 사용(default \_id)
   - 여러 개의 Shard 서버로 분할될 기준 필드를 가리키며, partition, load balancing에 기준이 된다.
 
+- Collection을 Shard 하는 법
+  - Shard Cluster 구성 (sh.status()로 확인)
+  - Shard Key 결정
+  - 데이터베이스에 sharding 설정 (sh.enableSharding("MyGameDB")
+  - collection에게 shard key 지정 (sh.shardCollection("MyGameDB.players", \[playerId: 1, gameTime: 1]) )
+
 #### Replication
 
 - 복제
