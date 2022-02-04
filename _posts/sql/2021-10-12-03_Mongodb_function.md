@@ -254,11 +254,20 @@ category: No SQL
   - primary server 의 heartbeat는 항상 복제 집합을 구성하고 있는 노드 개수의 과반수만큼을 유지하고 있어야 한다
   - 만약 primary server가 과반수의 heartbeat를 가지고 있지 않는다면, 해당 서버는 secondary 서버로 전환되고 전체 복제 집합은 primary server 부재에 따른 투표를 시행
   - primary가 될 수 있는 자격 조건으로는 priority(마스터가 될 수 있는 우선순위), votes(자신을 포함한 복제 집합의 노드 개수의 과반수 투표) 등을 가지고 있다.
+  
+- Write Concerns
+  - Primary에서 새로들어온 데이터([x:100])를 Oplog에 쌓지 못한 상태에서 장애가 발생하게 된다면
+  - 먼저 Primary의 장애로 Secondary 중 하나를 Primary 선정된다
+  - 추가로 들어온 데이터([x:101])은 쌓이게 되지만 Oplog에 쌓지 못한 데이터([x:100])는 rollback 된다
+  - Majority Write(option) 제공 - writeConcern: {w: "majority"}
+    - insert 성능이 느려진다
 
-- 한계
-  - 슬레이브가 아무리 빨리 데이터를 동기화 한다고 해도, 마스터와의 통신 지연 시간만큼의 차이를 가질 수 있음
-  - 부하를 견디지 못해서 마스터 서버가 죽었을 경우, Oplog에 동기화 되지 않은채 남아있는 데이터 연산을 잃어버리는 현상이 발생할 수 있음
-  - 저널링 파일에 데이터를 저장하는 방법의 경우에도 group commits 주기(100ms) 안에 데이터가 존재하는데도 시스템이 다운되어 메모리에 저장된 데이터가 날아갔을 경우에는 복구가 불가능함
+- Read Concerns
+  - 데이터를 읽을 때 durable을 설정할 수 있다.
+  - Read Local: Primary의 최신
+  - Read Majority: 100% durable을 가진 최신
+  - Read Snapshot: 쿼리 시작 지점에 데이터 (트랜잭션 이전)
+  - Read Linearizable: Wait unitl a majority catch up with my query time
 
 - replicaset 구성
   - 서버 실행
