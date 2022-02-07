@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Spring Boot 와 MonboDB 연동
+title: Spring Boot 와 MongoDB 연동
 summary: NoSql - Mongodb
 author: devhtak
 date: '2021-10-24 21:41:00 +0900'
