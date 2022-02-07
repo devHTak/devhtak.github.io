@@ -76,6 +76,9 @@ category: No SQL
                 core:
                   MongoTemplate: DEBUG
     ```
+    ```
+    logging.level.org.mongodb.javarest: debug
+    ```
     - reactive mongo db logging
       ```
       logging.level.org.springframework.data.mongodb.core.ReactiveMongoTemplate=DEBUG
