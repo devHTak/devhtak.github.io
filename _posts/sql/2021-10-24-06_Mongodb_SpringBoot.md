@@ -101,6 +101,25 @@ category: No SQL
   - @Id로 지정된 field가 있으면 MongoDB의 \_id로 맵핑된다.
   - 만약 @Id로 지정된 field가 없다면 id란 이름의 field가 MongoDB의 _id로 맵핑된다.
 
+#### Spring POJO 객체에 Shard Key 지정
+
+- 아래 버전 이상
+  - MongoDB Version 4.2.x
+  - MongoDB Driver 4.2.3
+  - Spring FW 5.3.7
+  - Spring Boot 2.5.0
+  - Spring Data MongoDB 3.2.1
+
+- Spring Data POJO Class
+  - @Sharded Annotation 옵션에 shardKey 지정 필요
+    ```java
+    @Data
+    @Sharded(shardKey={"name"})
+    public class Product {
+        @Id private ObjectId _id;
+    }
+    ```
+
 #### Spring Boot 에서 MongoDB 접근 API
 
 - 예제 Collection 생성
