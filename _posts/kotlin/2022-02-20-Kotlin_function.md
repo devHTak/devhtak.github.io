@@ -146,27 +146,69 @@ var StringBuilder.lastChar: Char
 ```
 
 ##### 컬렉션 처리: 가변 길이 인자, 중위 함수 호출, 라이브러리 지원
-- vararg 키워드 사용 -> 가변 길이 인자 사용 가능
-- 중위 함수 호출 구문 사용 -> 인자가 하나뿐인 메소드 간편하게 호출
-- 구조 분해 선언을 사용 
+- vararg 키워드를 사용하면 호출 시 인자 개수가 달라질 수 있는 함수를 정의할 수 있다
+- 중위 함수 호출 구문을 사용하면 인자가 하나뿐인 메소드를 간편하게 호출할 수 있다
+- 구조 분해 선언을 사용하면 복합적인 값을 분해해서 여러 변수에 나눠 담을 수 있다
 
-- 가변 인자 함수
- 
+- 자바 컬렉션 API 확장
+  - 위에서 코틀린 컬렉션은 자바와 같은 클래스를 사용하지만 더 확장된 API를 제공한다
+  ```kotlin
+  fun main() {
+    val view: View = Button()
+    view.showOff()
+    
+    var strings: List<String> = listOf("first", "second", "fourteenth")
+    println(strings.last())
+    
+    val numbers: Collection<Int> = setOf(1, 14, 2)
+    println(numbers.maxOrNull())
+  }
+  ```
+  - 자바 라이브러리 클래스의 인스턴스인 컬렉션에 대해 코틀린이 새로운 기능을 추가 할 수 있었던 이유는 last(), max()는 모두 확장 함수.
 
-값의 쌍 다루기: 중위 호출과 구조 분해 선언
-중위 호출이라는 방식으로 to 함수를 호출한 케이스이다. 중위 호출을 사용하려면 infix 변경자를 함수 선언 앞에 추가한다.
+- 가변 인자 함수: 인자의 개수가 달라질 수 있는 함수 정의
+  ```kotlin
+  fun main(args: Array<String>) {
+    val list = listOf("args: ", *args)
+    println(list)
+  }
+  ```
+  - 코틀린에서도 자바와 비슷하게 가변 길이 인자를 사용할 수 있습니다.
 
-to 라는 일반메소드. to 함수는 Pair의 인스턴스를 반환한다. 이는 두 원소로 이루어진 순서 쌍을 표현한다.
+- 값의 쌍 다루기: 중위 호출과 구조 분해 선언
+  ```kotlin
+  fun main() {
+    val map = mapOf(1 to "one", 7 to "seven", 53 to "fifty-three")
+    println(1.to("one"))  // 일반적인 방식으로 호출
+    println(1 to "one")   // 중위 호출 방식으로 호출
+  }
+  ```
+  - 여기서 to는 코틀린 키워드가 아니다. 중위 호출이라는 방식으로 to라는 일반 메소드를 호출한 것.
+  - 인자가 하나뿐인 일반 메소드나 인자가 하나뿐인 확장 함수에 중위 호출을 사용할 수 있으며 함수를 중위 호출에 사용하게 허용하고 싶다면 infix 변경자를 함수 선언 앞에 추가해야 한다
+  ```kotlin
+  public infix fun <A, B> A.to(that: B): Pair<A, B> = Pair(this, that)
+  fun main() {
+      val (number, name) = 1 to "one"
+      println("number: $number, name : $name")
+  }
+  ```
+  - 구조 분해 선언: 위와 같이 두 변수를 즉시 초기화하여 선언하는 방식
 
-val (number, name) = 1 to "one"
-이는 구조분해 선언이다. 
-
-문자열과 정규식 다루기
-자바에서 split 함수를 사용해서 구분자를 . 으로 하는 문자열 분리를 할 수가 없다. 실제로 split 의 구분문자열은 정규식이기 때문이다.
-
-코틀린에서는 여러가지 다른 조합의 파라미터를 받는 split 확장 함수를 제공함으로써 혼동을 야기하는 메소드를 감춘다. 코틀린에서는 전달하는 값의 타입에 따라 정규식/일반 텍스트 중 어느 것으로 문자열 분리할지 알 수 있다. 
-
- 
+- 문자열 나누기
+  ```kotlin
+  public class Test {
+      public static void main(String[] args) {
+          String[] split = "12.345-6.A".split(".");
+          System.out.println(Arrays.toString(split)); // []
+      }
+  }
+```
+  - 자바에서는 split 함수로 위와 같이 마침표(.)을 분리시키면 [12, 345-6, A]와 같은 배열로 반환되는 것이 아니라 빈 배열로 반환.
+  - split의 구분 문자열은 실제로는 정규식으로 마침표(.)는 모든 문자를 나타내는 정규식으로 해석된다.
+  - 코틀린에서는 자바의 이러한 혼란스러운 split() 메소드의 매개변수를 String이 아니라 Regex 타입의 값을 받습니다.
+    ```kotlin
+    println("12.345-6.A".split(".")) // [12, 345-6, A]
+    ```
 
 ##### 코드 다듬기: 로컬 함수와 확장 
 - 코틀린에서는 함수에서 추출한 함수를 원 함수 내부에 중첩시킬 수 있다. 따라서, 코드 중첩을 로컬 함수를 통해서 해소가능하다. 
