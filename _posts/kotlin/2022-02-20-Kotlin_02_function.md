@@ -264,3 +264,6 @@ fun saveUser(user: User) {
 }
 ```
 - 한 객체만을 다루면서 객체의 비공개 데이터를 다룰 필요는 없는 함수는 확장 함수로 만들면 객체.멤버 처럼 수신 객체를 지정하지 않고도 공개된 멤버 프로퍼티나 메소드에 접근할 수 있다.
+
+##### 출처
+- Kotlin in Action(http://www.yes24.com/Product/Goods/55148593)
