@@ -1,3 +1,11 @@
+---
+layout: post
+title: Kotlin 함수
+summary: The Java
+author: devhtak
+date: '2022-02-20 14:41:00 +0900'
+category: Kotlin
+---
 
 ##### 컬렉션
 - 컬렉션 만들기
