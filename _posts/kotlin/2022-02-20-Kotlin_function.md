@@ -202,7 +202,7 @@ var StringBuilder.lastChar: Char
           System.out.println(Arrays.toString(split)); // []
       }
   }
-```
+  ```
   - 자바에서는 split 함수로 위와 같이 마침표(.)을 분리시키면 [12, 345-6, A]와 같은 배열로 반환되는 것이 아니라 빈 배열로 반환.
   - split의 구분 문자열은 실제로는 정규식으로 마침표(.)는 모든 문자를 나타내는 정규식으로 해석된다.
   - 코틀린에서는 자바의 이러한 혼란스러운 split() 메소드의 매개변수를 String이 아니라 Regex 타입의 값을 받습니다.
