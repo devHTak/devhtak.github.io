@@ -508,7 +508,7 @@ fun saveUser(user: User) {
   val personList = listOf(Person("Bob", 31), Person("Alice", 29))
   val filterList = personList.filter { it.age > 30 }
   println(filterList)
-```
+  ```
   - 컬렉션을 이터레이션하면서 주어진 람다에 각 원소를 넘겨 람다가 true인 원소를 모은다.
   - 만족하는 원소들을 모아 새로운 컬렉션으로 반환한다.
 
@@ -588,7 +588,8 @@ fun saveUser(user: User) {
   println(strs.groupBy { it.length })
   ```
   - groupBy: 리스트를 특정 기준에 맞춰 맵으로 변경하여 반환
-  - flatMap과 flatten: 중첩된 컬렉션 안의 원소 처리
+
+- flatMap과 flatten: 중첩된 컬렉션 안의 원소 처리
   ```kotlin
   val strings = listOf("abc", "def")
   println(strings.flatMap { it.toList() })
