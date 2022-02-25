@@ -501,72 +501,72 @@ fun saveUser(user: User) {
 ##### 컬렉션 함수형 API
 
 - filter 함수
-```kotlin
-val list = listOf(1, 2, 3, 4)
-println(list.filter { it % 2 == 0 }) // 짝수만 filtering
+  ```kotlin
+  val list = listOf(1, 2, 3, 4)
+  println(list.filter { it % 2 == 0 }) // 짝수만 filtering
 
-val personList = listOf(Person("Bob", 31), Person("Alice", 29))
-val filterList = personList.filter { it.age > 30 }
-println(filterList)
+  val personList = listOf(Person("Bob", 31), Person("Alice", 29))
+  val filterList = personList.filter { it.age > 30 }
+  println(filterList)
 ```
   - 컬렉션을 이터레이션하면서 주어진 람다에 각 원소를 넘겨 람다가 true인 원소를 모은다.
   - 만족하는 원소들을 모아 새로운 컬렉션으로 반환한다.
 
 - map 함수
-```kotlin
-val list = listOf(1, 2, 3, 4)
-println(list.map { it * it }) // 자기자신을 곱함
+  ```kotlin
+  val list = listOf(1, 2, 3, 4)
+  println(list.map { it * it }) // 자기자신을 곱함
 
-val personList = listOf(Person("Bob", 31), Person("Alice", 29))
-val mapList = personList.map { it.age } // 나이만으로 컬렉션을 만듦
-println(mapList)
+  val personList = listOf(Person("Bob", 31), Person("Alice", 29))
+  val mapList = personList.map { it.age } // 나이만으로 컬렉션을 만듦
+  println(mapList)
 
-// 멤버 참조 사용
-val memberRefMapList = personList.map(Person::name)
-println(memberRefMapList)
-```
+  // 멤버 참조 사용
+  val memberRefMapList = personList.map(Person::name)
+  println(memberRefMapList)
+  ```
   - 주어진 람다를 컬렉션의 각 원소에 적용한 결과를 모아서 새 컬렉션을 만든다.
 
 - maxBy + filter 조합
-```kotlin
-val list = listOf(Person("Bob", 31), Person("Alice", 29))
-val filterAndMaxBy = list.filter { it.age == list.maxBy(Person::age)!!.age}
-```
+  ```kotlin
+  val list = listOf(Person("Bob", 31), Person("Alice", 29))
+  val filterAndMaxBy = list.filter { it.age == list.maxBy(Person::age)!!.age}
+  ```
   - 위 코드의 단점은 filter가 이터레이션하기 때문에 maxby 함수가 컬렉션 수 만큼 호출되며 처리된다는 것이다.
-```kotlin
-val list = listOf(Person("Bob", 31), Person("Alice", 29))
-val maxAge = list.maxBy(Person::age)!!.age
-val filterAndMaxBy = list.filter { it.age == maxAge }
-```
+  ```kotlin
+  val list = listOf(Person("Bob", 31), Person("Alice", 29))
+  val maxAge = list.maxBy(Person::age)!!.age
+  val filterAndMaxBy = list.filter { it.age == maxAge }
+  ```
   - 이터레이션 된다는 것을 항상 기억하고 불필요한 작업을 반복하지 않도록 유의해야 한다.
 
 - 컬렉션 맵에서의 filter, map
-```kotlin
-val numbers = mapOf(0 to "zero", 1 to "one", 2 to "two", 3 to "three", 4 to "four")
-val filterValuesMap = numbers.filterValues { it == "zero"}
-val mapValuesMap = numbers.mapValues { it.value.toUpperCase() }
-println(filterValuesMap)
-println(mapValuesMap)
+  ```kotlin
+  val numbers = mapOf(0 to "zero", 1 to "one", 2 to "two", 3 to "three", 4 to "four")
+  val filterValuesMap = numbers.filterValues { it == "zero"}
+  val mapValuesMap = numbers.mapValues { it.value.toUpperCase() }
+  println(filterValuesMap)
+  println(mapValuesMap)
 
-val filterKeysMap = numbers.filterKeys { it == 1 }
-val mapKeysMap = numbers.mapKeys { it.key % 2 }
-println(filterKeysMap)
-println(mapKeysMap)
-```
+  val filterKeysMap = numbers.filterKeys { it == 1 }
+  val mapKeysMap = numbers.mapKeys { it.key % 2 }
+  println(filterKeysMap)
+  println(mapKeysMap)
+  ```
   - 맵에서의 filter와 map은 별도의 API가 존재한다.
   - 맵의 filterValues, filterKeys 의 it 는 각각 value와 key를 가르킨다.
 
 - 컬렉션에 술어 사용: all, any, count, find
-```kotlin
-val list = listOf(Person("Alice", 27), Person("Bob", 31), Person("hzoou", 25), Person("txxbro", 28), Person("iyj", 28), Person("WooVictory", 27))
+  ```kotlin
+  val list = listOf(Person("Alice", 27), Person("Bob", 31), Person("hzoou", 25), Person("txxbro", 28), Person("iyj", 28), Person("WooVictory", 27))
 
-// 술어 선언
-val canBeInClub27 = { p: Person -> p.age <= 27 }
-println("all: ${list.all(canBeInClub27)}")
-println("any: ${list.any(canBeInClub27)}")
-println("count: ${list.count(canBeInClub27)}")
-println("find: ${list.find(canBeInClub27)}")
-```
+  // 술어 선언
+  val canBeInClub27 = { p: Person -> p.age <= 27 }
+  println("all: ${list.all(canBeInClub27)}")
+  println("any: ${list.any(canBeInClub27)}")
+  println("count: ${list.count(canBeInClub27)}")
+  println("find: ${list.find(canBeInClub27)}")
+  ```
   - all: 컬렉션의 모든 원소가 조건을 만족하는지 판단
   - any: 컬렉션의 모든 원소 중 하나라도 조건을 만족하는지 판단
   - count: 조건을 만족하는 원소의 갯수를 반환
@@ -579,31 +579,31 @@ println("find: ${list.find(canBeInClub27)}")
     - 위 예제 코드의 결과에서 보듯이 all과 any는 서로 부정으로 대응한다. 하지만 가독성을 이유로 any 대신 !all 이나 all 대신 !any는 사용하지 않는 것이 좋다.
 
 - groupBy
-```kotlin
-val list = listOf(Person("Alice", 27), Person("hzoou", 25), Person("txxbro", 28), Person("iyj", 28), Person("WooVictory", 27))
+  ```kotlin
+  val list = listOf(Person("Alice", 27), Person("hzoou", 25), Person("txxbro", 28), Person("iyj", 28), Person("WooVictory", 27))
 
-println("groupBy: ${list.groupBy { it.age }}")
+  println("groupBy: ${list.groupBy { it.age }}")
 
-val strs = listOf("12", "345", "11", "456")
-println(strs.groupBy { it.length })
-```
+  val strs = listOf("12", "345", "11", "456")
+  println(strs.groupBy { it.length })
+  ```
   - groupBy: 리스트를 특정 기준에 맞춰 맵으로 변경하여 반환
   - flatMap과 flatten: 중첩된 컬렉션 안의 원소 처리
-```kotlin
-val strings = listOf("abc", "def")
-println(strings.flatMap { it.toList() })
+  ```kotlin
+  val strings = listOf("abc", "def")
+  println(strings.flatMap { it.toList() })
 
-data class Book(val title: String, val authors: List<String>)
+  data class Book(val title: String, val authors: List<String>)
 
-val books = listOf(Book("책1", listOf("작가1")),
-                 Book("책2", listOf("작가2", "작가3")), 
-                 Book("책3", listOf("작가4", "작가1")))
+  val books = listOf(Book("책1", listOf("작가1")),
+                   Book("책2", listOf("작가2", "작가3")), 
+                   Book("책3", listOf("작가4", "작가1")))
 
-println("toSet(): ${books.flatMap { it.authors }.toSet()}")
-println("기본: ${books.flatMap { it.authors }}")
+  println("toSet(): ${books.flatMap { it.authors }.toSet()}")
+  println("기본: ${books.flatMap { it.authors }}")
 
-println("flatten(): ${books.map { it.authors }.flatten()}")
-```
+  println("flatten(): ${books.map { it.authors }.flatten()}")
+  ```
   - flatMap: 인자로 주어진 람다를 컬렉션의 모든 객체에 적용(매핑)하고 람다를 적용한 결과 얻어지는 여러 리스트를 한 리스트로 모은다(flatten). 즉, 리스트의 리스트가 있을 때 중첩된 리스트의 원소를 한 리스트로 모을 때 사용한다.
   - toSet(): 컬렉션의 중복을 제거리
   - flatten(): 변환할 내용 없이 펼치기만 하는 경우 사용
@@ -629,27 +629,27 @@ println("flatten(): ${books.map { it.authors }.flatten()}")
     - 항상 지연 계산된다. 즉, 최종 연산을 하지 않으면 계속 지연이 되어 결과를 반환하지 않는다.
   - 최종 연산: 최초 컬렉션에 대해 변환을 적용한 시퀀스로부터 일련의 계산을 수행해 얻을 수 있는 컬렉션이나 원소, 숫자, 객체이다.
     - 즉시 계산의 수행 순서와 지연 계산의 수행 순서
-```kotlin
-listOf(1, 2, 3, 4).map { println("eagerly map($it)"); it * it }
-                .filter { println("eagerly filter($it)"); it % 2 == 0 }
-listOf(1, 2, 3, 4).asSequence()
-                .map { println("lazy map($it)"); it * it}
-                .filter { println("lazy filter($it)"); it % 2 == 0 }
-                .toList()
-```
-  - 즉시 계산의 경우 모든 원소에 대해 먼저 map을 끝낸 후 이후 filter를 수행하게 된다.
-  - 시퀀스(지연 계산)의 경우 각 원소에 대해 순차적으로 적용이 된다.
+  ```kotlin
+  listOf(1, 2, 3, 4).map { println("eagerly map($it)"); it * it }
+                  .filter { println("eagerly filter($it)"); it % 2 == 0 }
+  listOf(1, 2, 3, 4).asSequence()
+                  .map { println("lazy map($it)"); it * it}
+                  .filter { println("lazy filter($it)"); it % 2 == 0 }
+                  .toList()
+  ```
+    - 즉시 계산의 경우 모든 원소에 대해 먼저 map을 끝낸 후 이후 filter를 수행하게 된다.
+    - 시퀀스(지연 계산)의 경우 각 원소에 대해 순차적으로 적용이 된다.
 
 - map과 filter 호출 순서에 따른 성능 차이의 발생
-```kotlin
-val list = listOf(Person("Alice", 27), Person("hzoou", 25), Person("txxbro", 28), Person("iyj", 28), Person("WooVictory", 27))
+  ```kotlin
+  val list = listOf(Person("Alice", 27), Person("hzoou", 25), Person("txxbro", 28), Person("iyj", 28), Person("WooVictory", 27))
 
-list.asSequence().map(Person::name) // map 먼저 실행
-    .filter { it.length < 4 }.toList()
+  list.asSequence().map(Person::name) // map 먼저 실행
+      .filter { it.length < 4 }.toList()
 
-list.asSequence().filter { it.length < 4 } // filter 먼저 실행
-    .map(Person::name).toList()
-```
+  list.asSequence().filter { it.length < 4 } // filter 먼저 실행
+      .map(Person::name).toList()
+  ```
   - filter 보다 map을 호출할 경우 map은 모든 원소를 변환하므로 더 많은 이터레이션이 발생하게 된다.
 
 ##### 자바 스트림과 코틀린 시퀀스 비교
@@ -660,15 +660,15 @@ list.asSequence().filter { it.length < 4 } // filter 먼저 실행
   - 자바 8에 대해서는 다른 개발자의 블로그의 글인 자바 8 스트림 이란? 을 참고하자.
 
 - 시퀀스 만들기
-```kotlin
-val numbers = generateSequence(0) { it + 1 } // 시퀀스 생성
-val numbersTo100 = numbers.takeWhile { it <= 100 } // while loop 시퀀스 생성
-println(numbersTo100.sum()) // 위의 모든 시퀀스는 sum의 결과를 계산할 때 수행된다.
+  ```kotlin
+  val numbers = generateSequence(0) { it + 1 } // 시퀀스 생성
+  val numbersTo100 = numbers.takeWhile { it <= 100 } // while loop 시퀀스 생성
+  println(numbersTo100.sum()) // 위의 모든 시퀀스는 sum의 결과를 계산할 때 수행된다.
 
-fun File.isInsideHiddenDirectory() = generateSequence(this) { it.parentFile }.any { it.isHidden }
-val file = File("/Users/svtk/.HiddenDir/a.txt")
-println(file.isInsideHiddenDirectory())
-```
+  fun File.isInsideHiddenDirectory() = generateSequence(this) { it.parentFile }.any { it.isHidden }
+  val file = File("/Users/svtk/.HiddenDir/a.txt")
+  println(file.isInsideHiddenDirectory())
+  ```
   - generateSequence: 이전의 원소를 인자로 받아 다음 원소를 계산하는 시퀀스를 만드는 함수
   - 최종 연산인 sum() 을 호출 하기 전에는 계산되지 않다가 최종 연산이 호출될 때에 계산이 수행된다.
   
