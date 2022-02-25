@@ -6,7 +6,6 @@ author: devhtak
 date: '2022-02-20 14:41:00 +0900'
 category: Kotlin
 ---
-₩
 #### 함수 
 
 ##### 컬렉션
