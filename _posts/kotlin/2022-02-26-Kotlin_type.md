@@ -1,0 +1,357 @@
+#### 코틀린 타입 시스템
+
+##### null 가능성
+
+- 코틀린에서는 null에 문제점을 컴파일 시점으로 옮겼다.
+- null이 될 수 있는지 여부를 타입 시스템에 추가함으로써 컴파일러가 컴파일 시 미리 감지 할 수 있기 때문에 실행 시점에 발생할 수 있는 가능성을 줄였다.
+
+- null이 될 수 있는 타입
+  - 자바의 차이점으로 코틀린은 타입 시스템이 null이 될 수 있는 타입을 명시적으로 지원한다. 
+  - 타입 이름 뒤에 물음표를 붙이면, 타입의 변수나 프로퍼티에 null 참조를 저장할 수 있다. 
+  - 물음표가 없는 타입은 null 참조를 할 수 없으며, 컴파일 시 에러가 발생한다.
+  ```kotlin
+  val number1: Integer? = null
+  val number2: Integer = null // compile error
+  ```
+  - null 값을 비교하고 나면 컴파일러는 변수가 null 이 아님을 알 수 있기 때문에 기본 타입의 값처럼 사용할 수 있다.
+  ```kotlin
+  fun safeLength(text: String?): Int =
+      if (text != null) text.length else 0
+  ```
+  - null이 될 수 있는 타입과 null이 될 수 없는 타입을 명확하게 구분하면 각 타입의 값에 대해서 어떤 연산이 가능할지 명확하게 이해할 수 있다. 
+    - 실행 시점에 Integer?과 Integer 타입의 객체는 동일하다. null 타입에 대한 검사는 컴파일 시점에 수행된다.
+    - 코틀린에서는 null이 될 수 있는 타입을 처리하는데 별도의 실행 시점 비용은 들지 않는다.
+ 
+- 안전한 호출 연산자 ?.
+  - 코틀린은 null 참조를 가질 수 있는 타입의 변수를 안전한게 호출할 수 있도록 ?. 호출 연산자를 지원한다. 
+  - null 참조를 가질 수 있는 변수 s를 안전하게 호출하는 방법에 대한 코드이다.
+  ```kotlin
+  val s: String? = null
+
+  // if문 사용
+  if (s != null) s.toUpperCase() else null
+
+  // ?. 연산자 사용
+  s?.toUpperCase()
+  ```
+
+- 엘비스 연산자 ?:
+  - null 대신 사용할 기본값을 지정할 때 엘비스 연산자를 사용할 수 있다. 
+  - 엘비스 연산자는 이항 연산자로 좌항을 연산한 값이 null인 경우에 우항 값을 결과로 한다.
+  ```kotlin
+  val result = foo(null) // "", 빈 값 참조
+  fun foo(s: String?) =
+      s ?: ""
+  ``` 
+  
+- 안전한 캐스트 as?
+  - 코틀린에서 타입 캐스트 연산자 as가 있다. 
+  - 자바와 동일하게 대상 값을 as로 지정한 타입으로 바꾸지 못하면 ClassCastException이 발생한다. 
+  - as를 사용하기 전에 is를 사용해서 변환 가능한지 여부를 미리 체크 할 수 있다. is 연산자와 as 연산자를 연달아 쓰는 것보다 더 나은 해결 방법을 제공하는데, as? 연산자를 사용하면 된다.
+  ```kotlin
+  class Person(val name: String) {
+
+      fun equals(o: Any?): Boolean {
+          val otherPerson = o as? Person ?: return false
+          return otherPerson == name
+      }	
+  }
+  ``` 
+- null 아님 단언 !!
+  - null이 될 수 있는 타입에 null이 아님을 컴파일러에게 알려주는 용도로 !!를 사용할 수 있다. 
+  - !!를 사용해야 하는 곳은 실제 null이 아님에도 컴파일러가 인식을 하지 못할 때 써야 한다.
+  ```kotlin
+  fun ignoreNulls(s: String?) {
+      val sNotNull: String = s!! // s가 null일 경우에 exception 발생
+  }
+  ```
+  - !!를 사용함으로써 발생하는 예외는 스택 트레이스에 어떤식에서 예외가 발생 했는지에 대한 정보는 없고, 어떤 파일의 몇 번째 줄인지에 대한 정보만 있다. 
+    - 어떤 식에서 null 값으로 예외가 발생했는지 정확하게 파악하기 위해서는 단언문을 한 줄에 함께 쓰는 일은 피해야 한다.
+  ```kotlin
+  person.company!!.address!!.country
+  ```
+
+- let 함수
+  - let 함수를 사용하면 null이 될 수 있는 식을 쉽게 다룰 수 있다. 
+  - null이 될 수 있는 값을 null이 아닌 값만 인자로 받는 함수에 쉽게 넘길 수 있다.
+  ```kotlin
+  val email: String? = "email@email.com"
+
+  // let 함수는 자신의 수신 객체를 인자로 전달받은 람다에게 전달
+  email?.let { sendEmailTo(it) }
+    ?: throw RuntimeException("이메일 값이 존재하지 않아서 메일 전송하는 실패했습니다.")
+
+  fun sendEmailTo(email: String) {
+    // send email
+  }
+  ```
+ 
+- 나중에 초기화 할 프로퍼티
+  - lateinit 변경자를 붙이면 null이 될 수 없는 타입으로 선언할 수 있다. 
+  - lateinit을 붙임으로써 프로퍼티 초기화를 미룰 수 있다. 
+  - 나중에 초기화 하는 프로퍼티는 반드시 var여야 한다. 그리고 프로퍼티 초기화 전에 접근하게 되면 예외가 발생한다.
+  - lateinit이 없는 경우
+    ```kotlin
+    class TestClass {
+        private var service: Service? = null
+
+        @Before
+        fun setUp() {
+            service = Service()
+        }
+
+        @Test
+        fun testAction() {
+            service!!.performAction() // null 타입일 수 있기 때문에 !! 단어문 필요
+        }
+    }
+    ```
+  - lateinit이 있는 경우
+    ```kotlin
+    class TestClass {
+        private lateinit var service: Service
+
+        @Before
+        fun setUp() {
+            service = Service()
+        }
+
+        @Test
+        fun testAction() {
+            service.performAction() // null 타입일 수 있기 때문에 !! 단어문 필요
+        }
+    }
+    ```
+    
+- null이 될 수 있는 타입 확장
+  - null이 될 수 있는 타입에 대한 확장 함수를 정의하면, null 값을 다루는 강력한 도구를 활용 가능하다.
+  ```kotlin
+  fun verifyUserInput(input: String?) {
+      if (input.isNullOrBlank()) {
+          println("Please fill in the requried fields")
+      }
+  }
+  
+  verifyUserInput(null) // 예외 발생하지 않음
+  ```
+
+- isNullOrBlank 함수
+  - 호출된 수신 객체가 null 인 경우에 this는 null이 될 수 있다는 점이 자바와 다르다.
+  ```kotlin
+  public inline fun CharSequence?.isNullOrBlank(): Boolean {
+      contract {
+          returns(false) implies (this@isNullOrBlank != null)
+      }
+
+      return this == null || this.isBlank()
+  }
+  ```
+
+- 타입 파라미터의 null 가능성
+  - 코틀린에서 함수나 클래스의 모든 타입 파라미터는 기본적으로 null이 될 수 있다.
+  ```kotlin
+  fun <T> printHashCode(t: T) {
+      println(t?.hashCode()) // t가 null일 수 있으므로 안전한 호출 사용
+  }
+
+  printHashCode(null) // T 타입은 Any?로 추론
+  ```
+  - 타입 파라미터가 null이 아님을 확실히 하려면 null이 될 수 없는 타입 상한(upper bound)를 지정해야 한다.
+  ```kotlin
+  fun <T: Any> printHashCode(t: T) {
+      println(t.hashCode())
+  }
+
+  printHashCode(null) // compile error
+  ```
+
+##### 코틀린 원시 타입
+- 코틀린은 원시 타입과 래퍼 타입을 구분하지 않는다.
+
+- 원시 타입
+  - 자바는 원시 타입과 참조 타입을 구분한다. 
+  - 원시 타입(int, double) 변수에는 값이 직접 들어가지만, 참조 타입(String) 변수에는 메모리상의 객체 위치가 들어간다. 
+  - 컬렉션에서 원시 타입을 담을 수 없고 래퍼 타입으로 감싸서 사용해야 한다.
+    - 코틀린은 원시 타입과 래퍼 타입을 구분하지 않으므로 항상 같은 타입을 사용한다.
+  ```kotlin
+  val number: Int = 1
+  val list: List<Int> = listOf(1, 2, 3)
+  ```
+  - 코틀린은 원시 타입과 참조 타입이 같다고 항상 객체로 표현하지 않는다. 
+    - 실행 시점에 숫자 타입은 가장 효율적인 방식으로 표현된다. 
+    - 대부분의 경우 코틀린의 Int 타입은 자바 int 타입으로 컴파일 된다.
+    - int 타입을 사용하지 못하는 경우는 컬렉션과 같은 제네릭 클래스를 사용하는 경우가 있다.
+
+- null이 될 수 있는 원시 타입
+  - 자바는 참조 타입만 null를 가질 수 있다. 
+  - 코틀린에서 null이 될 수 있는 타입은 자바에서 원시 타입으로 표현할 수 없고, 자바의 래퍼 타입으로 컴파일 된다.
+  ```kotlin
+  // kotlin
+  val number: Intger? = null
+  ```
+  ```java
+  // java
+  Integer number;
+  ```
+
+- 숫자 변환
+  - 코틀린과 자바는 숫자를 변환하는 방식에 차이가 있다. 
+  - 코틀린은 한 타입의 숫자를 다른 타입의 숫자로 자동 변환하지 않는다.
+  ```kotlin
+  val i = 1
+  val l: Long = i // compile error
+  ```
+  - 자동 변환이 아닌 직접 변환하는 메서드를 호출해야 한다.
+  ```kotlin
+  val i = 1
+  val l: Long = i.toLong()
+  ```
+
+- Any, Any? 최상위 타입
+  - 자바에서 Object가 클래스 계층의 최상위 타입이듯 코틀린에서는 Any 타입이 모든 null이 될 수 없는 타입의 조상 타입이다. 
+  - 코틀린에서 Any를 사용하면 자바 바이트코드의 Object로 컴파일된다.
+  ```kotlin
+  val answer: Any = 42
+  ```
+ 
+- Unit 타입, 코틀린의 void
+  - 코틀린에서 Unit 타입은 자바의 void와 같은 기능을 한다. 
+  - 함수가 어떤 값도 반환하지 않는 경우에 함수의 반환 타입으로 Unit를 쓸 수 있다.
+  ```kotlin
+  fun print(s: String?): Unit { ... }
+  ```
+  - Unit 타입은 생략할 수 있기 때문에 주로 반환 타입 선언 없이 사용한다.
+  ```kotlin
+  fun print(s: String?) { ... }
+  ```
+  - 자바의 void와 달리 코틀린의 Unit은 타입으로 쓸 수 있다. 
+    - 제네릭에서 타입 파라미터로 Unit를 타입 인자로 사용할 수 있다.
+  ```kotlin
+  interface Processor<T> {
+      fun process(): T
+  }
+
+  class NoResultProcessor : Processor<Unit> {
+      override fun process() {
+          // code
+          // return을 명시할 필요가 없다
+      }
+  }
+  ```
+  
+##### 컬렉션과 배열
+- 코틀린 컬렉션은 자바 라이브러리를 바탕으로 만들어졌고, 확장 함수를 통해 기능을 추가한다.
+
+- null 가능성과 컬렉션
+  - ArrayList 타입에 Int? 타입을 선언함으로써 컬렉션에 null 값을 포함시킬 수 있다.
+  ```kotlin
+  val result = ArrayList<Int?>()
+  result.add(1)
+  result.add(null)
+  ```
+  - List<Int?>
+    - 컬렉션 원소에 null 값 또는 Int 값이 존재한다. 컬렉션 자체는 null 값이 될 수 없다.
+  - List<Int>?
+    - 컬렉션 자체가 null이 될 수 있다. 컬렉션 원소는 항상 Int 값이 존재한다.
+
+ 
+- 읽기 전용과 변경 가능한 컬렉션
+  - 코틀린에서는 컬렉션 안의 데이터를 접근하는 인터페이스와 데이터를 변경하는 인터페이스를 분리했다. 
+    - 컬렉션의 데이터를 수정하려면, MutableCollection 인터페이스를 사용해야 한다.
+
+  - Collection 인터페이스
+    - 데이터를 읽는 여러 다른 연산을 수행할 수 있는 함수가 있다. (Query Operations)
+    ```kotlin
+    public interface Collection<out E> : Iterable<E> {
+        // Query Operations
+        /**
+         * Returns the size of the collection.
+         */
+        public val size: Int
+
+        /**
+         * Returns `true` if the collection is empty (contains no elements), `false` otherwise.
+         */
+        public fun isEmpty(): Boolean
+
+        /**
+         * Checks if the specified element is contained in this collection.
+         */
+        public operator fun contains(element: @UnsafeVariance E): Boolean
+
+        override fun iterator(): Iterator<E>
+
+        // Bulk Operations
+        /**
+         * Checks if all elements in the specified collection are contained in this collection.
+         */
+        public fun containsAll(elements: Collection<@UnsafeVariance E>): Boolean
+    }
+    ```
+  - MutableCollection
+    - 원소 추가, 삭제 등 데이터를 수정하는 함수가 있다. (Modification Operations)
+    ```kotlin
+    public interface MutableCollection<E> : Collection<E>, MutableIterable<E> {
+        // Query Operations
+        override fun iterator(): MutableIterator<E>
+
+        // Modification Operations
+        /**
+         * Adds the specified element to the collection.
+         *
+         * @return `true` if the element has been added, `false` if the collection does not support duplicates
+         * and the element is already contained in the collection.
+         */
+        public fun add(element: E): Boolean
+
+        /**
+         * Removes a single instance of the specified element from this
+         * collection, if it is present.
+         *
+         * @return `true` if the element has been successfully removed; `false` if it was not present in the collection.
+         */
+        public fun remove(element: E): Boolean
+    }
+    ```
+  - 컬렉션 생성 함수
+    - 컬렉션 타입	
+      - List
+      - Set
+      - Map
+    - 읽기 전용 타입	
+      - listOf
+      - setOf
+      - mapOf	
+    - 변경 가능 타입
+      - mutableListOf, arrayListOf
+      - mutableSetOf, hashSetOf, linkedSetOf, sortedSetOf
+      - mutableMapOf, hashMapOf, linkedMapOf, sortedMapOf
+  
+  - 배열
+    - 코틀린 배열은 타입 파라미터를 받는 클래스다. 
+    - 코틀린 main 함수를 보면, 배열이 선언되어 있다. 
+    - main 함수에 배열이 생략해도 되어서 배열 선언이 없는 main 함수도 있을 수 있다.
+    ```kotlin
+    fun main(args: Array<String>) {
+        // ...
+    }
+    ```
+    - 배열을 만드는 방법은 arrayOf 함수, arrayOfNulls 함수를 사용해서 만들 수 있다. 
+    - 다른 방법으로는 Array 생성자를 사용하는 경우도 있다.
+    - 컬렉션을 배열로 변환하는 toTypedArray 메서드를 사용하면 쉽게 배열로 바꿀 수 있다.
+      ```kotlin
+      val list: List<String> = listOf("a", "b", "c")
+      val array: Array<String> = strings.toTypedArray()
+      ```
+      - 코틀린은 래퍼 타입 배열이 아닌 원시 타입 배열로 컴파일 하는 것을 지원하기 위해서 ByteArray, CharArray 등을 지원한다.
+      - 박싱된 값이 들어있는 컬렉션이나 배열이 있다면, toIntArray 등 변환 함수를 사용해 박싱하지 않은 값이 들어있는 배열로 변환할 수 있다.
+      ```kotlin
+      val array = IntArray(5)
+      ```
+
+##### 플랫폼 타입
+
+- 자바에서 가져온 타입은 코틀린에서 null 참조를 가질 수 있는지 등 정보를 알수가 없다. 
+- 그래서 코틀린은 이런 타입을 플랫폼 타입을 취급한다. 
+- 개발자는 플랫폼 타입을 null 참조를 가질 수 있는 타입, null이 될 수 없는 타입으로도 사용할 수 있다. 
+- 자바 인터페이스를 코틀린에서 구현해야 하는 경우에도 null 가능성과 컬렉션의 변경 가능성에 대해 고려해서 구현해야 한다.
