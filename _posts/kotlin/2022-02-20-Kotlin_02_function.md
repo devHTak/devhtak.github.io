@@ -305,7 +305,7 @@ fun saveUser(user: User) {
 
   val people = listOf(Person("Alice", 29), Person("Bob", 31))
   findTheOldest(people)
-
+  ```
   - 컬렉션에서 가장 큰 값 찾기: 람다 이용
   ```kotlin
   val people = listOf(Person("Alice", 29), Person("Bob", 31))
