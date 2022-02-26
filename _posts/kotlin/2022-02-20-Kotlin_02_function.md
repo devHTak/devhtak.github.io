@@ -271,6 +271,7 @@ fun saveUser(user: User) {
 ##### 람다 식과 멤버 참조
 - 람다는 자바 8에 도입되어 자바에서도 비로소 람다를 사용할 수 있게 되었다.
   - 자바에서 익명 클래스를 통해 버튼 클릭 리스너 구현
+  
   ```java
   /* 자바 */
   button.setOnClickListener(new OnClickListener() {
@@ -280,7 +281,7 @@ fun saveUser(user: User) {
       }
   });
   ```
-  - 람다로 리스너 구현
+- 람다로 리스너 구현
   ```kotlin
   button.setOnClickListener { /* 클릭시 동작 */}
   ```
