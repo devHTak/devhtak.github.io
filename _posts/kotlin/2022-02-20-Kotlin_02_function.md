@@ -589,6 +589,7 @@ fun saveUser(user: User) {
   println(strs.groupBy { it.length })
   ```
   - groupBy: 리스트를 특정 기준에 맞춰 맵으로 변경하여 반환
+  - key, value(list)
 
 - flatMap과 flatten: 중첩된 컬렉션 안의 원소 처리
   ```kotlin
