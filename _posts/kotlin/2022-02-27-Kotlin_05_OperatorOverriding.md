@@ -551,4 +551,5 @@ fun main(args: Array<String>) {
   - p.name -> \_attributes.getValue(p, prop)라는 호출을 대신한다.
   - 이는 다시 \_attributes.getValue(p, prop) -> \_attributes\[prop.name]을 통해 구현된다.
 
-##### 출처
+#### 출처
+- Kotlin In Action (http://www.yes24.com/Product/Goods/55148593)
