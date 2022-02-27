@@ -111,7 +111,7 @@ operator fun Point.unaryMinus(): Point {
 }
 val p = Point(10, 20)
 println(-p) // Point(x=-10, y=-20)
-
+```
 - 이항 연산자의 오버로딩과 마찬가지로 미리 정해진 이름의 함수를 멤버나 확장 함수로 선언하면서 operator를 표시하면 된다.
 - 단항 연산자를 오버로딩하기 위해 사용하는 함수는 인자를 취하지 않는다.
   - +a: unaryPlus
