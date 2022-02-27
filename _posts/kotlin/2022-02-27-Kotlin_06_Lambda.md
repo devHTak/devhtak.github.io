@@ -782,3 +782,4 @@ fun readFirstLineFromFile(path: String): String {
     - 람다 식의 구현 방법이나 람다 식을 인라인 함수에 넘길 때 어떻게 본문이 인라이닝 되는지 등의 규칙을 무명 함수에도 모두 적용할 수 있다.
 
 #### 출처
+- Kotlin In Action (http://www.yes24.com/Product/Goods/55148593)
