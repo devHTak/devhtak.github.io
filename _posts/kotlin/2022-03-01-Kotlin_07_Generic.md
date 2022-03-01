@@ -307,4 +307,4 @@ fun <T> copyData(source: MutableList<out T>, destination: MutableList<T>) {
   - List\<out T>처럼 이미 변성 변경자가 붙어 있는 클래스에 out 프로젝션을 하는 것은 의미가 없으므로 컴파일러와 IDE가 친절하게(?) 경고를 하게 될 것이다.
 
 ##### 출처
-- 
+- Kotlin In Action (http://www.yes24.com/Product/Goods/55148593)
