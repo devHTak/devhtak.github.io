@@ -216,7 +216,7 @@ val s: String = "abc"
 val t: String? = s // String이 String?의 하위 타입이므로 이 대입은 가능
 ```
 - 제네릭 타입을 인스턴스화 할때, 타입 인자에 서로 다른 타입이 들어가고 서로 하위 타입 관계가 성립하지 않은 걸 가리켜 무공변(invariant)라고 한다.
-- 타입 A가 B의 하위 타입이면 List<A>는 List<B>의 하위 타입이며 이런 관계를 공변적(covariant)라고 한다.
+- 타입 A가 B의 하위 타입이면 List\<A>는 List\<B>의 하위 타입이며 이런 관계를 공변적(covariant)라고 한다.
 
 - 공변성(covariant)
   - 공변적인 관계를 표현할 때는 out 키워드를 넣어 표현한다.
@@ -268,7 +268,7 @@ class Herd<T: Animal>(var leadAnimal: T, vararg animals: T) { ... }
     - Producer\<Cat>은 Producer\<Animal>의 하위 타입이다.
     - T를 아웃 위치에서만 사용
   - 반공변성
-    - Consumer<in T>
+    - Consumer\<in T>
     - 타입 인자의 하위 타입 관계가 제네릭 타입에서 뒤집힌다.
     - Consumer\<Animal>은 Consumer\<Cat>의 하위 타입이다.
     - T를 인 위치에서만 사용
