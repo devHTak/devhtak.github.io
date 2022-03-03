@@ -169,3 +169,5 @@ category: Kotlin
   - 최상위 수준이나 클래스 안에 정의된 프로퍼티만 리플렉션으로 가져올 수 있고 함수의 로컬 변수에는 접근할 수 없다.
 
 ##### 출처
+
+- Kotlin In Action (http://www.yes24.com/Product/Goods/55148593)
