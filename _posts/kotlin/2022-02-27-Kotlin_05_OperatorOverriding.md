@@ -118,7 +118,7 @@ println(-p) // Point(x=-10, y=-20)
   - -a: unaryMinus
   - !a: not
   - ++a, a++: inc
-  - –a, a–: dec
+  - --a, a--: dec
   ```kotlin
   operator fun BigDecimal.inc() = this + BigDecimal.ONE
   var bd= BigDecimal.ZERO
