@@ -161,11 +161,11 @@ category: Kotlin
     - 코틀린 컴파일러가 생성한 합성 타입을 사용하기 때문에 원하는 수만큼 많은 파라미터를 갖는 함수에 대한 인터페이스를 사용할 수 있으며 kotlin.runtile.jar의 크기를 줄일 수 있게 되었다.
   - KProperty는 call 메소드를 호출할 수 있고, get 메소드 또한 지원한다.
     ```kotlin
-  var counter = 0
-  val kProperty = ::counter
-  kProperty.setter.call(21)
-  println(kProperty.get()) // 21
-  ```
+    var counter = 0
+    val kProperty = ::counter
+    kProperty.setter.call(21)
+    println(kProperty.get()) // 21
+    ```
   - 최상위 수준이나 클래스 안에 정의된 프로퍼티만 리플렉션으로 가져올 수 있고 함수의 로컬 변수에는 접근할 수 없다.
 
 ##### 출처
