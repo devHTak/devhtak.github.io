@@ -34,7 +34,7 @@ category: msa
 
 - 설치(도커)
   ```
-  $ docker run -d -p 9411:9411 openzipkin/zipkin
+  $ docker run -d -p 9411:9411 --name zipkin openzipkin/zipkin
   ```
   - localhost:9411/zipkin 접속 확인
   
