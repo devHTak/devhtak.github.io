@@ -31,7 +31,7 @@ category: Test
 #### kafka 구성
 
 - Kafka Config
-  - application.yml 로 세팅하기
+  - 설정파일으로 
     ```yml
     spring:
       kafka:
@@ -70,7 +70,7 @@ category: Test
         - Kafka에 데이터를 보낼 때, key / value를 직렬화
         - consumer에서 살펴본 key-deserializer, value-deserializer와 동일
 
-  - 코드로 세팅하기
+  - 코틀린  세팅하기
     - Producer
       ```kotlin
       @Component
