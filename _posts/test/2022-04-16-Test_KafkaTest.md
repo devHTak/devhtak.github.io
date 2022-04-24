@@ -136,6 +136,7 @@ category: Test
       }
   }
   ```
+  - KafkaTemplate을 통해 메세지를 전송할 수 있다.
 
 - Kafka Consumer
   ```kotlin
@@ -152,18 +153,95 @@ category: Test
       }
   }
   ```
+  - @KafkaListener 애노테이션을 통해 설정한 토픽, 그룹에 대한 메시지가 오면 해당 메시지를 받아온다
 
 #### Kafka Test
 
+```kotlin
+@SpringBootTest
+@DirtiesContext
+@EmbeddedKafka(partitions = 1, topics=arrayOf("TOPIC_BOOK"))
+//    brokerProperties = arrayOf("listeners=PLAINTEXT://127.0.0.1:9092", "port=9092"))
+class BookConsumerTest {
+
+    lateinit var consumer: Consumer<Int, String>
+    lateinit var producer: Producer<Int, String>
+    @Autowired
+    lateinit var embeddedKafkaBroker: EmbeddedKafkaBroker
+    @Autowired
+    lateinit var objectMapper: ObjectMapper
+    private val TOPIC_NAME = "TOPIC_BOOK";
+
+    @BeforeEach
+    fun beforeEach() {
+        consumer = configureConsumer()
+        producer = configureProducer()
+    }
+
+    @AfterEach
+    fun afterEach() {
+        consumer.close()
+        producer.close()
+    }
+
+
+    @Test
+    fun kafkaTest() {
+        // kafka producer
+        val bookStatusEventDto = BookStatusEventDto("TEST_ID", BookStatus.AVAILABLE)
+        val producerRecord: ProducerRecord<Int, String> =
+            ProducerRecord(TOPIC_NAME, 123, objectMapper.writeValueAsString(bookStatusEventDto))
+        producer.send(producerRecord)
+
+        // kafka consumer
+        val consumerRecords: ConsumerRecord<Int, String> =
+            KafkaTestUtils.getSingleRecord(consumer, TOPIC_NAME)
+
+        assertNotNull(consumerRecords)
+        assertEquals(123, consumerRecords.key())
+        val bookStockEventDto = objectMapper.readValue(consumerRecords.value(), BookStatusEventDto::class.java)
+        assertEquals("TEST_ID", bookStockEventDto.bookId);
+        assertEquals(BookStatus.AVAILABLE, bookStockEventDto.bookStatus)
+    }
+
+    private fun configureProducer(): Producer<Int, String> {
+        val props = KafkaTestUtils.producerProps(embeddedKafkaBroker)
+        val producer = DefaultKafkaProducerFactory<Int, String>(props).createProducer()
+        return producer
+    }
+
+    private fun configureConsumer(): Consumer<Int, String> {
+        val props = KafkaTestUtils.consumerProps("consumer_group", "true", embeddedKafkaBroker)
+        val consumer = DefaultKafkaConsumerFactory<Int, String>(props).createConsumer()
+        consumer.subscribe(Collections.singleton(TOPIC_NAME))
+        return consumer
+    }
+}
+```
+
 - @EmbeddedKafka
-  - kafka test를 위한 가장 간단한 방법으로 @EmbeddedKafka 애노테이션을 붙이면 EmbeddedKafkaBroker를 테스트 메서드, 세팅등에 사용할 수 있게 해준다.
-  - @ExtendWith(SpringExtension.class) 로 Spring Context 구성
-  - @Autowired로 EmbeddedKafkaBroker를 주입받을 수 있다.
+  - 카프카 기반 테스트를 스프링에서 동작하기 위한 애노테이션으로 테스트 클래스 정의
 
+- @SpringBootTest
+  - Spring Application Context를 시작하기 위해서 사용하는 애노테이션
 
+- @DirtiesContext
+  - 스프링 테스트에서 Application Context는 한개만 만들어지고, 테스트에서 공유하여 사용
+    - 그렇기 때문에 Application Context에 대한 설정은 변경하지 않는 것을 원칙으로 한다
+    - 만약 변경하면 나머지 테스트를 수행하는 동안 변경된 Application Context를 계속 사용하게 되며 이는 바람직하지 못하다
+  - @DirtiesContext를 통해 해당 클래스의 테스트에서 Application Context의 상태를 변경한다는 것을 알려준다
+    - 테스트 중에 변경한 컨텍스트가 뒤 테스트에 영향을 주지 않게 한다.
 
-  
+- EmbeddedKafkaBroker
+  - 단위 테스트를 위해 Kafka broker, zookeeper 
+
+- KafkaTestUtils
+  - Kafka 테스트를 위한 유틸리티
+  - Consumer, Producer 설정 및 생성, 메시지 구독 할 수 있다
 
 #### 출처
+- https://docs.spring.io/spring-kafka/api/org/springframework/kafka/test/EmbeddedKafkaBroker.html
+- https://docs.spring.io/spring-kafka/api/org/springframework/kafka/test/utils/KafkaTestUtils.html
 - https://blog.knoldus.com/testing-spring-embedded-kafka-consumer-and-producer/
+- https://stackoverflow.com/questions/48753051/simple-embedded-kafka-test-example-with-spring-boot
 - https://github.com/spring-projects/spring-kafka/blob/main/spring-kafka/src/test/kotlin/org/springframework/kafka/listener/EnableKafkaKotlinTests.kt
