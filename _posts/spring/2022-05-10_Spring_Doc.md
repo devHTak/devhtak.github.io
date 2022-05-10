@@ -10,6 +10,7 @@ category: Spring
 #### Spring API Documentation
 
 - REST API 문서 자동화에 대한 정리
+- SpringDoc OpenApi+swagger 와 Spring Rest Docs 정리
 
 #### Springfox Swagger와 Springdoc OpenAPI 3.0
 
@@ -206,9 +207,120 @@ category: Spring
             return ResponseEntity.ok(accountService.findAccountByAccountId(accountId));
         }
     ```
+    
+#### Spring REST Docs
+
+- Swagger와 차이점
+  - 테스트가 성공해야 문서가 작성 된다.
+    - REST Docs로 문서를 작성하는 것은 API의 신뢰도를 높이고 테스트 코드의 검증을 강제로 하게 만든다
+  - 실제 코드에 추가되는 코드가 없다.
+    - 프로덕션 코드와 분리되어 있기 때문에 Swagger같이 Config 설정 코드나 어노테이션이 프로덕션 코드를 더럽히지 않는다.
+
+- dependency 추가
+  ```
+  plugins { 
+    id "org.asciidoctor.convert" version "1.5.9.2"
+  }
+  dependencies {
+    asciidoctor 'org.springframework.restdocs:spring-restdocs-asciidoctor' 
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc' 
+  }
+  ext { 
+    snippetsDir = file('build/generated-snippets')
+  }
+  test { 
+    outputs.dir snippetsDir
+  }
+  asciidoctor { 
+    inputs.dir snippetsDir 
+    dependsOn test 
+  }
+  // JAR 파일에 패키징하는 설정
+  bootJar {
+    dependsOn asciidoctor 
+    from ("${asciidoctor.outputDir}/html5") { 
+      into 'static/docs'
+    }
+  }
+  ```
+
+- 테스트 코드 작성
+  ```java
+  @AutoConfigureMockMvc
+  @AutoConfigureRestDocs
+  @SpringBootTest
+  class AccountControllerTest {
+
+      @Autowired MockMvc mockMvc;
+      @MockBean AccountService accountService;
+      @Autowired ObjectMapper objectMapper;
+
+      @Test
+      void saveAccountTest() throws Exception {
+          final AccountResponse accountResponse = new AccountResponse("TEST", "1234", LocalDateTime.of(2022, 5, 10, 22, 00));
+          final AccountResource accountResource = new AccountResource("TEST", "TEST1234");
+          when(accountService.saveAccount(any())).thenReturn(accountResponse);
+
+
+          this.mockMvc.perform(post("/api/accounts")
+                          .content(objectMapper.writeValueAsString(accountResource))
+                          .contentType(MediaType.APPLICATION_JSON))
+                  .andExpect(status().isCreated()) // 4
+                  .andDo(MockMvcRestDocumentation.document("account-create",
+                          PayloadDocumentation.requestFields(
+                                PayloadDocumentation.fieldWithPath("name").description("Account Name").optional(),
+                                PayloadDocumentation.fieldWithPath("password").description("AccountPassword")
+                        ),
+                        PayloadDocumentation.responseFields(
+                                PayloadDocumentation.fieldWithPath("name").description("Account Save Name"),
+                                PayloadDocumentation.fieldWithPath("accountId").description("Account Id"),
+                                PayloadDocumentation.fieldWithPath("createdAt").description("Account created time")
+                          )
+                  ));
+      }
+  }
+  ```
+  - @AutoConfigureRestDocs
+    - Spring REST Docs에 대해 auto-configuration 할 수 있도록 class 파일에 적용하는 어노테이션
+  - Test 코드
+    - mockMvc를 통해 API를 호출한 후, andDo에 다큐먼트를 작성한다.
+    - MockMvcRestDocumentation.document
+      - parameter1: document 이름
+      - parameter2: request 설명
+      - parameter3: response 설명
+        - fieldWithPath는 key 값 description는 fieldWithPath 설명
+
+- 문서화
+  <img width="368" alt="image" src="https://user-images.githubusercontent.com/42403023/167635010-ae5d47ae-b5a4-4fa0-9a27-209348a3665e.png">
+
+  - 테스트 코드를 작성한 후 빌드하면 문서가 생성되는 것을 확인할 수 있다.
+  - /src/docs/asciidoc 폴더를 생성하고, \*.adoc 파일을 생성하자
+    ```
+    = Spring REST Docs
+    :toc: left
+    :toclevels: 2
+    :sectlinks:
+
+    [[resources-account]]
+    == Account
+
+    [[resources-account-create]]
+    === Account 생성
+
+    ==== HTTP request
+
+    include::{snippets}/account-create/http-request.adoc[]
+
+    ==== HTTP response
+
+    include::{snippets}/account-create/http-response.adoc[]
+    ```
+    - Asciidoctor는 일반 텍스트를 처리하고 필요에 맞게 스타일 및 레이아웃 된 HTML을 생성한다.
+
 #### 참고
 
 - Springfox와 Springdoc: https://junho85.pe.kr/1583
 - https://oingdaddy.tistory.com/271?category=824422
 - https://oingdaddy.tistory.com/272?category=824422
 - Springdoc 설정: https://blog.jiniworld.me/83 [hello jiniworld]
+- https://tecoble.techcourse.co.kr/post/2020-08-18-spring-rest-docs/
