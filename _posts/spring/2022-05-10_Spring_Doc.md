@@ -316,6 +316,8 @@ category: Spring
     include::{snippets}/account-create/http-response.adoc[]
     ```
     - Asciidoctor는 일반 텍스트를 처리하고 필요에 맞게 스타일 및 레이아웃 된 HTML을 생성한다.
+- 작성 후 빌드 하면 build/asciidoc/html5와 src/main/resources/static/docs에 html 파일 생성된 것을 확인할 수 있다
+- http://localhost:8080/docs/api-docs.html 를 접속하면 문서를 확인할 수 있다
 
 #### 참고
 
