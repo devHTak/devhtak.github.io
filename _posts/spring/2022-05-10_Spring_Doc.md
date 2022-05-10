@@ -166,9 +166,49 @@ category: Spring
     - /api-docs에서 가지고 온 데이터를 swagger-ui 화면에 뿌려준다.
     - 내가 지정한 path에 대한 정보를 확인할 수 있다.
 
+- Annotation
+  |swagger 3 annotations|swagger 2 annotations|description|
+  |---|---|---|
+  |@Tag|@Api|클래스를 Swagger 리소스로 표시|
+  |@Parameter(hidden = true) or @Operation(hidden = true) or @Hidden|@ApiIgnore| API 작업에서 단일 매개 변수를 나타냄|
+  |@Parameter|@ApiImplicitParam|API 작업에서 단일 매개 변수를 나타냄|
+  |@Parameters|@ApiImplicitParams|API 작업에서 복수 매개 변수를 나타냄|
+  |@Schema|@ApiModel|Swagger 모델에 대한 추가 정보를 제공|
+  |@Schema(accessMode = READ_ONLY)|@ApiModelProperty(hidden = true)|모델 속성의 데이터를 추가하고 조작|
+  |@Schema|@ApiModelProperty|Swagger 모델에 대한 추가 정보를 제공|
+  |@Operation(summary = "foo", description = "bar")|@ApiOperation(value = "foo", notes = "bar")|특정 경로에 대한 작업 또는 일반적으로 HTTP 메서드를 설명|
+  |@Parameter|@ApiParam|작업 매개 변수에 대한 추가 메타 데이터를 추가| 
+  |@ApiResponse(responseCode = "404", description = "foo")|@ApiResponse(code = 404, message = "foo")|작업의 가능한 응답을 설명|
+  
+  - 적용 예
+    ```java
+    @RestController
+    @RequestMapping("/api")
+    @Tag(name = "Account controller", description = "Account controller desc")
+    public class AccountController {
 
+        private final AccountService accountService;
+
+        @Autowired
+        public AccountController(AccountService accountService) {
+            this.accountService = accountService;
+        }
+
+        @Operation(
+                summary = "사용자 정보 조회"
+                , description = "사용자의 ID를 통해 사용자의 정보를 조회한다."
+                , tags = { "contact" })
+        @ApiResponses(value = {
+                @ApiResponse(responseCode = "200", description = "successful operation",
+                        content = @Content(array = @ArraySchema(schema = @Schema(implementation = Contact.class)))) })
+        @GetMapping("/accounts/{accountId}")
+        public ResponseEntity<AccountResponse> getAccountByAccountId(@PathVariable String accountId) {
+            return ResponseEntity.ok(accountService.findAccountByAccountId(accountId));
+        }
+    ```
 #### 참고
 
 - Springfox와 Springdoc: https://junho85.pe.kr/1583
 - https://oingdaddy.tistory.com/271?category=824422
+- https://oingdaddy.tistory.com/272?category=824422
 - Springdoc 설정: https://blog.jiniworld.me/83 [hello jiniworld]
