@@ -14,10 +14,10 @@ category: msa
   - Rabbit MQ는 라이브러리를 통해 복잡한 AMQP 동작 방식 제공
 
 - 대화 시작
-  - 대화를 시작하면 아래와 같이 패킷을 전달하여 대화 시작할 수 있는 채널을 형성한다
-    - Client -> Server: Protocol Header 패킷 전달
-    - Client <- Server: Connection.Start 패킷 전달
-    - Client -> Server: Connection.StartOk 패킷 전달
+  - 대화를 시작하면 아래와 같이 프레임을 전달하여 대화 시작할 수 있는 채널을 형성한다
+    - Client -> Server: Protocol Header 프레임 전달
+    - Client <- Server: Connection.Start 프레임 전달
+    - Client -> Server: Connection.StartOk 프레임 전달
 - 채널
   - AMQP 스펙에는 Rabbit MQ와 통신하기 위한 채널 정의
   - 채널은 다른 채널의 대화로부터 전송을 격리하며, 여러 대화를 수행할 수 있다
@@ -26,8 +26,11 @@ category: msa
   - 명령형식
     - 클래스.메서드 형식(Connection.Start)
   - 프레임 컴포넌트
+  
+    |프|레|임|구|조|
     |---|---|---|---|---|
-    |Frame 유형|채널번호|프레임크기| Payload | 끝을 나타내는 바이트 표식|
+    |Frame 유형|채널번호|프레임크기| Payload |끝을 나타내는 바이트 표식|
+  
   - 프레임 유형
     - 헤더 프레임: Rabbit MQ 연결할 때 사용
     - Method 프레임: 서로 주고받는 요청/응답 전달
