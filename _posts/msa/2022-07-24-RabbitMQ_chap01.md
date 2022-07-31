@@ -136,7 +136,76 @@ category: msa
 
 #### 메시지를 받지 않고 소비하기
 
+- Basic.Get vs Basic.Consume
+  - Basic.Get(동기)
+    - Basic.Get 요청을 보내면 메시지가 있으면 Basic.GetOk, 없으면 Basic.GetEmpty 응답
+    - Basic.Get 을 사용하면 메시지 수신을 확인해야 하며, 메시지가 있는지를 확인한다
+  - Basic.Consume(비동기)
+    - Basic.Consume 으로 구독하면 Basic.Cancel 을 전송하기 전까지 메시지를 수신할 수 있다.
+    - 메시지가 처리됐음을 알리는 message.ack을 전달해야 한다
+
+- 소비자 성능 조절
+  - 무응답 모드로 빠르게 메시지 소비하기
+    - no_ack: True
+      - RabbitMQ가 소비자에게 메시지를 전달하는 가장 빠르고 안정적인 방법
+      - TCP 소켓 연결을 통해 통신하는데 연결이 열려있으면 전달되었다고 판단
+  - Consumer 프리페치 제어
+    - 미리 지정된 수의 메시지를 수신하도록 처리할 수 있는 QoS 설정을 채널에 요청할 수 있다
+    - Prefetch 값을 최적화 하여 사용해야 한다
+    - RabbitMQ 는 기본적으로 RR 방식으로 메시지를 수신하는데 Prefetch 수가 성능에 영향을 미치는지 확인해야 한다
+    - 네트워크 통신 최소화 + 메시지 처리량 향상
+  - Consumer에서 트랜잭션 사용
+    - Producer와 마찬가지로 트랜잭션을 사용하여 일괄 작업을 커밋하고 롤백할 수 있다.
+
+- 메시지 거부하기
+  - 메시지 처리 중 이슈가 발생했을 때, Basic.Nack, Basic.Reject 로 메시지 브로커에 다시 전달할 수 있다.
+  - Basic.Reject
+    - 컨슈머에서 Basic.Reject 를 사용하면 메시지를 삭제하거나 큐에 있는 메시지를 다시 삽입되도록 지시할 수 있다
+    - 재삽입 플래그가 활성화되면 재처리할 수 있도록 큐에 메시지를 넣는다
+  - Basic.Nack
+    - Basic.Reject 는 단일 메시지만 처리 가능하고, Basic.Nack은 다중 메시지를 처리할 수 있다.
+  - DLX
+    - 메시지를 처리할 때 이슈가 발생하면 x-dead-letter-exchange 로 라우팅할 수 있다.
+    - direct 방식으로 큐를 바인딩 하기 위해서는 x-dead-letter-routing-key 지정이 필요하다
+  
+- 큐제어하기
+  - 
+
 #### 익스체인지 라우팅을 통한 메시지 패턴
+
+- Exchange 
+  - Direct Exchange
+    - Routing key 가 동일한 문자열인지 검사
+    - 매우 단순하며 RPC 패턴에 용이 (Application 의존성 분리, 독립적인 컴포넌트 구성, 확장성에 뛰어남)
+    - Architecture
+    
+      - <img width="407" alt="image" src="https://user-images.githubusercontent.com/42403023/182009609-e2dd24ed-09b9-453b-be68-4c8811a86ef2.png">
+      - MethodFrame: Basic.Publish
+      - Contents Header Frame: reply-to(바인딩 될 큐 이름) / correlation-id (RPC 요청을 구분할 ID)
+      - 본문 Frame 으로 구성
+      
+  - Fanout Exchange
+    - Fanout Exchange 에 연결된 모든 Queue에 전달
+    - Routing Key를 확인할 필요가 없다 -> 성능 이점 / 모든 Application이 메시지를 전달 받을 수 있다.
+    
+  - Topic Exchange
+    - Routing Key 가 있는 모든 큐에 메시지를 라우팅
+    - Direct Exchange 와의 차이점은 와일드 카드 기반의 패턴 매칭을 사용할 수 있다
+    - 단일 목적의 Application이 단일 큐에 연결하는 아키텍처는 모놀리식 구조에 비해 유지보수 혹은 확장에 용이 (유연성)
+
+  - Header Exchange
+    - Message 속성 중 Headers 테이블을 사용해 라우팅 처리
+    - Queue.Bind 메소드의 인수로 key/value 배열, x-match(any or all) 사용
+  
+  - Exchange 간에 Routing 하기
+    - Rabbit MQ 는 AMQP 스펙에 없는 Exchange 조합으로 Message Routing 할 수 있는 유연한 방법 제공
+    - Exchange.Bind RPC Method 를 통해 제공
+    - 유연하지만 복잡성 + 추가적 오버헤드 발생
+    
+  - Consistent Hashing Exchange
+    - Rabbit MQ 에 배포하는 플러그인으로 연결된 Queue 에 분배
+    - 정수 기반 가중치를 사용하는 알고리즘으로 큐를 선택하고 메시지를 전달
+    - Round Robin 하지 않고 Routing Key 의 Hash 값 or 메시지 속성 중 Header-Type의 값을 기반으로 메시지 전달
 
 #### 출처
 - RabbitMQ IN DEPTH
