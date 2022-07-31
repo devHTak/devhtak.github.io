@@ -193,6 +193,19 @@ category: msa
       - 큐의 메시지 최대 크기 설정
       - x-max-length 인수를 arguments로 설정
 
+  - 그 외 큐 설정
+  
+    |인수 이름|목적|
+    |---|---|
+    |x-dead-letter-exchange|메시지가 재삽입되지 않고 거부될 때, 라우틱할 익스체인지|
+    |x-dead-letter-routing-key|거부된 메시지를 라우팅하는 데 사용하는 라우팅 키|
+    |x-expires|지정된 시간(밀리초 단위) 후에 큐를 삭제|
+    |x-ha-policy|HA 큐를 만들 때 노드 간에 HA를 적용하는 정책 지정|
+    |x-ha-nodes|HA 큐를 분산할 노드|
+    |x-max-length|큐에서 지정하는 메시지 만료 시간|
+    |x-message-ttl|큐의 최대 메시지 수|
+    |x-max-priority|최대 값이 255인 큐의 우선순위를 지정하는 데 사용|
+
 #### 익스체인지 라우팅을 통한 메시지 패턴
 
 - Exchange 
