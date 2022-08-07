@@ -379,4 +379,97 @@ public static void main(String[] args) throws InterruptedException {
 
 ##### Item 83. 지연 초기화는 신중히 사용하라
 
+- 지연 초기화(lazy initialization)는 필드의 초기화 시점을 그 값이 처음 필요할 때까지 늦추는 기법
+  - 최적화 용도로 사용하며, 클래스와 인스턴스 초기화 때 발생할 수 있는 순환 문제를 해결하는 효과도 있다
+
+- 지연 초기화는 장단점을 가지고 있다.
+  - 생성시의 초기화 비용은 줄어들지만, 지연초기화는 필드에 접근하는 비용이 커진다.
+  - 해당 클래스의 인스턴스 중 그 필드를 사용하는 인스턴스의 비율이 낮은 반면, 그 필드를 초기화하는 비용이 크다면 지연 초기화는 올바른 역할을 한다.
+  - 하지만 정말 그런지, 지연 초기화 적용 전, 후의 성능을 측정해보아야 한다
+
+- 멀티스레드 환경에서 지연초기화는 까다롭다
+  - 대부분의 상황에서는 일반적인 초기화가 지연 초기화보다 낫다
+    - 인스턴스 필드를 선언할 때 수행하는 일반적인 초기화 모습
+      ```java
+      private final FieldType field = computeFieldValue();
+      ```
+  - 멀티쓰레드에서 안전하게 지연 초기화 하는 방법
+    - 지연초기화가 초기화 순환성을 깨트릴 것 같으면 synchronized 를 단 접근자를 사용하자
+    ```java
+    private FieldType field;
+    private synchronized FieldType getField() {
+        if(field == null)
+            this.field = computeFieldValue();
+        return field;
+    }
+    ```
+  - 성능 때문에 정적 필드를 지연 초기화해야 한다면 지연 초기화 홀더 클래스(lazy initialization holder class) 관용구를 사용하자
+    ```java
+    private static class FieldHolder {
+        static final FieldType field = computeFieldValue();
+    }
+    private static FieldType getField() {
+        return FileHolder.field;
+    }
+    ```
+    - getFeild() 가 처음 호출되는 순간 FieldType.field가 처음 읽히면서, FieldHolder 클래스 초기화를 촉발
+    - getField 메서드가 필드에 접근하면서 동기화를 전혀 하지 않으니 성능에 영향이 없다.
+  - 성능 때문에 인스턴스 필드를 지연 초기화해야 한다면 이중검사 관용구(double-check)를 사용하자(volatile)
+    - 초기화된 필드에 접근할 때의 동기화 비용을 없애준다
+    ```java
+    private volatile FieldType field;
+    private FieldType getField() {
+        FieldType result = field;
+        if(result != null) // 첫번째 검사 (락 사용 안함) 
+            return result;
+         synchronized(this) {
+            if(field == null)
+                field = computeFieldValue();
+            return field;
+         }
+    }
+    ```
+    - result 지역변수를 사용한 이유는 필드가 이미 초기화된 상황에서 그 필드를 한번만 읽도록 보장하는 역할을 한다
+    - 단일 검사 관용구에 경우 초기화가 중복되어 발생할 수 있다
+  - 3가지 초기화 기법은 기본타입 필드, 객체 참조 필드 모두에 적용될 수 있다.
+
 ##### Item 84. 프로그램의 동작을 스레드 스케줄러에 기대지 마라
+
+- 여러 쓰레드가 실행중이면 쓰레드 스케줄러가 어떤 스레드를 얼마나 오래 실행할 지 정한다
+  - 운영체제마다 스케줄링 정책은 다를 수 있다
+  - 정확성이나 성능 스레드 스케줄러에 따라 달라지는 프로그램이면 다른 플랫폼에 이식하기 어렵다
+
+- 실행 가능한 스레드의 평균적인 수를 프로세서 수보다 많아지지 않도록 하는 것
+  - 실행 가능한 스레드 수를 적게 유지하는 주요 기법은 각 스레드가 유용한 작업을 완료한 후에 추가 일거리가 발생하기 전까지 대기하는 것
+  - 스레드는 당장 처리할 작업이 없다면 실행돼서는 안된다
+
+- 바쁜 대기(bysh waiting)
+  - 공유 객체의 상태가 바뀔때까지 쉬지않고 검사해서는 안된다.
+  - 스레드 스케줄러의 취약하며 프로세서에 큰 부담을 준다
+  ```java
+  public class SlowCountDownLatch {
+      private int count;
+      
+      public SlowCountDownLatch(int count) {
+          this.count = count;
+      }
+      
+      public void await() {
+          while(true) {
+              synchronized(this) {
+                  if(count == ) return;
+              }
+          }
+      }
+      
+      public synchronized void countDown() {
+          if(count != 0) count--;
+      }
+  }
+  ```
+  - 1000개의 스레드를 만드는 기존 CountDownLatch를 사용하는 것보다 10배가 느려진다
+
+- Thread.yield
+  - 특정 스레드가 다른 스레드들과 비교해 CPU 시간을 충분히 얻지 못해서 간신히 돌아가는 프로그램을 보더라도 Thread.yield를 써서 문제를 고치려 하지 말자
+  - 성능에 효과가 있는 yield 도, 다른 OS에 이식됨에 따라 효과가 없을 수도, 오히려 느려지게 할 수 있다.
+  - 테스트할 수 있는 수단도 
