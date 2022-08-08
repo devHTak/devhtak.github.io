@@ -22,8 +22,10 @@ category: No SQL
   - 가용성(Availability)
     - 모든 사용자들이 읽기 및 쓰기가 가능해야 하며, 몇몇 노드의 장애 시에도 다른 노드에 영향을 미치면 안된다.
     - 클러스터 내에 몇 개 노드가 고장나도 정상적인 서비스를 제공해야 한다
+    - 마스터 슬레이브 복제, 피어 투 피어 복제 등에 방법을 통해 제겅한다
   - 분할내성(Partition tolerance)
     - 메시지 전달이 실패하거나 시스템 일부가 망가져도 시스템이 계속 동작할 수 있어야 한다.
+    - 지역적으로 분할된 네트워크 환경에서 동작하는 시스템에서 네트워크 단절, 네트워크 데이터 유실이 일어나더라도 각 지역 내의 시스템은 정상적으로 동작해야 됨을 의미한다
   - CP Category: There is a risk of some data becoming unavailable (MongoDB, HBase, Memcache, BigTable, Redis)
   - CA Category: Network problem migigt stop the system (RDBMS)
   - AP Category: Clients may read inconsistent data (Cassandra, RIAK, CouchDB)
