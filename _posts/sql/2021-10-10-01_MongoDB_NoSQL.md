@@ -21,6 +21,7 @@ category: No SQL
     - 모든 노드들은 같은 시간에 동일한 항목에 대하여 같은 내용의 데이터를 사용자에게 보여준다.
   - 가용성(Availability)
     - 모든 사용자들이 읽기 및 쓰기가 가능해야 하며, 몇몇 노드의 장애 시에도 다른 노드에 영향을 미치면 안된다.
+    - 클러스터 내에 몇 개 노드가 고장나도 정상적인 서비스를 제공해야 한다
   - 분할내성(Partition tolerance)
     - 메시지 전달이 실패하거나 시스템 일부가 망가져도 시스템이 계속 동작할 수 있어야 한다.
   - CP Category: There is a risk of some data becoming unavailable (MongoDB, HBase, Memcache, BigTable, Redis)
