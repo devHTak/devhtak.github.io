@@ -4,7 +4,7 @@ title: Redis Basic
 summary: Redis Basic
 author: devhtak
 date: '2022-08-20 21:41:00 +0900'
-category: SQL
+category: No SQL
 ---
 
 #### Redis 특징
@@ -17,6 +17,9 @@ category: SQL
   - 읽기 성능 증대를 위해 서버 측 복제(replica) 를 지원
   - 쓰기 성능 증대를 위해 클라이언트 측 샤딩 지원
   - 키-값 저장소로 문자열, 리스트, 해시, 셋, 정렬된 셋과 같은 다양한 데이터형 지원
+
+- NO SQL 특징
+  - https://devhtak.github.io/no%20sql/2021/10/10/01_MongoDB_NoSQL.html 참고
 
 #### Redis 시작
 
