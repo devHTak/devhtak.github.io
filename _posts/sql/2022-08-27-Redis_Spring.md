@@ -98,14 +98,16 @@ category: No SQL
     - @Id
       - org.springframework.data.annotation.Id
       - keyspace:id 로 key 정의됨
+    - @Index
+      - findBy not working: https://stackoverflow.com/questions/53121627/unable-to-get-result-from-the-redis-using-crud-repository-in-spring-boot
   - spring data에서 제공하는 CrudRepository 를 통한 Repository 정의
     ```java
     public interface PersonRepository extends CrudRepository<Person, String> {
         
     }
     ```
-  - findBy not working
-    - https://stackoverflow.com/questions/53121627/unable-to-get-result-from-the-redis-using-crud-repository-in-spring-boot
+    - CrudRepository 는 Redis 가 아닌 spring-data 에서 제공
+    - findAll() 에 경우 Iterator을 반환하기 때문에 List 로 override 해주는 것이 편하다
     
 - RedisTemplate
   - RedisTemplate 은 redis command를 사용하기 위해 value data type에 따른 추상화 객체를 제공한다
