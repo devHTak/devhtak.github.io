@@ -104,6 +104,8 @@ category: No SQL
         
     }
     ```
+  - findBy not working
+    - https://stackoverflow.com/questions/53121627/unable-to-get-result-from-the-redis-using-crud-repository-in-spring-boot
     
 - RedisTemplate
   - RedisTemplate 은 redis command를 사용하기 위해 value data type에 따른 추상화 객체를 제공한다
