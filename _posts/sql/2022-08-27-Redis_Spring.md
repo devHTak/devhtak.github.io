@@ -98,8 +98,7 @@ category: No SQL
     - @Id
       - org.springframework.data.annotation.Id
       - keyspace:id 로 key 정의됨
-    - @Index
-      - findBy not working: https://stackoverflow.com/questions/53121627/unable-to-get-result-from-the-redis-using-crud-repository-in-spring-boot
+    
   - spring data에서 제공하는 CrudRepository 를 통한 Repository 정의
     ```java
     public interface PersonRepository extends CrudRepository<Person, String> {
@@ -121,6 +120,70 @@ category: No SQL
     
 - 예제
   - https://github.com/devHTak/redis-spring-example 참고
+
+#### Repository 활용하기 - Secondary Indexes
+
+- Redis는 key-value 형태로 저장되기 때문에 key 인 @id 를 제외한 다른 필드로 쿼리 하기 어려운 점이 있다.
+- 여러 필드로 쿼리를 하기 위해서는 다른 방법을 사용해주어야 한다
+- @Indexed
+  - entity 내에 @Indexed 애노테이션으로 인덱스 생성
+  ```java
+  @RedisHash(value="cart", timeToLive = 300)
+  public class Cart {
+      @Id
+      private String id;
+      @Indexed
+      private Member member;
+      private Item item;
+      private int count;
+      private int totalPrice;
+  ```
+
+- Query by Example
+  - QBE 를 통해 다이나믹 쿼리를 생성할 수 있으며 filed 명 contain 등의 쿼리를 작성할 필요가 없어진다
+    - ex) JPA : List\<Person> findByContainsFirstName(String firstName)
+  - 사용법
+    - Probe: 쿼리에 필요한 값들이 저장된 엔티티
+    - ExampleMatcher: 특정 필드에 일치 방법을 나타내는 객체 
+    - Example: Probe, ExampleMatcher로 생성되며, 쿼리를 만드는 데 사용된다.
+  - 예제
+    ```java
+    Person person = new Person();
+    person.setFirstName("Test");
+    
+    Example<Person> example1 = Example.of(person);
+    
+    ExampleMatcher matcher = ExampleMatcher.matching()
+        .withIgnorePaths("lastname")
+        .withIncludeNullValues()
+        .withStringMatcherEnding();
+       
+    Example<Person> example2 = Example.of(person, matcher);
+    ```
+    - withIgnorePaths: 지정한 프로퍼티를 무시하도록 설정
+    - withIncludeNullValues: 지정한 프로퍼티의 null 값도 포함하도록 설정
+    - withStringMatcherEnding: 지정한 프로퍼티의 suffix 가 일치하도록 설정
+
+- QueryByExampleExcutor
+  - QBE 를 실행할 수 있는 interface 제공
+  - Repository 에 구현할 수 있도록 한다.
+    ```java
+    public interface QueryByExampleExecutor<T> {
+        <S extends T> Optional<S> findOne(Example<S> example);
+        <S extends T> Iterable<S> findAll(Example<S> example);
+        <S extends T> Iterable<S> findAll(Example<S> example, Sort sort);
+        <S extends T> Page<S> findAll(Example<S> example, Pageable pageable);
+        <S extends T> long count(Example<S> example);
+        <S extends T> boolean exists(Example<S> example);
+        <S extends T, R> R findBy(Example<S> example, Function<FluentQuery.FetchableFluentQuery<S>, R> queryFunction);
+    }
+    
+    public interface CartRepository extends CrudRepository<Cart, String>, QueryByExampleExecutor<Cart> {} 
+    ```
+
+- 출처
+  - https://docs.spring.io/spring-data/redis/docs/2.1.9.RELEASE/reference/html/#redis.repositories.indexes
+  - https://redis.io/docs/reference/patterns/indexes/
 
 #### Cache로 Redis 
 
