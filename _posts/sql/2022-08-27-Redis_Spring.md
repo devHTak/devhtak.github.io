@@ -187,6 +187,151 @@ category: No SQL
 
 #### Cache로 Redis 
 
+- API Cache
+  - 캐시란 한번 처리한 데이터를 임시로 저장소에 저장하는 것으로, 해당 임시 데이터를 동일하거나 유사 요청이 왔을 경우 저장소에서 바로 읽어와 응답하여 성능 및 응답속도 향상을 위한 기술
+  - 요청이 왔을 경우 연산을 수행하거나 DB의 데이터를 불러와 response 하는 데, 캐시를 이용해 특정 요청을 저장소에 임시로 저장해두었다가 이후 동일한 응답을 해도 되는 요청이 왔을 경우 별도 연산없이 바로 저장소에서 데이터를 가지고 응답하여 성능/응답 시간을 개선할 수 있다
+
+- dependency 구성
+  - JPA / H2 Database / Redis / Spring web / Spring cache 로 구성
+
+- 설정
+  ```yml
+  spring:
+    application:
+      name: redis-example
+    cache:
+      type: redis
+    redis:
+      host: localhost
+      port: 6379
+    h2:
+      console:
+        enabled: true
+        path: /h2-console
+      datasource:
+        url: jdbc:h2:tcp://localhost/~/test
+        username: user
+        password:
+        driver-class-name: org.h2.Driver
+    jpa:
+      hibernate:
+        ddl-auto: create
+      properties:
+        hibernate:
+          format_sql: true
+  ```
+  
+- RedisConfig
+  - @EnableCaching 애노테이션 추가
+  - CacheManager 설정
+    ```java
+    @Bean
+    public CacheManager redisCacheManager() {
+        RedisCacheConfiguration redisCacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));
+
+        RedisCacheManager redisCacheManager = RedisCacheManager.RedisCacheManagerBuilder.fromConnectionFactory(redisConnectionFactory()).cacheDefaults(redisCacheConfiguration).build();
+        return redisCacheManager;
+    }
+    ```
+
+- @Cacheable, @CachePut, @CacheEvict 사용하여 구성
+  - 참고: https://devhtak.github.io/spring/2021/10/12/Spring_Cache.html
+  - Entity
+    ```java
+    @Entity @Data
+    public class Item {
+
+        @Id
+        @GeneratedValue
+        private Long id;
+
+        private String name;
+
+        private int price;
+    }
+    ```
+  - Service
+    ```java
+    @Service
+    @Transactional
+    public class ItemService {
+
+        private final ItemJpaRepository itemRepository;
+
+        @Autowired
+        public ItemService(ItemJpaRepository itemRepository) {
+            this.itemRepository = itemRepository;
+        }
+
+
+        public Item getById(Long itemId) {
+            return itemRepository.findById(itemId).orElseThrow(IllegalArgumentException::new);
+        }
+
+        public Item save(ItemDto itemDto) {
+            Item item = new Item();
+            item.setName(itemDto.getName());
+            item.setPrice(itemDto.getPrice());
+
+            return itemRepository.save(item);
+        }
+
+        public Item update(Long itemId, ItemDto itemDto) {
+            Item item = itemRepository.findById(itemId)
+                    .orElseThrow(IllegalArgumentException::new);
+
+            item.setName(itemDto.getName());
+            item.setPrice(itemDto.getPrice());
+
+            return item;
+        }
+    }
+    ```
+  - Controller
+    ```java
+    @RestController
+    public class ItemController {
+
+        private final ItemService itemService;
+
+        @Autowired
+        public ItemController(ItemService itemService) {
+            this.itemService = itemService;
+        }
+
+        @GetMapping("/items/{itemId}")
+        @Cacheable(value = "Items", key="#itemId")
+        public ResponseEntity<Item> getItemById(@PathVariable Long itemId) {
+            Item item = itemService.getById(itemId);
+
+            return ResponseEntity.ok(item);
+        }
+
+        @PostMapping("/items")
+        public ResponseEntity<Item> save(@RequestBody ItemDto itemDto) {
+            Item item = itemService.save(itemDto);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(item);
+        }
+
+        @PutMapping("/items/{itemId}")
+        @CachePut(value = "Items", key="#itemId")
+        public ResponseEntity<Item> updateItemById(@PathVariable Long itemId, @RequestBody ItemDto itemDto) {
+            Item item = itemService.update(itemId, itemDto);
+
+            return ResponseEntity.ok(item);
+        }
+    }
+    ```
+    - Controller 단에 응답을 저장하여, 결과값까지 캐시에 저장되도록 하였다
+  - Redis 에서 확인하기
+    ```
+    $ get Items:1
+    "{\"@class\":\"org.springframework.http.ResponseEntity\",\"headers\":{\"@class\":\"org.springframework.http.ReadOnlyHttpHeaders\"},\"body\":{\"@class\":\"com.example.item.Item\",\"id\":1,\"name\":\"TEST1\",\"price\":1000},\"statusCodeValue\":200,\"statusCode\":[\"org.springframework.http.HttpStatus\",\"OK\"]}"
+    ```
+
 #### 출처
 - 블로그
   - https://bcp0109.tistory.com/328
