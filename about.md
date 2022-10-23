@@ -11,6 +11,7 @@ permalink: /about/
 ###### 연락처
 
 ✉️ [qkrgusxkr1@gmail.com](mailto:qkrgusxkr1@gmail.com)
+
 📞 010-8754-1495
 
 ##### 블로그 & 깃허브
