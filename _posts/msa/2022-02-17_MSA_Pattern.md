@@ -37,7 +37,8 @@ category: msa
 - 서비스
   - Spring Cloud - Spring API Gateway Service
   - Kubernetes - Service, Ingress Resources
-
+  
+- vs Gateway routing pattern 
 ##### BFF(Backend for Frontend) Pattern
 
 ![image](https://user-images.githubusercontent.com/42403023/154488938-57fc40ed-19b2-4725-bb4d-1dad6b33d7fc.png)
