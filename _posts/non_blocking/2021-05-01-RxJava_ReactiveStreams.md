@@ -38,7 +38,7 @@ paradigm concerned with data streams and the propagation of change.
 - 전통적인 아키텍처에서는 동기 블로킹방식을 사용하였다.
   - (동기 블로킹 방식) 하나의 요청에 대해 하나의 스레드를 통해 처리하며 모든 데이터를 가져와서 처리할 때까지 해당 스레드를 블로킹한다.
   - 멀티스레드의 문제점을 해결할 수 있다.
-    - Thread Pool 최적화
+    - Thread Pool. 부하가 높은 상태에서 새로운 I/O 작업을 동시에 처리하는 데 비효율적일 수 있다
     - Thread Context-Switching 발생
       ```
       Thread Context-Switching과 Process Context-Switching의 차이점
@@ -59,7 +59,9 @@ paradigm concerned with data streams and the propagation of change.
       반면, 쓰레드라면 저장된 캐쉬 데이터는 쓰레드가 바뀌어도 공유하는 
       데이터가 있으므로 의미있다. 그러므로 컨텍스트 스위칭이 빠른 것이다. 
       ```
-      
+- 분산시스템에서 서비스 간에 통신할 때 자원을 효율적으로 사용하기 위해서는 메시지 기반(메시지 브로커) 통신 원칙 사용
+  - 메시지 기반 통신을 사용하면 탄력성, 복원력을 확보하며 높은 응답성을 보일 수 있다
+  
 - Reactive Stream에서의 데이터 처리 방식은 1thread에 여러 요청을 처리할 수 있다.
   - Context Switching을 줄일 수 있고 여러 요청을 한번에 처리할 수 있다.
 
@@ -244,7 +246,6 @@ paradigm concerned with data streams and the propagation of change.
   - blocking: 자신의 수행 결과가 끝날 때 까지 제어권을 갖고 있는 것을 의미
   - non-blocking: 자신이 호출되었을 때 제어권을 바로 자신을 호출한 쪽으로 넘기며, 자신을 호출한 쪽에서 다른 일을 할 수 있도록 하는 것을 의미
    
-
 #### 마블 다이어그램
 
 - 리액티브 프로그래밍을 통해 발생하는 비동기적인 데이터의 흐름을 시간의 흐름에 따라 시각적으로 표시한 다이어그램
@@ -270,7 +271,6 @@ paradigm concerned with data streams and the propagation of change.
   - just 함수: 데이터 가공, 변화하는 함수가 아닌 Observable, Flowable을 생성하는 함수이다.
   
 #### 출처
-
 - Kevin의 RxJava 강의
 
 - 참고: \[Java] Reactive Stream 이란? 
