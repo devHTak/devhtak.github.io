@@ -20,8 +20,12 @@ category: Reactive
 
 - CompletableFuture
   - Java 8에서 나왔으며 간단하게 비동기적인 결과를 담고 있고, 가져올 수 있다.
+  - Future와 CompletionStage 를 상속한다
   - CompletableFuture 리스트의 모든값이 완료될 때까지 기다릴지 아니면 하나의 값만 완료되길 기다릴지 선택할 수 있다는 것이 장점
   - 병렬성과(Parallelism)과 동시성(Concurrency)에서 CompletableFuture가 중요한데, 여러개의 cpu core 사이에 지연 실행이나 예외를 callable하게 처리할 수 있어서 명시적인 처리가 가능해진다.
+
+- CompletionStage
+  - 함수형 스타일 또는 선언형 스타일로 코드를 작성할 수 있으며 코드가 깔끔해지고 결과를 비동기적으로 처리 가능하다
 
 #### CompletableFuture 사용
 
