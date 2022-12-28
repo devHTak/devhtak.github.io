@@ -154,10 +154,31 @@ paradigm concerned with data streams and the propagation of change.
   - Iterable은 Iterator를 통해 데이터를 꺼내오고, Iterator의 next()를 통해 데이터를 가져온다
 
 - Reactive Programming은 Observer Pattern + Iterator Pattern
-  - Iterator로 스트림의 '끝'을 나타내고, Observer pattern의 async한 이벤트 실행을 결합하여 나타낸다.
-    - Iterator의 next() -> Observable onNext(), hasNext() -> onComplete(), error에 대한 처리로 onError()를 제공
-    - 데이터를 전송하는 방식은 Observer 패턴을 사용한다.
-
+  - RxObserver
+    ```java
+    public interface RxObserver {
+        void onNext(T event);
+        void onCompletion();
+        void onError(Exception e);
+    }
+    ```
+    - Iterator의 next()를 호출하는 대신 onNext() 콜백에 의해 RxObserver에 새로운 이벤트가 통지된다.
+    - hasNext() 메서드의 끝을 확인하는 대신 onComplete() 메소드를 통해 스트림의 끝을 알린다
+    - next()를 처리하는 동안 예외가 발생할 수 있기 떄문에 onError() 메소드를 추가한다
+  - Observable
+    - Subject 역할 수행
+  - Observable, Observer 구현 예제
+    ```java
+    Observable.create(sub -> { // 파라미터 Observable 구현체(onSubscribe 구현)
+        sub.onNext("Hello, reactive world");
+        sub.onComplete();
+    }).subscribe( // 파라미터 RxObservable 구현체(onNext, onError, onComplete 구현)
+        System.out::println,
+        System.out::println,
+        () -> System.out.println("Done")
+    );
+    ```
+    
 #### Reactive Stream
 
 - non-blocking backPressure(배압) 을 이용하여 비동기 서비스를 할 때 기본이 되는 스펙
