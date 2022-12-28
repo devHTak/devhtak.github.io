@@ -109,32 +109,21 @@ paradigm concerned with data streams and the propagation of change.
 
 - Observer Pattern
   - 한 객체의 상태가 바뀌면 그 객체에 의존하는 다른 객체들한테 연락을 하고, 자동으로 내용이 갱신되는 방식에 디자인패턴
-  - push 방식: 데이터의 변화가 발생했을 때 변경이 발생한 곳에서 데이터를 보내주는 방식
-  - Observable은 하나 또는 여러개의 Observer를 가지며 Observable은 notifyObservers 메소드를 호출함으로 변화를 Observer들에게 알려준다고 한다
+  - Observer(관찰자)는 Subject(주체)에 등록되고 Subject로부터 알림을 수신할 수 있다.
+    - Subject 스스로 이벤트를 발생시키거나 다른 구성요소에 의해 호출될 수 있다
+    - 해당 인터페이스를 사용하는 클라이언트는 Observer 구현체를 Subject에 등록한 후, 이벤트가 발생할 경우 notifyObservers 호출
     ```java
-    // Source(Observable) -> Event/Data -> Target(Observer)
-    static class IntObservable extends Observable implements Runnable { 
-      @Override
-      public void run() {
-        for(int i = 1; i <= 10; i++) {
-          setChanged();
-          notifyObservers(i);
-        }
-      }		
+    // Subject 구현체는 여러 Observer를 등록/해제할 수 있으며 notifyObservers가 호출되면 등록된 Observer에 observe를 호출
+    public interface Subject<T> {
+        void registerObserver(Observer<T> observer);
+        void unregisterObserver(Observer<T> observer);
+        void notifyObservers(T event);
     }
-    public static void main(String[] args) {
-      Observer observer = new Observer() {
-        public void update(Observable o, Object arg) {
-          // 이벤트를 받았을 때 진행하는 메서드
-          System.out.println(arg);
-        }
-      };
-      IntObservable intObservable = new IntObservable();
-      intObservable.addObserver(observer);
-      intObservable.run();
-      return "ok";
+    public interface Observer<T> {
+        void observe(T event);
     }
     ```
+  - push 방식: 데이터의 변화가 발생했을 때 변경이 발생한 곳에서 데이터를 보내주는 방식
 
 - Iterator Pattern
   - 컬렉션 구현 방법을 노출시키지 않으면서 컬렉션 안에 들어있는 모든 엘리먼트에 접근할 수 있는 방식을 구현한 패턴
