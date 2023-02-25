@@ -35,7 +35,7 @@ category: Reactive
 
   ** 이미지 출처: https://tech.kakao.com/2018/05/29/reactor-programming/
   
-  - Subscriber에서 onSubscribe(Subscription) 신호를 별도 Scheduler로 처리한다 
+  - Publisher에서 subscribe(Subscriber) 신호를 별도 Scheduler로 처리한다 
   - 전형적으로 blocking IO와 같이 publisher가 느리고 consumer가 빠른 경우에 사용
   - 예시
     - Flux 활용
@@ -85,7 +85,7 @@ category: Reactive
 
   ** 이미지 출처: https://tech.kakao.com/2018/05/29/reactor-programming/
   
-  - publishOn은 subscribe 이후 onNext, onComplete, onError을 호출할 때 별도 쓰레드를 생성한다.
+  - publishOn은 Subscriber에 onNext, onComplete, onError을 호출할 때 별도 쓰레드를 생성한다.
   - publishOn() 메서드를 이용하면 next, complete, error신호를 별도 쓰레드로 처리할 수 있다. 
   - map(), flatMap() 등의 변환도 publishOn()이 지정한 쓰레드를 이용해서 처리한다.
   - Publisher는 빠르게 진행되며 Subscriber가 상대적으로 느린 경우 사용한다.
