@@ -35,7 +35,7 @@ category: Reactive
 
   ** 이미지 출처: https://tech.kakao.com/2018/05/29/reactor-programming/
   
-  - Subscriber에서 request(Subscription) 신호를 별도 Scheduler로 처리한다 
+  - Subscriber에서 onSubscribe(Subscription) 신호를 별도 Scheduler로 처리한다 
   - 전형적으로 blocking IO와 같이 publisher가 느리고 consumer가 빠른 경우에 사용
   - 예시
     - Flux 활용
