@@ -199,7 +199,21 @@ category: JPA
     List<Team> findAllFetchJoin();
     ```
 2. Fetch Join 과 pagenation
-    
+- 원인
+  ```java
+  @Query("select distinct t from Team p join fetch t.members")
+  List<Team> findWithPagination(Pageable pageable);
+  ```
+  - 1:N 관계에서 페이지네이션을 사용하는 경우(~ToMany)
+    - 로그를 보면 SQL LIMIT 구문이 등장하지 않는다.
+    - 1:N 관계를 join 하게되면 데이터의 수가 변경되기 때문에 LIMIT 구문을 사용하는 쿼리로 페이지네이션 적용이 어렵다
+    - 조회 결과를 메모리로 가져와 Pagination 계산을 한다. -> OOM 발생 가능
+  - N:1 관계에서는 SQL LIMIT 적용이 가능하다.(~ToOne)
+- 해결방법
+  - 일대다에 경우 batch size를 지정해주자
+    - X 타입 엔티티가 지연 로딩된 ~ToMany 관계의 Y 타입 컬렉션을 최초 조회할 때 이미 조회한 X 타입 엔티티(즉, 영속성 컨텍스트에서 관리되고 있는 엔티티)들의 ID들을 모아서 IN 구문을 사용하여 조회
+    - X 타입 엔티티들이 필요로 하는 모든 Y 타입 데이터를 한 번에 조회합니다.
+
 #### 출처
 
 - https://programmer93.tistory.com/83
