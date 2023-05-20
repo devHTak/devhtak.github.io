@@ -167,7 +167,7 @@ category: JPA
 #### 우회 방법
 1. Batch Size 지정
 - N+1이 하는방법이 아닌 N+1 문제가 발생하여도 in 연산자를 사용하여 쿼리 수를 줄이는 방법
-- application.yml
+- @BatchSize 애노테이션 또는 설정(application.yml)
   ```yml
   spring:
     jpa:
@@ -183,6 +183,7 @@ category: JPA
 
 #### Fetch Join과 @EntityGraph 사용 시 주의사항과 해결방법
 
+1. Cartesian Product
 - 주의사항
   - 쿼리를 살펴보면 Fetch Join은 inner join, @EntityGraph는 outer join을 사용한다
     - 카테시안 곱(Cartesian Product)가 발생하여 Member의 수만큼 Team이 중복 발생하게 된다
@@ -197,6 +198,7 @@ category: JPA
     @Query("select distinct t from Team t join fetch t.members m")
     List<Team> findAllFetchJoin();
     ```
+2. Fetch Join 과 pagenation
     
 #### 출처
 
