@@ -10,22 +10,25 @@ category: Spring
 #### JDBC
 - JDBC란?
   - Java Database Connectivity 는 자바에서 데이터베이스에 접속할 수 있도록 하는 API
+  
 - JDBC 등장 이유
   - Application 와 DB
     - 커넥션 연결: 주로 TCP/IP를 이용하여 커넥션 연결
     - SQL 전달: 애플리케이션 서버는 DB가 이해할 수 있는 SQL을 연결된 커넥션을 통해 DB에 전달
     - 결과 응답: DB는 전달된 SQL을 수행하고 그 결과를 응답, 애플리케이션 서버는 응답 결과를 활용
-  - 문제점 - 각각의 데이터베이스 사용 방법이 다르고, 접근 방법이 달라 DB를 변경할 때마다 접근 코드도 함께 변경되어야 한다
+  - 문제점 - 각각의 데이터베이스 사용 방법이 다르고, 접근 방법이 달라 DB를 변경할 때마다 접근 코드도 함께 변경되어야 한다  
   - 이런 문제를 해결하기 위하여 JDBC 등장
     - JDBC 표준 인터페이스(Connection, Statement, ResultSet) -> (상속)MySqlDriver, OracleDriver ..
     - java.sql.Connection - 연결
     - java.sql.Statement- SQL을 담은 내용
     - java.sql.ResultSet - SQL 요청 응답
+    
 - JDBC로 인한 문제 해결
   - DB 변경 시, 불필요한 애플리케이션의 코드도 변경되어야 했던 문제 해결
     - 데이터베이스 연결 로직을 jdbc 인터페이스에 의존하게 됨으로써, 다른 데이터베이스 종료로 변경하여도, jdbc 구현 라이브러리만 변경해주면 됩니다.
     - 어플리케이션의 비지니스 로직은 영향을 받지 않습니다.
   - DB 마다 달랐던 커넥션 연결, SQL 전달, 응답 방법을 JDBC 표준 라이브러리가 동일하게 제공하기 때문에 따로 학습하지 않아도 된다.
+  
 - JDBC 한계
   - jdbc 표준 인터페이스 등장으로 일반적인 부분은 공통화 하였지만, 각각 데이터베이스마다 제공하는 기능과 특별한 양식들은 다르기 때문에 결국, 한계가 있었다고 합니다.
     - 페이징 SQL - 각 db 마다 사용방법이 다름
@@ -38,10 +41,12 @@ category: Spring
     - JDBC의 반복 코드를 제거해준다.
     - SQL 응답 결과를 객체로 편리하게 변환해준다.
   - 단점: 개발자가 SQL을 직접 작성해야한다. (어디까지나 ORM 에 비해서)
+  
 - ORM
   - ORM은 객체를 관계형 데이터베이스 테이블과 매핑
   - 개발자는 반복적인 SQL을 직접 작성하지 않고, ORM 기술이 개발자 대신에 SQL을 동적으로 만들어 실행
   - 추가로 각각의 데이터베이스마다 다른 SQL을 사용하는 문제도 중간에서 해결해준다.
+  
 - SQL Mapper, ORM 모두 base low level 에서는 JDBC 사용
 
 #### JDBC Connection
@@ -55,6 +60,7 @@ category: Spring
   }
   ```
   - H2 DB 접속정보 저장
+  
 - DBConnectionUtil.class
   ```java
   @Slf4j
@@ -76,10 +82,12 @@ category: Spring
   - DB 인식 방법
     - DriverManager 가 External Libraries 에 있는 현재 다운되어진 라이브러리 중 디비 라이브러리를 찾아옵니다.
     - DriverManager.getConnection() 은 데이터베이스 드라이버를 찾아 해당 드라이버가 제공하는 커넥션을 반환
+    
 - DriverManager 이해
   - JDBC DriverManager란, JDBC 드라이버 세트를 관리하기 위한 기본 서비스
   - DriverManager 초기화는 느리게 수행되며 스레드 컨텍스트 클래스 로더를 사용하여 서비스 공급자를 찾는다.
   - getConnection 메소드가 호출되면 DriverManager 는 초기화 시 로드된 드라이버와 현재 애플리케이션과 동일한 클래스 로더를 사용하여 명시적으로 로드된 드라이버 중에서 적절한 드라이버를 찾으려고 시도
+  
 - getConnection 과정
   - 애플리케이션 로직에서 커넥션이 필요하면 DriverManager.getConnection() 을 호출
   - DriverManager 는 라이브러리에 등록된 드라이버 목록을 자동으로 인식
@@ -96,50 +104,33 @@ category: Spring
   ```java
   public Member save(Member member) throws SQLException {
       String sql = "insert into member(member_id, money) values (?, ?)";
-
       Connection connection = null;
-      PreparedStatement preparedStatement = null; // 이걸로 쿼리를 날림?
-
+      PreparedStatement preparedStatement = null;
       try {
           connection = getConnection();
           preparedStatement = connection.prepareStatement(sql);
-
           //파라미터 바인딩
           preparedStatement.setString(1, member.getMemberId());
           preparedStatement.setInt(2, member.getMoney());
           preparedStatement.executeUpdate();
           return member;
-
       } catch (SQLException e) {
           log.error("db error", e);
           throw e;
       } finally {
-          //db 연결을 끊어줘야함
-          preparedStatement.close();
-          //여기서 익셉션이 터지면 connection 이 안끊어짐 그래서 다 묵어야함
-
-          connection.close();
-
-
-          //요래 해야함
           close(connection, preparedStatement, null);
       }
   }
-
   public Member findById(String memberId) throws SQLException {
       String sql = "select * from member where member_id = ?";
-
       Connection connection = null;
       PreparedStatement preparedStatement = null;
       ResultSet resultSet = null;
-
       try {
           connection = getConnection();
           preparedStatement = connection.prepareStatement(sql);
           preparedStatement.setString(1, memberId);
-
           resultSet = preparedStatement.executeQuery();
-
           if (resultSet.next()) {
               Member member = new Member();
               member.setMemberId(resultSet.getString("member_id"));
@@ -155,23 +146,17 @@ category: Spring
           close(connection,preparedStatement,resultSet);
       }
   }
-
   public void update(String memberId, int money) throws SQLException {
       String sql = "update member set money=? where member_id=?";
-
-
       Connection connection = null;
       PreparedStatement preparedStatement = null;
-
       try {
           connection = getConnection();
           preparedStatement = connection.prepareStatement(sql);
           preparedStatement.setInt(1, money);
           preparedStatement.setString(2, memberId);
-
           int resultSize = preparedStatement.executeUpdate();
           log.info("resultSize = {}", resultSize);
-
       } catch (SQLException e) {
           log.error("error : ", e);
           throw e;
@@ -179,22 +164,16 @@ category: Spring
           close(connection,preparedStatement,null);
       }
   }
-
   public void delete(String memberId) throws SQLException {
       String sql = "delete from member where member_id=?";
-
-
       Connection connection = null;
       PreparedStatement preparedStatement = null;
-
       try {
           connection = getConnection();
           preparedStatement = connection.prepareStatement(sql);
           preparedStatement.setString(1, memberId);
-
           int resultSize = preparedStatement.executeUpdate();
           log.info("resultSize = {}", resultSize);
-
       } catch (SQLException e) {
           log.error("error : ", e);
           throw e;
@@ -203,8 +182,6 @@ category: Spring
       }
   }
   private void close(Connection con, Statement stmt, ResultSet resultSet) {
-
-      //이렇게 해야 Exception 이 터져도 catch 로 잡기 때문에 각각의 close 가 다른 close 에 영향을 주지 않음
       if (resultSet != null) {
           try {
               resultSet.close();
@@ -227,7 +204,6 @@ category: Spring
           }
       }
   }
-
   private static Connection getConnection() {
       return DBConnectionUtil.geConnection();
   }
@@ -237,36 +213,28 @@ category: Spring
   - PreparedStatement 객체를 이용해 쿼리를 디비에 전달
   - 모든 처리가 완료되었다면, 연결된 커넥션을 순차적으로 역순으로 close() 호출
   - ResultSet 은 디비에서 불러온 결과를 저장해서 cursor 를 이용해 값 조회
+  
 - TestCode
   ```java
   MemberRepositoryV0 repositoryV0 = new MemberRepositoryV0();
   @Test
   void crud() throws SQLException {
-
       //save
       Member memberV0 = new Member("memberV0", 100000);
       repositoryV0.save(memberV0);
-
       //findById
       Member findMember = repositoryV0.findById(memberV0.getMemberId());
       log.info("findMember = {}", findMember);
-
-      //2개는 다른 인스턴스지만, isEqualTo 가  equals() 를 호출해 값만 비교 하기 때문에 true
       //@Data 롬복은, 모든 상태 값을 비교할수 있는 equals 와 고유한 hashCode 를 자동으로 만들어준다.
-      assertThat(findMember).isEqualTo(memberV0);
-
-
+      assertEqauls(findMember, memberV0);
       //update
       int updateMoney = 200000;
       repositoryV0.update(memberV0.getMemberId(), updateMoney);
       Member updateMember = repositoryV0.findById(memberV0.getMemberId());
-      assertThat(updateMember.getMoney()).isEqualTo(updateMoney);
-
-
+      assertEquals(updateMember.getMoney(), updateMoney);
       //delete
       repositoryV0.delete(memberV0.getMemberId());
-      assertThatThrownBy(() -> repositoryV0.findById(memberV0.getMemberId()))
-          .isInstanceOf(NoSuchElementException.class);
+      assertThrows(NoSuchElementException.class, () -> repositoryV0.findById(memberV0.getMemberId()));
   }
   ```
 
@@ -279,20 +247,25 @@ category: Spring
   - DB는 ID, PW 를 통해 내부 인증을 완료하고, 내부에 DB 세션을 생성
   - DB는 커넥션 생성이 완료되었다는 응답
   - DB 드라이버는 커넥션 객체를 생성해서 클라이언트에 반환
+  
 - Connection의 문제점
   - 데이터베이스에 접근할 떄마다, 커녁션 생성/삭제 과정이 추가된다면, 고객사용 서비스에서 "SQL 처리 시간 + 커녁션 생성 시간"이 추가되기 때문에 응답 속에데 영향을 미친다
+  
 - Connection Pool
   - 이러한 문제를 해결하기 위해, 커넥션을 미리 생성해두고 사용하는 커넥션 풀 방법을 이용
   - 커넥션 풀이란, 이름 그대로 커넥션을 관리하는 풀(수영장)
+  
 - Connection Pool 초기화 및 연결 상태
   - 어플리케이션을 시작하는 시점에 커넥션 풀은 필요한 만큼의 커넥션을 미리 확보해서 커넥션 풀에 보관
   - 보통 커넥션의 개수는, 서비스의 특징과 스펙에 따라 다르지만 보통 10개(default) 생성하여 관리
   - 커넥션 풀에 들어있는 커넥션은 TCP/IP로 DB와 커넥션이 연결되어 있는 상태이기 때문에 언제든지 즉시 SQL을 DB에 전달 가능
+  
 - Connection Pool 사용 과정
   - 사용자가 커넥션 풀에 커넥션을 요청
   - 커넥션 풀은 자신이 가지고 있는 커넥션이 있다면 커넥션 중에 하나를 반환
   - 애플리케이션 로직은 커넥션 풀에서 받은 커넥션을 사용해서 SQL을 데이터베이스에 전달하고 그 결과를 받아서 처리
   - 로직에서 커넥션을 다 사용했다면, 종료하지 않고(재사용할 수 있도록) 커넥션 풀에 반납
+  
 - Connection Pool 장점 및 정리
   - 적절한 커넥션 풀 숫자는 각 상황에 따라 다르기 떄문에 성능 테스트를 통해서 결정 필요
   - 사용자는 최초에 커넥션 풀에 담긴 커넥션만 사용할 수 있기 때문에, 무한정으로 DB 에 연결이 생성되는 것을 막아 DB 부하 예방
@@ -308,6 +281,7 @@ category: Spring
     - 의존관계가 DriverManager 에서 HikariCP 로 변경 필요
   - DataSource 인터페이스를 통해 해결 Connection을 획득하는 방법을 추상화
     - jvax.sql.DataSource라는 인터페이스를 제공 (커넥션을 획득하는 방법을 추상화)
+    
 - DataSource 정리
   - 대부분의 커넥션 풀은 DataSource 인터페이스 구현체 존재
     - 개발자는 DBCP2 커넥션 풀, HikariCP 커넥션 풀의 코드를 직접 의존하는 것이 아니라 DataSource 인터페이스에만 의존하도록 어플리케이션 로직 작성
@@ -380,9 +354,7 @@ category: Spring
       ```java
       @Slf4j
       class MemberRepositoryV1Test {
-
           MemberRepositoryV1 repositoryV1;
-
           @BeforeEach
           void beforeEach(){
               //커넥션 풀링
@@ -390,20 +362,17 @@ category: Spring
               dataSource.setJdbcUrl(ConnectionConst.URL);
               dataSource.setUsername(ConnectionConst.USERNAME);
               dataSource.setPassword(ConnectionConst.PASSWORD);
-
               repositoryV1 = new MemberRepositoryV1(dataSource);
           }
 
           @Test
           void crud() throws SQLException, InterruptedException {
-
               //save
               Member memberV0 = new Member("memberV0", 100000);
               repositoryV1.save(memberV0);
               //findById
               Member findMember = repositoryV1.findById(memberV0.getMemberId());
               log.info("findMember = {}", findMember);
-
               //2개는 다른 인스턴스지만, isEqualTo 가  equals() 를 호출해 값만 비교 하기 때문에 true
               //@Data 롬복은, 모든 상태 값을 비교할수 있는 equals 와 고유한 hashCode 를 자동으로 만들어준다.
               assertEquals(findMember, memberV0);
@@ -412,11 +381,9 @@ category: Spring
               repositoryV1.update(memberV0.getMemberId(), updateMoney);
               Member updateMember = repositoryV1.findById(memberV0.getMemberId());
               assertEquals(updateMember.getMoney(), updateMoney);
-
               //delete
               repositoryV1.delete(memberV0.getMemberId());
               assertThrows(NoSuchElementException.class, () -> repositoryV1.findById(memberV0.getMemberId()));
-
               //커넥션 풀 채우는 거 볼려고
               Thread.sleep(1000);
           }
