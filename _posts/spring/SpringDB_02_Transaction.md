@@ -67,3 +67,128 @@ category: Spring
   - 트랜잭션 시작
     - 이런 종류의 작업은 꼭 수동 커밋 모드를 사용해서 수동으로 커밋, 롤백 할 수 있도록 해야합니다.
     - 보통 이렇게 자동 커밋모드에서 수동 커밋 모드로 전환하는 것을 트랜잭션의 시작이라 합니다.
+
+#### 트랜잭션 추상화 - PlatformTransactionManager
+
+- 트랜잭션은 구현 기술마다 제공하는 방법이 다르다
+  - JDBC 자동 커밋 취소: connection.setAutoCommit(false);
+  - JPA: transaction.begin()
+- 스프링의 트랜잭션 추상화 인터페이스를 활용하여 원하는 구현체를 DI 해 사용한다
+  - PlatformTransactionManager
+    - 구현체로는 JDBC 트랜잭션 매니저: JdbcTransactionManager, JPA 트랜잭션 매니저: JpaTransactionManager 등이 있다
+  ```java
+  public interface PlatformTransactionManager extends TransactionManager{
+      TransactionStatus getTransaction(@Nullable TransactionDefinition definition) throws TransactionException;
+      void commit(TransactionStatus status) throws TransactionException;
+      void rollback(TransactionStatus status) throws TransactionException;
+  }
+  ```
+- 예제
+  ```java
+  @Autowired
+  private PlatformTransactionManager transactionManager;
+  public void orderItem(String itemId, String memberId, int qty) throws SQLException {
+      TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+      try {
+          buisinessLogic(itemId, memberId, qty);
+          transactionManager.commit(status);
+      } catch (Exception e) {
+          transactionManager.rollback(status);
+      }
+  }
+  ```
+ 
+- 트랜잭션 동기화 매니저를 통해 트랜잭션 종료까지 커넥션을 동기화(유지)해주는 기능을 제공한다.
+  - 쓰레드 로컬: 쓰레드가 각자 스택을 갖는 것 처럼 싱글톤인 스프링 빈도 각자의 저장소를 갖는 것
+  - 동기화 매니저는 이 쓰레드 로컬을 사용하여 커넥션을 저장하기 때문에 커넥션을 동기화한다
+  - 순서
+    - 비즈니스 로직에서 Transaction을 시작하면 TransactionManager는 DataSource에 ConnectionPool에서 Connection 을 획득
+    - setAutoCommit(false)를 통해 수동 커밋 모드로 변경
+    - 동기화 매니저에 커넥션을 보관하면, 트랜잭션 동기화 매너지는 쓰레드 로컬에 커넥션을 보관한다
+    - 비즈니스 로직을 실행하면 커넥션을 동기화 매니저에서 획득하여 SQL을 데이터베이스에 전달하여 실행
+    - 종료를 위해서 트랜잭션 동기화 매니저로부터 동기화된 커넥션을 획득, DB에 commit, rollback 등을 진행한다
+    - 트랜잭션 동기화 매니저와 쓰레드 로컬을 정리하고, 수동 모드에서 다시 자동 커밋 모드로 되돌린다. connection.close()를 호출해 커넥션 풀 반환
+
+- DataSourceUtils
+  ```java
+  private void close(Connection connection, Statement statement, ResultSet resultSet) {
+      JdbcUtils.closeResultSet(resultSet);
+      JdbcUtils.closeStatement(statement);
+      DataSourceUtils.releaseConnection(connection, dataSource);
+  }
+
+  private Connection getConnection() throws SQLException {
+      return DataSourceUtils.getConnection(dataSource);
+  }
+  ```
+  - TransactionManager를 사용해 커넥션을 이용할 때 사용
+  - getConnection()은 트랜잭션 동기화 매니저를 사용하며, 만약 관리중인 커넥션이 있으면 이를 반환하고, 없다면 새로운 커넥션을 생성하여 반환
+  - releaseConnection() 은 트랜잭션을 사용하기 위해 동기화된 커넥션은 닫지 않고, 유지하지만, 트랜잭션 동기화 매니저가 관리하는 커넥션이 없다면 바로 닫는다
+
+#### TransactionTemplate
+
+- 트랜잭션이 추상화된 인터페이스를 사용하더라도, 동일한 골격을 생성하는 것은 동일하다.
+- 템플릿 콜백 패턴을 활용하면 코드 중복을 해결할 수 있다
+  - 스프링에서는 TransactionTemplate을 통해 이미 구현된 트랜잭션 관련 코드를 한곳에 몰아 놓고, 우리는 비즈니스 로직만 작성해 주입하면 된다
+- TransactionTemplate
+  ```java
+  @Override
+	@Nullable
+	public <T> T execute(TransactionCallback<T> action) throws TransactionException {
+    Assert.state(this.transactionManager != null, "No PlatformTransactionManager set");
+
+    if (this.transactionManager instanceof CallbackPreferringPlatformTransactionManager) {
+      return ((CallbackPreferringPlatformTransactionManager) this.transactionManager).execute(this, action);
+    }
+    else {
+      TransactionStatus status = this.transactionManager.getTransaction(this);
+      T result;
+      try {
+        result = action.doInTransaction(status);
+      } catch (RuntimeException | Error ex) {
+        // Transactional code threw application exception -> rollback
+        rollbackOnException(status, ex);
+        throw ex;
+      } catch (Throwable ex) {
+        // Transactional code threw unexpected exception -> rollback
+        rollbackOnException(status, ex);
+        throw new UndeclaredThrowableException(ex, "TransactionCallback threw undeclared checked exception");
+      }
+      this.transactionManager.commit(status);
+      return result;
+    }
+  }
+  ```
+  - action 인자를 넘겨주면 된다.
+  ```java
+  public void orderItemV2(String itemId, String memberId, int qty) {
+      template.executeWithoutResult(status -> buisinessLogic(itemId, memberId, qty));
+  }
+  ```
+
+#### 트랜잭션 AOP
+- 트랜잭션 프록시
+  - Client -> Proxy 호출(Trasaction 시작 - buisiness logic(서비스) - Transaction 종료) -> Service(Buisiness Logic) -> Repository
+  - 서비스에서 직접 트랜잭션을 처리하는 것이 아닌 프록시가 대신 트랜잭션 관련 로직을 처리한다
+  - Spring에서 직접 AOP를 구현해도 되지만, @Transactional 애노테이션을 통해 자동으로 AOP를 적용해준다
+- 과정
+  - 프록시 호출하면 트랜잭션 시작 부분에서 스프링 컨테이너를 통해 트랜잭션 매니저를 획득한다
+  - 트랜잭션 매니저를 통해 트랜잭션을 획득(transactionManager.getTransaction()), DataSource에서 Connection 획득, setAutoCommit(false)를 통해 수동 커밋 모드로 변경
+  - 트랜잭션 동기화 매니저에 커넥션을 보관
+  - 실제 서비스(비즈니스 로직)를 호출하고, Repository에서는 트랜잭션 동기화 매니저에서 커넥션을 획득하여 SQL 실행
+
+- Spring Boot
+  - Spring Boot 이전에는 DataSource와 TransactionManager를 빈으로 등록해주어야 했다
+    ```java
+    @Bean
+    DataSource dataSource() {
+        return new DriverManagerDataSource(URL, USERNAME, PASSWORD);
+    }
+    @Bean
+    PlatformTransactionManager platformTransactionManager() {
+        return new DataSourceTransactionManager(dataSource());
+    }
+    ```
+  - SpringBoot에서는 빈을 등록하는 과정을 자동화 해두었다(@EnableAutoConfiguration)
+    - application.yml 에 datasource 관련 정보를 작성하면, 지정된 속성을 참고하여 데이터 소스와 트랜잭션 매니저를 자동으로 생성
+    
