@@ -192,3 +192,56 @@ category: Spring
   - SpringBoot에서는 빈을 등록하는 과정을 자동화 해두었다(@EnableAutoConfiguration)
     - application.yml 에 datasource 관련 정보를 작성하면, 지정된 속성을 참고하여 데이터 소스와 트랜잭션 매니저를 자동으로 생성
     
+#### JdbcTemplate 예외 처리
+
+- Exception은 CheckedException, RuntimeException(UncheckedException) 으로 나뉜다
+  - RuntimeException 하위 예외들은 런타임 예외로 컴파일러가 확인하지 않고, 실행 시점에 발생
+- RuntimeException 활용
+  - 반드시 잡아야하는 비즈니스 로직 상의 예외를 제외하고는 기본적으로 런타임 예외를 사용하여 예외를 생성한다.
+  - 예외를 핸들링하는 하는 책임은 ControllerAdvice 에게 있다.
+    - Service, Repository 에 책임과는 다르기 때문에 단일 책임 원칙(SRP)에 어긋난다.
+- Spring 예외 변환기와 JdbcTemplate
+  - SQLErrorCodeSQLExceptionTranslator
+    ```java
+    @Override
+    @Nullable
+    protected DataAccessException doTranslate(String task, @Nullable String sql, SQLException ex) {
+	SQLException sqlEx = ex;
+	if (sqlEx instanceof BatchUpdateException && sqlEx.getNextException() != null) {
+		SQLException nestedSqlEx = sqlEx.getNextException();
+		if (nestedSqlEx.getErrorCode() > 0 || nestedSqlEx.getSQLState() != null) {
+			sqlEx = nestedSqlEx;
+		}
+	}
+
+	// First, try custom translation from overridden method.
+	DataAccessException dae = customTranslate(task, sql, sqlEx);
+	if (dae != null) {
+		return dae;
+	}
+
+	// Next, try the custom SQLException translator, if available.
+	SQLErrorCodes sqlErrorCodes = getSqlErrorCodes();
+	if (sqlErrorCodes != null) {
+		SQLExceptionTranslator customTranslator = sqlErrorCodes.getCustomSqlExceptionTranslator();
+		if (customTranslator != null) {
+			DataAccessException customDex = customTranslator.translate(task, sql, sqlEx);
+			if (customDex != null) {
+				return customDex;
+			}
+		}
+	}
+	// ...
+    }
+    ```
+    - CheckedException 에 경우 메소드에서 예외를 던져야 하기 때문에 추상화의 의미를 퇴색시킨다.
+    - 스프링 예외를 분석하여 자동으로 스프링의 런타임 예외로 변환해주는 예외 변환기를 제공하며 DataAccessException 리턴ㅓ
+    
+- JdbcTemplate에서 transalteException
+  ```java
+  protected DataAccessException translateException(String task, @Nullable String sql, SQLException ex) {
+	DataAccessException dae = getExceptionTranslator().translate(task, sql, ex);
+	return (dae != null ? dae : new UncategorizedSQLException(task, sql, ex));
+  }
+  ```
+  - transalteException은 catch 문에서 실행되며, Translator를 활용하여 CheckedException을 UncheckedException 을 변환하는 역할을 한다.
