@@ -245,3 +245,68 @@ category: Spring
   }
   ```
   - transalteException은 catch 문에서 실행되며, Translator를 활용하여 CheckedException을 UncheckedException 을 변환하는 역할을 한다.
+
+#### @Transactional
+- 스프링은 PlatformTransactionManager로 여러 트랜잭션 구현체를 추상화 두었다.
+  - Spring Boot는 @AutoConfiguration을 통해 사용 기술에 따라 자동으로 TransactionManager를 등록해준다.
+- @Transactional
+  - AOP가 적용되어 트랜잭션과 비즈니스 로직을 분리할 수 있다.
+- Proxy로 인한 트랜잭션이 적용되지 않은 문제 발생 가능!!
+  - 트랜잭션 어노테이션을 적용 하면
+    - Client -> Transaction Proxy 호출(PlatformTransactionManager를 통해 Transaction을 얻고, 여기사 DataSource(CP)에서 커넥션을 얻고, 이는 동기화 매니저에 보관)
+    - Transaction Proxy는 @Transactional이 적용된 서비스에 비즈니스 로직을 호출
+    - 비즈니스 로직 수행 중 데이터 로직을 수행하면 데이터 로직은 동기화 매니저에 보관한 커넥션을 획득하여 사용
+  - 비즈니스 로직 내부에서 메소드를 호출한다면? -> Proxy 객체를 통해 호출하는 것이 아니기 때문에 트랜잭션이 적용될 수 없다.
+    ```java
+    @Service
+    public class TransactionExampleService {
+    	public void extenralCall() {
+	    log.info("external");
+	    internalCall(); // 내부에서 호출
+	}
+	@Transactional
+	public void internalCall() {
+	    log.info("internal");
+	    // transaction logic
+	}
+    }
+    ```
+    - this.internalCall()을 호출하기 때문에 트랜잭션 로직이 탈 수 없다.
+  - 해결 방법
+    - 가장 간단한 방법은 내부 호출을 끄집어 외부 호출로 변경
+      ```java
+      @RequiredArgsConstructor
+      public class OuterTransactionExampleService {
+          private final InternalTransactionExampleService service;
+          public void externalCall() {
+	      log.info("external");
+              service.internalCall();
+	  }
+      }
+      @Service
+      public class InternalTransactionExampleService {
+      	  @Transactional
+	  public void internalCall() {
+	      log.info("internal");
+	      // transaction logic
+	  }
+      }
+      ```
+    - @Transactional이 걸리는 메소드는 public 메소드에만 적용이 된다.
+- rollbackFor 사용 필요한 경우
+  - 기본적으로 RuntimeException는 롤백, CheckedException은 커밋되기 때문에, 필요한 예외에 경우 설정해주어야 한다.
+
+#### 트랜잭션 전파
+- 스프링은 논리 트랜잭션과 물리 트랜잭션 개념이 있다.
+  - 트랜잭션이 적용된 외부 로직이 트랜잭션이 적용된 내부 로직을 호출한다면,
+  - 논리트랜잭션은 외부 로직, 내부 로직을 따로 생각하고, 물리트랜잭션은 외부, 내부 로직을 하나의 트랜잭션으로 생각한다.
+- 논리 트랜잭션들은 하나의 물리 트랜잭션으로 묶인다.
+  - 모든 논리 트랜잭션이 커밋되어야 물리 트랜잭션이 커밋된다.
+  - 하나의 논리 트랜잭션이 롤백되면 물리 트랜잭션은 롤백된다.
+- 외부와 내부 트랜잭션의 분리 - REQUIRES_NEW
+  - 외부 로직과 내부 로직 모두 새로운 커낵션을 획득하여 트랜잭션을 진행
+  - 분리된 커넥션이기 때문에 내부 롤백, 외부 커밋처럼 다르게 가져갈 수 있다.
+  - 새로운 커넥션을 얻기 때문에 DB 커넥션 낭비될 수 있기 때문에 잘 판단해야 한다.
+- 이 외 Propagation 속성
+  - MANDATORY, NEVER, NESTED
+  - SUPPORT(트랜잭션이 없으면 그래도 진행, 기존 트랜잭션이 있으면 참여하여 진행), NOT_SUPPORT(트랜잭션이 있던, 없던 보류 시키고 트랜잭션 없이 진행)
