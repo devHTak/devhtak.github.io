@@ -1,4 +1,11 @@
-
+---
+layout: post
+title: Java GC. G1GC와 ZGC
+summary: Java Version
+author: devhtak
+date: '2023-06-23 21:41:00 +0900'
+category: Java Study
+---
  
 #### Heap 구조
 ##### 1.7 이전에 구조
@@ -22,7 +29,6 @@
   - 차이점 2. static 변수/상수가 PermGen에 저장되는 것이 아닌 Heap에 할당되어 GC 대상이 될 수 있도록 함
  
 #### GC 종류
- 
 - GC 튜닝의 목적은 STW 시간을 줄이는 것이다.
   - Old generation 영역은 Young Generation 영역보다 크게 할당되고, GC는 적게 일어나지만 시간이 길 수 밖에 없고 이는 성능에 영향을 미친다.
 - Serial GC
