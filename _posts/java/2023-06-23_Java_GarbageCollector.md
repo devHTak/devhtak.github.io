@@ -6,7 +6,6 @@ author: devhtak
 date: '2023-06-23 21:41:00 +0900'
 category: Java Study
 ---
- 
 #### Heap 구조
 ##### 1.7 이전에 구조
 - 1.7 버전 이전 Heap 메모리 구조는 Eden, Survivor 0/1, Old Memory, Permanent Generation 으로 구성되어 있었다.
