@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Java GC. G1GC와 ZGC
+title: Java GC. G1GC와 ZGC
 summary: Java Version
 author: devhtak
 date: '2023-06-23 21:41:00 +0900'
