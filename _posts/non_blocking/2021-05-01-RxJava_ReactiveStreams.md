@@ -279,21 +279,36 @@ paradigm concerned with data streams and the propagation of change.
        .subscribe(x - > System.out.println(x)); // 25, 15, 30 출력
     ```
   - just 함수: 데이터 가공, 변화하는 함수가 아닌 Observable, Flowable을 생성하는 함수이다.
-  
+
+#### Non-Blocking이 유리한 프로젝트(Spring Webflux)
+- 고효율 스트리밍 서비스
+  - 웹플럭스는 리액티브 스트림 스펙을 준수하므로, 백프레셔(Backpressure)를 통해 스트림의 효율성을 극대화할 수 있습니다.
+- 대규모 실시간 데이터 처리
+  - 리액티브 모델은 데이터 처리량이 많고 실시간 응답이 필요한 경우에 매우 효과적입니다.
+- 마이크로서비스 아키텍처
+  - 각각의 서비스가 독립적으로 확장 가능해야 하는 환경에서는 리액티브 시스템이 유용합니다.
+- 이벤트 주도 프로젝트
+  - 비동기식 및 non-blocking 방식의 처리로 인해 이벤트 주도 시스템에서 잘 맞습니다.
+- 서버 푸시 기반 애플리케이션
+  - Server-sent events나 WebSocket 같은 기술을 통해 클라이언트에 서버로부터의 실시간 업데이트가 필요한 애플리케이션에 유리합니다.
+- 로드 밸런싱이 필요한 서비스
+  - 높은 트래픽에 대응하기 위해 로드 밸런싱이 필요한 서비스에서는 더 효과적인 리소스 사용이 가능합니다.
+- 클라우드 기반 서비스
+  - 클라우드 환경에서는 컴퓨팅 리소스를 효율적으로 활용해야 하므로 리액티브 프로그래밍이 유리합니다.
+- API 게이트웨이
+  - 여러 백엔드 서비스로부터 데이터를 집계하고 반환하는 API 게이트웨이에서는 비동기 및 non-blocking 처리를 통해 더 효율적인 응답 시간을 달성할 수 있습니다.
+- 비동기 메시징 어플리케이션
+  - 실시간 채팅이나 알림 등의 비동기 메시징 시스템에서는 WebFlux의 비동기 처리 능력이 장점으로 작용합니다.
+
 #### 출처
 - Kevin의 RxJava 강의
-
 - 참고: \[Java] Reactive Stream 이란? 
   (URL: https://sabarada.tistory.com/98)
-  
 - 참고: \[Reactive] Reactive Programming 과 Reactive Stream
   (URL: https://sightstudio.tistory.com/14)
-  
 - 참고: Reactive Stream - Observer, Iterator, Reactive Stream
   (URL: https://phantasmicmeans.tistory.com/entry/Observer-Iterator-Reactive-Stream)
-  
 - 출처: Blocking & Non-blocking & Synchronous & Asynchronous
   (URL: https://musma.github.io/2019/04/17/blocking-and-synchronous.html)
-  
 - 참고: 토비의 봄 TV 5회 스프링 리액티브 프로그래밍 (1) - Reactive Streams
   (URL: https://www.youtube.com/watch?v=8fenTR3KOJo&list=PLv-xDnFD-nnmof-yoZQN8Fs2kVljIuFyC&index=10&ab_channel=TobyLee)
