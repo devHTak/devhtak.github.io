@@ -1,9 +1,9 @@
 ---
 layout: post
-title: Spring Document
+title: Spring GraalVM, AOT
 summary: Spring Document
 author: devhtak
-date: '2022-05-10 21:41:00 +0900'
+date: '2023-07-01 21:41:00 +0900'
 category: Spring
 ---
 #### Spring AOT(Ahead of Time)
