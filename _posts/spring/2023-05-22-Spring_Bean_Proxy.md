@@ -1,3 +1,11 @@
+---
+layout: post
+title: Spring Proxy Bean
+summary: Spring Document
+author: devhtak
+date: '2023-05-22 21:41:00 +0900'
+category: Spring
+---
 #### Spring Bean은 Proxy로 만들어질까?
 
 - 일반 빈을 조회하였을 때
