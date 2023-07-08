@@ -6,6 +6,7 @@
   - JDBC와 달리 적은 스레드와 리소스를 가지고 동시성을 다룰 수 있는 non-blocking을 사용하기 위해 만들어졌다
 - R2DBC를 사용하기 위해서는 Project Reactor에 대한 의존성이 필요하다.
   - Mono, Flux 와 같은 응답 객체를 사용한다.
+- R2DBC는 interface를 제공하는 Specification 이기 때문에 데이터베이스 벤더 측에서 해당 데이터베이스에 맞도록 구현해야 한다.
 - 요구사항
   - JDK 17 이상
   - Spring Framework 6.0.10 이상
@@ -19,7 +20,6 @@
   - ReactiveCrudRepository, ReactiveSortingRepository: Reactive 기능 제공
 - Query 메소드 사용
   - findByName 과 키워드를 나열하면 스스로 Query를 생성한다.
-- Repository 생성
 
 #### R2DBC Configuration
 - R2dbcAutoConfiguration
@@ -65,3 +65,4 @@
       
 #### 출처
 - https://docs.spring.io/spring-data/r2dbc/docs/current/reference/html/
+- https://binux.tistory.com/155
