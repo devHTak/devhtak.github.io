@@ -58,10 +58,34 @@
       - DatabaseClient 사용방법        
   - 설정 정보(spring.r2dbc.url)
     - 추가 설정에 대한 정보는 R2dbcProperties.class 참고 가능
-
+  - 연관관계 지원
+    ```
+    Spring Data R2DBC aims at being conceptually easy. In order to achieve this, it does NOT offer caching, lazy loading, write-behind, or many other features of ORM frameworks. This makes Spring Data R2DBC a simple, limited, opinionated object mapper.
+    ```
+    - R2DBC는 Relational Mapping을 지원하지 않는다.
+      - JPA에 외래키(Foreign key)이므로 @OneToOne, @OneToMany @ManyToOne 같은 annotation을 사용하지만, R2DBC는 연관관계 매핑을 지원하지 않는다.
+      - 그러므로 Lazy loading, Method name을 통한 Join 등이 불가능하다.
+    - @Query를 직접 작성하여 Join을 해주어야 한다.
+      
 #### 간단한 CRUD 작업
 - 의존성
+  ```
+  implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	implementation 'org.projectlombok:lombok'
+	runtimeOnly 'com.h2database:h2'
+	runtimeOnly 'io.r2dbc:r2dbc-h2'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'io.projectreactor:reactor-test'
+  ```
 - application.yml
+  ```yaml
+  spring:
+    r2dbc:
+      url: r2dbc:h2:mem://test
+      username: sa
+      password:
+  ```
       
 #### 출처
 - https://docs.spring.io/spring-data/r2dbc/docs/current/reference/html/
