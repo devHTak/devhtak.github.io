@@ -25,6 +25,7 @@ category: SQL
     - Timestamp: 시스템에서 고유 번호를 부혀아혀 접근 순서를 미리 정한다.
     - 낙관적 검증: 트랜잭션이 종료될 때 적합성을 검증하여 데이터베이스에 최종 반영한다.
 
+### RDB - 동시성 제어
 #### Lock
 - Locking은 하나의 트랜잭션이 실행하는 동안 특정 데이터 항목에 대해 다른 트랜잭션이 동시에 접근하지 못하도록 하는 상호배제 기능을 제공하는 기법을 말한다.
 - 공유잠금(Shared Lock - S Lock)과 배타잠금(Exclusive Lock - X Lock)
@@ -66,4 +67,47 @@ category: SQL
 - 한계
   - 장기 트랜잭션 철회 시 자원 낭비
 
-#### Redis 를 통한 동시성 해결
+### Redis 를 통한 동시성 해결
+#### 분산락과 스핀락의 개념
+- 스핀락
+  - 락을 얻지 못하면 무한루프를 돌면서 계속 락을 얻으려고 시도하는 동기화 기법
+  - 단점
+    - 계속 락을 얻으려고 시도하기 떄문에 대기가 길어져 효율이 떨어질 수 있으며 서버에 부하가 발생한다.
+- 분산락
+  - 여러 서버를 운영하는 분산환경에서 락 처리에 대한 고민을 할 필요성이 있다.
+  - 분산락은 데이터베이스 등 공통된 저장소를 이용하여 자원이 사용중인지를 체크하고 그렇기 때문에 전체 서버에 동기화된 처리가 가능하다.
+
+#### Redis Client - Lettuce를 활용한 락 구현
+- 락을 획득한다는 것은 락이 존재하는지 확인, 존재하지 않는다면 락을 획득한다는 연산이 필요하며 setnx 명령어를 지원한다.
+  - setnx 를 이용하여 레디스에 값이 존재하지 않으면 계속 세팅을 시도하고 락을 획득하여 진행한다.
+```java
+void doProcess() {
+    String lockKey = "LOCK_KEY";
+    try {
+        while(!tryLock(lockKey)) {
+            try { 
+                Tread.sleep(50);
+            } catch(InterruptedException e) { 
+                throw new RuntimeException(e); 
+            }
+        }
+        // doProcess
+    } finally {
+        unlock(lockKey);
+    } 
+}
+void tryLock(String lockKey) {
+    return command.setnx(key, "1");
+}
+viud unlock(String lockKey) {
+    command.del(key);
+}
+```
+- 문제점
+  - timeout이 걸려있다.
+    - 락을 얻기 위해 무한루프를 돌게 되는데, timeout이 없으면 애기치 못한 상황에 데드락에 빠질 수 있다.
+  - Redis 부하
+    - 스핀락에 경우 계속 redis에게 setnx 명령을 보내기 때문에 부하를 가하게 된다.
+
+#### Redis Client - Redisson을 활용한 락 구현
+
