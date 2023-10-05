@@ -391,5 +391,17 @@ public class AllBeanTest {
   - List<DiscountPolicy>: DiscountPolicy 타입으로 조회한 모든 스프링 빈을 담아준다.
   - 만약 해당하는 타입의 스프링 빈이 없으면, 빈 컬렉션이나 Map을 주입한다.
 
+#### 빈 주입 과정 - 어떻게 빈을 찾는가?
+- BeanPostProcessor
+  - 빈의 인스턴스가 만들어지는 라이프사이클에서 빈의 초기화 단계의 이전과 이후에 다른 부가적인 작업을 할 수 있게 해주는 인터페이스이다.
+  - postProcessBeforeInitialization 메소드와 postProcessAfterInitialization 메소드가 존재하는데 초기화 단계 이전과 이후에 해당 메서드가 실행되어 빈을 찾을 수 있다.
 
+- AutowiredAnnotationBeanPostProcessor
+  - BeanPostProcessor 에 구현 객체로 필드, 메서드, 클래스에 대한 의존관계를 주입해준다.
+  - processInjection 메서드를 보면 빈의 클래스 정보를 가져와 Metadata를 찾아 주입하는 역할을 한다.
+  - inject 메서드를 보면 리플렉션을 통해 빈을 주입한다.
+
+- AbstractAutowireCapableBeanFactory
+  - BeanFactory는 BeanPostProcessor 타입의 빈을 꺼내 일반적인 빈들을 @Autowired 로 의존관계 주입이 필요한 빈들에게 @Autowired를 처리하는 로직을 적용한다.
+    
 ** 출처: 인프런 스프링핵심원리 - 기본편, 김영한님 강연
