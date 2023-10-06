@@ -111,3 +111,13 @@ viud unlock(String lockKey) {
 
 #### Redis Client - Redisson을 활용한 락 구현
 
+- Redisson tryLock()과 세마포어
+  ```java
+  boolean tryLock(long waitTime, long leaseTime, TimeUnit unit) throws InterruptedException;
+  ```
+  - waitTime: 락을 사용할 수 있을 때까지 기다리는 시간
+  - leaseTime: 시간이 지나면 락이 해제되는 시간
+- tryLock() 구현체
+  - subscribe 메소드를 호출하는데 내부에서는 Semaphore를 활용하고 있다.
+  - Redisson tryLock()을 호출할 시, subscribe 메서드 내부의 getSemaphore 메서드를 호출하여 서버와의 통신을 통해 세마포어를 가져온다.
+  - acquire 메서드를 호출하여 락을 획득하게 되는데 이때 지정된 시간 내 락을 얻을 수 있다면 true, 실패하면 false 반환
