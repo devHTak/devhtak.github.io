@@ -392,11 +392,39 @@ public class AllBeanTest {
   - 만약 해당하는 타입의 스프링 빈이 없으면, 빈 컬렉션이나 Map을 주입한다.
 
 #### 빈 주입 과정 - 어떻게 빈을 찾는가?
+- LifeCycle
+  - 스프링 컨테이너 생성 -> 스프링 빈 생성 -> 의존성 주입 -> 초기화 콜백(빈의 의존관계 주입이 완료된 후 호출) -> 사용 -> 소멸전 콜백(빈이 소멸되기 직전 호출) -> 종료
 - BeanPostProcessor
+  ```java
+  @Nullable
+	default Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+		return bean;
+	}
+	@Nullable
+	default Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+		return bean;
+	}
+  ```
   - 빈의 인스턴스가 만들어지는 라이프사이클에서 빈의 초기화 단계의 이전과 이후에 다른 부가적인 작업을 할 수 있게 해주는 인터페이스이다.
   - postProcessBeforeInitialization 메소드와 postProcessAfterInitialization 메소드가 존재하는데 초기화 단계 이전과 이후에 해당 메서드가 실행되어 빈을 찾을 수 있다.
 
 - AutowiredAnnotationBeanPostProcessor
+  ```java
+  public void processInjection(Object bean) throws BeanCreationException {
+  		Class<?> clazz = bean.getClass();
+  		InjectionMetadata metadata = findAutowiringMetadata(clazz.getName(), clazz, null);
+  		try {
+  			metadata.inject(bean, null, null);
+  		}
+  		catch (BeanCreationException ex) {
+  			throw ex;
+  		}
+  		catch (Throwable ex) {
+  			throw new BeanCreationException(
+  					"Injection of autowired dependencies failed for class [" + clazz + "]", ex);
+  		}
+	}
+  ```
   - BeanPostProcessor 에 구현 객체로 필드, 메서드, 클래스에 대한 의존관계를 주입해준다.
   - processInjection 메서드를 보면 빈의 클래스 정보를 가져와 Metadata를 찾아 주입하는 역할을 한다.
   - inject 메서드를 보면 리플렉션을 통해 빈을 주입한다.
