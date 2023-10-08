@@ -95,6 +95,9 @@ category: JPA
       @Autowired
       private TeamService teamService;
 
+      @Autowired
+      private EntityManager entityManager;
+
       @AfterEach
       public void after() {
           teamRepository.deleteAll();
@@ -115,6 +118,7 @@ category: JPA
       @Test
       @DisplayName("N+1 예외 발생")
       public void nPlusOne() throws Exception {
+          em.flush(); em.clear(); // 영속성 컨텍스트 비우기
           // when
           List<String> memberNames = teamService.findAllMemberName();
 
