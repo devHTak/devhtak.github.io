@@ -78,7 +78,7 @@ category: JPA
 
         @Transactional(readOnly = true)
         public List<String> findAllMemberName() {
-            return teamRepository.findAll()
+            return teamRepository.findAll().stream()
                       .flatMap(team -> team.getMembers().stream())
                       .map(Member::getName)
                       .collect(Collectors.toList());
@@ -115,7 +115,7 @@ category: JPA
       @Test
       @DisplayName("N+1 예외 발생")
       public void nPlusOne() throws Exception {
-          // given
+          // when
           List<String> memberNames = teamService.findAllMemberName();
 
           //then
