@@ -62,6 +62,7 @@ category: JPA
       - UPDATE, DELETE로 인한 row 락 시간 최소화
   - 지연로딩과 즉시 로딩
     - 지연로딩: 객체가 실제 사용될 때 로딩
+      - XXXToMany 관계는 fetchType을 지정하지 않으면 항상 지연로딩으로 가져온다.  
       
       ```java
       Member member = memberRepository.findById(1); // SELECT * FROM MEMBER WHERE ID=1
@@ -69,12 +70,16 @@ category: JPA
       // 지연 로딩 시 실제 사용할 때 Team객체를 조회한다. 
       ```
     - 즉시로딩: JOIN SQL로 한번에 연관된 객체까지 미리 조회
+      - XXXToOne 애노테이션은 fetchType을 지정하지 않으면 항상 즉시로딩으로 가져온다.
       
       ```java
       Member member = memberRepository.findById(1); // SELECT M.*, T.* FROM MEMBER M JOIN TEAM T ON M.ID = T.MEMBER_ID WHERE M.ID=1
       Team team = member.getTeam();  
       // 즉시 로딩 시 조인하여 한번에 관계된 객체까지 가져온다.
       ```
+    - 실무에서는 항상 지연로딩으로 세팅한다.
+      - 즉시로딩으로 지정하면 불필요한 조인으로 데이터를 가져올 수 있기 때문에 지연로딩으로 사용
+      - 만약 바로 필요한 데이터로 조회가 필요한 경우 fetch join 등을 사용  
 
 - JPA 구동 방식
   - 설정
