@@ -392,8 +392,28 @@ public class AllBeanTest {
   - 만약 해당하는 타입의 스프링 빈이 없으면, 빈 컬렉션이나 Map을 주입한다.
 
 #### 빈 주입 과정 - 어떻게 빈을 찾는가?
-- LifeCycle
+- Spring Bean LifeCycle
   - 스프링 컨테이너 생성 -> 스프링 빈 생성 -> 의존성 주입 -> 초기화 콜백(빈의 의존관계 주입이 완료된 후 호출) -> 사용 -> 소멸전 콜백(빈이 소멸되기 직전 호출) -> 종료
+  - 빈 인스턴스 화 및 DI
+    - XML, Annotation 빈 정의를 스캔
+    - 빈 인스턴스 생성
+    - 빈 프로퍼티에 의존성 주입
+  - 검사
+    - Bean이 BeanNameAware 인터페이스를 구현 시, setBeanName() 호출
+    - Bean이 BeanClassLoaderAware 인터페이스 구현 시, setBeanClassLoader() 호출
+    - Bean이 ApplicationContextAware 인터페이스 구현 시 setApplicationContext() 호출	
+  - 빈 생성 생명주기 콜백
+    - @PostConstruct -> Bean이 InitializingBean 인터페이스 구현 시 afterPropertiesSet() 호출 -> init-method 정의할 시 지정한 메소드 호출
+  - 빈 소멸 생명주기 콜백
+    - @PreDestroy -> Bean이 DisposableBean 인터페이스 구현 시 destroy() 호출 -> destroy-method 정의할 시 지정한 메소드 호출
+    - Scope이 Prototype일 경우 소멸 생명주기 콜백은 호출되지 않음
+- 빈 생성 페이즈
+  - Instantiation: 스프링은 마치 우리가 수동으로 자바 객체를 생성할 때 처럼 빈 객체를 초기화 한다.
+  - Populating Properties: 객체를 초기화한 후 스프링은 Aware 인터페이스를 구현한 빈을 스캔하고 관련된 프로퍼티를 세팅하기 시작한다.
+  - Pre-Initialization: 스프링의 BeanPostProcessors가 이 페이즈에서 활용된다. postProcessBeforeInitialization() 메서드들이 그들의 잡을 한다. 또한 @PostConstruct가 달린 메서드가 그 후에 바로 실행된다.
+  - AfterPropertiesSet: 스프링은 InitializingBean 인터페이스를 구현한 빈들의 afterPropertiesSet() 메서드들을 실행한다.
+  - Custom Initialization: 스프링은 @Bean 어노테이션의 initMethod 어트리뷰트에 정의한 초기화 메서드를 트리거한다.
+  - Post-Initialization: 스프링의 BeanPostProcessors가 또 한 번 작동된다. 이 페이즈에서는 postProcessAfterInitialization()메서드를 트리거한다.
 - BeanPostProcessor
   ```java
   @Nullable
