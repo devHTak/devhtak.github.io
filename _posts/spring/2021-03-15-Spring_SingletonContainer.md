@@ -344,5 +344,99 @@ void configurationDeep() {
     - @Configuration이 없으면, AppConfig@CGLIB이 생성되지 않는다.
   - memberRepository() 처럼 의존관계 주입이 필요해서 메서드를 직접 호출할 때 싱글톤을 보장하지 않는다.
   - 크게 고민할 것이 없다. 스프링 설정 정보는 항상 @Configuration 을 사용하자.
-  
+
+#### SpringApplication 파헤치기
+- SpringApplication.run(class)
+  ```java
+  public ConfigurableApplicationContext run(String... args) {
+		//... 
+		try {
+			ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);
+			ConfigurableEnvironment environment = prepareEnvironment(listeners, bootstrapContext, applicationArguments);
+			Banner printedBanner = printBanner(environment);
+			context = createApplicationContext(); // Application Type에 따라 ApplicationContext를 생성한다.(Default, Servlet, Reactive)
+			context.setApplicationStartup(this.applicationStartup);
+			prepareContext(bootstrapContext, context, environment, listeners, applicationArguments, printedBanner); // Spring Bean Factory 생성
+			refreshContext(context); 
+			afterRefresh(context, applicationArguments);
+			Duration timeTakenToStartup = Duration.ofNanos(System.nanoTime() - startTime);
+			if (this.logStartupInfo) {
+				new StartupInfoLogger(this.mainApplicationClass).logStarted(getApplicationLog(), timeTakenToStartup);
+			}
+			listeners.started(context, timeTakenToStartup);
+			callRunners(context, applicationArguments);
+		} 
+		// ...
+		return context;
+	}
+  ```
+  - context = createApplicationContext();
+    - ApplicationContextFactory를 통해 Application Type에 따라 ApplicationContext를 생성한다.(Default, Servlet, Reactive)
+    - AnnotationConfigApplicationContext
+      - scan, register 메소드
+  - prepareContext(bootstrapContext, context, environment, listeners, applicationArguments, printedBanner);
+    - Context 내에 BeanFactory를 가져온다.
+      - GenericApplicationContext 생성자에서 DefaultListableBeanFactory beanFactory 를 생성한다.
+      - BeanFactory를 생성할 때 BeanNameAware, BeanFactoryAware, BeanClassLoaderAware를 세팅
+    - Boot 기준 Singleton Bean 생성 및 BeanFactoryPostProcessor 등을 등록한다.
+  - refreshContext(context);
+    - ApplicationContext에 refresh() 호출
+    - AbstractApplicationContext.refresh()
+      ```java
+      @Override
+	  public void refresh() throws BeansException, IllegalStateException {
+		synchronized (this.startupShutdownMonitor) {
+			// ...
+			try {
+				// Allows post-processing of the bean factory in context subclasses.
+				postProcessBeanFactory(beanFactory);
+				StartupStep beanPostProcess = this.applicationStartup.start("spring.context.beans.post-process");
+				// Invoke factory processors registered as beans in the context.
+				invokeBeanFactoryPostProcessors(beanFactory);
+				// Register bean processors that intercept bean creation.
+				registerBeanPostProcessors(beanFactory);
+				beanPostProcess.end();
+				// Initialize message source for this context.
+				initMessageSource();
+				// Initialize event multicaster for this context.
+				initApplicationEventMulticaster();
+				// Initialize other special beans in specific context subclasses.
+				onRefresh();
+				// Check for listener beans and register them.
+				registerListeners();
+				// Instantiate all remaining (non-lazy-init) singletons.
+				finishBeanFactoryInitialization(beanFactory);
+				// Last step: publish corresponding event.
+				finishRefresh();
+			}
+			// ...
+		}
+	  }  
+      ```
+      - 과정
+        - refresh 준비 단계
+        - BeanFactory 준비 단계
+        - BeanFactory의 후처리 진행
+        - BeanFactoryPostProcessor 실행
+        - BeanPostProcessor 등록
+        - MessageSource 및 Event Multicaster 초기화
+        - onRefresh(웹 서버 생성)
+        - ApplicationListener 조회 및 등록
+        - 빈들의 인스턴스화 및 후처리
+        - refresh 마무리 단계
+      - BeanFactoryPostProcessor 실행
+        - BeanFactoryPostProcessor는 빈을 탐색하는 것처럼 빈 팩토리가 준비된 후에 해야하는 후처리기들을 실행된다. 대표적으로 싱글톤 객체로 인스턴스화할 빈을 탐색하는 작업 진행
+        - PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors 이 실제 작업하는 메소드로 postProcessBeanDefinitionRegistry, processConfigBeanDinitions 메소드를 타고 들어가면
+          - ConfigurationClassParser의 parse 메소드 실행, parsing 하는 작업 중에 ComponentScanAnnotationParser.parse 메소드까지 찾아 들어가면, Scanner에 basePackage를 기반으로 scan을 진행한다.
+          - AbstractBeanFactory.doGetBean 메소드를 살펴보면 빈이 아직 등록되지 않았다면 빈을 생성하는 것을 볼 수 있다.
+      - BeanPostProcessor
+        - 빈들이 생성되고 나서 빈의 내용이나 빈 자체를 변경하기 위한 빈 후처리기인 BeanPostProcessor를 등록
+        - 대표적으로 @Value, @PostConstruct, @Autowired 등이 BeanPostProcessor에 의해 처리되며 이를 위한 BeanPostProcessor 구현체들이 등록된다
+      - onRefresh();
+        - template method 로 구현체에 따른다.
+        - themeSource = ResourceBundleThemeSource 로 세팅(GenericWebApplicationContext)
+        - WebServerFactory 를 통해 Tomcat Server 객체를 만들고 설정 값들을 세팅한다.(ServletWebServerApplicationContext)
+  - afterRefresh(context, applicationArguments);
+    - refresh 후 처리를 진행하며 과거에는 애플리케이션 컨텍스트 생성 후에 초기화 작업을 위한 ApplicationRunner, CommandLineRunner를 호출하는 callRunners()가 내부에 존재했다.
+    - 현재는 별도의 단계로 빠져서 메소드가 비어있는 상태
 - 참고: 영한님의 스프링핵심원리-기본편 강의
