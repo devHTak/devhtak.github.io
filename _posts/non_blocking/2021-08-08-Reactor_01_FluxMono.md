@@ -50,6 +50,7 @@ category: Reactive
     Flux<String> flux = Flux.jst("Hello", "Reactor", "Flux", "Mono");
     ```
     - just 내에 들어가는 값들로 Flux를 생성한다.
+    - Hot Publisher며 처음 방출된 값을 cache해두고 다음 구독자에게 cache된 값을 방출한다.
   
   - range
     ```java
@@ -96,10 +97,10 @@ category: Reactive
       });
     });
     ```
+    - Cold Publisher를 생성하며 subscribe 하지 않으면 데이터를 방출하지 않는다.
     - create를 사용하면 Subscriber의 요청과 상관없이 비동기로 데이터를 발생할 수 있다.
     - Consumer<? super FluxSink<T>> emitter를 파라미터로 받는 데, Consumer는 람다이고, FluxSink를 살펴보자.
-      - FluxSink: 0/1개의 onError/onComplete 이벤트 다음에 임의의 수의 다음 신호를 방출하기 위한 다운스트림 가입자
-        
+      - FluxSink: 0/1개의 onError/onComplete 이벤트 다음에 임의의 수의 다음 신호를 방출하기 위한 다운스트림 가입자        
       - generate와 달리 한번에 한 개 이상의 next() 신호를 발생할 수 있다.
       - 해당 차이는 배압(backpressure)를 일으키며 이에 대한 전략을 설정해주어야 한다.
       - 배압전략 1. IGNORE : Subscriber의 요청 무시하고 발생(Subscriber의 큐가 다 차면 IllegalStateException 발생)
