@@ -76,10 +76,13 @@ category: Java Study
 
 #### 주의사항
 - Carrier Thread를 block 하면 Virtual Thread 활용 불가
-  - synchronized block
-  - parallelStream 
-- VM Option에 의해 감지 가능하다
-  - -Djdk.tracePinnedThreads=short, full
+    - synchronized block
+    - parallelStream 
+  - VM Option에 의해 감지 가능하다
+    - -Djdk.tracePinnedThreads=short, full
+- 배압이 없다.
+  - 최대한의 성능을 내기 위해 무제한으로 Virtual Thread를 생성할 수 있기 때문에 하드웨어 이슈 발생 가능하다
+  - 충분한 성능 테스트 필요
 
 #### 출처
 우아한 형제들 - 우아한 테크 세미나[https://www.youtube.com/watch?v=BZMZIM-n4C0]
