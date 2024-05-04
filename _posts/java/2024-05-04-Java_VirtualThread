@@ -1,0 +1,86 @@
+---
+layout: post
+title: Java. Virtual Thread
+summary: Java Virtual Thread
+author: devhtak
+date: '2024-05-04 21:41:00 +0900'
+category: Java Study
+---
+### Virtual Thread
+
+#### Virtual Thread란
+- 2018년 Project Loom 으로 시작된 경량 스레드 모델로 2023년 JDK21에 정식 feature 로 추가되었다.
+- 장점
+  - 스레드 생성 및 스케줄링 비용이 기존 스레드보다 저렴
+    - 기존 자바 스레드는 생성 비용, 사용 메모리 사이즈가 크며 OS에 의해 스케줄링 된다.
+    - Virtual Thread는 생성비용이 적기 때문에 Thread Pool을 사용하지 않으며 사용 메모리자 작다. JVM에 의해 스케줄링 된다.
+      ```java
+      Thread.start();
+      Thread.ofVirtual().start();
+      // 비교해보기
+      ```
+  - 스레드 스케줄링을 통해 Nonblocking IO 지원
+    - Spring Webflux 와 Netty 는 EventLoop를 통해 여러 요청을 하나의 Thread로 처리된다.
+    - Virtual Thread는 JVM Scehduling, Continuation 을 활용한다.
+  - 기존 스레드를 상속하여 코드 호환 가능
+    ```java
+    final class VirtualThread extends BaseVirtualThread {
+        // ...
+    }
+    sealed abstract class BaseVirtualThread extends Thread {
+        // ...
+    }
+    ```
+    ```java
+    public ExecutorService excutorService() {
+        return Excutors.newVirtualThreadPerTaskExecutor();
+    }
+    ```
+
+#### Virtual Thread 동작 원리
+- 스레드 생성과 비용 차이 원리
+  - Java Thread
+    - OS에 Scheduler에 의해 Kernal Thread <(JNI)> JVM 에 Platform Thread가 1:1 매핑되는 형태
+    - 작업 단위는 Runnable
+  - Virtual Thread
+    - JVM에 의해 Scheduling 되며 Carrier Thread와 1:N 매핑된다. 작업 단위는 Continuation 이 된다.
+    - OS Scehduler에 의해 Thread <(JNI)> JVM 내에 ForkJoinPool 형태에 Scehduler를 통해 Carrier Thread가 생성되고 Work Stealing 방식으로 Virtual Thread에 할당하여 작업 수행
+  - Virtual Thread는 커널 영역 접근 없이 단순히 Java 객체를 생성하기 때문에 OS Kernell을 호출하는 System Call이 존재하지 않는다.
+
+- Non Blocking IO 원리
+  - Continuation 작업 단위
+    - 실행 가능한 작업 흐름으로 중단(yield)이 가능하고, 중단 지점부터 재실행 가능하다.
+    - Kotlin에 Coroutin 과 동일한 형태인듯..? 좀 더 찾아보자 ㅠ
+  - Virtual Thread 내에 Continuation
+    - Continuation 객체와 실행할 Runnable Lambda 존재
+    - ForkJoinPool에 의해 Continuation 실행
+  - ForkJoinPool에서 Work Stealing 방식은 WorkQueue에 Continuation을 발행
+  - Continuation 을 사용하는 이유
+    - Virtual Thread 작업 중단을 위해 Continuation yield(park 중단) 를 호출하여 실제 작업이 block 되지 않아 실제 스레드가 중단되지 않고 다른 작업 처리가 가능하다.
+    - Kernal Thread 중단이 없기 때문에 System Call 이 발생하지 않고 Context Switching 비용이 낮다
+
+#### 기존 스레드 모델 서버와 비교
+- 기존 Thread Model Server
+  - 요청 별로 Tomcat - Platform Thread에 할당되며 OS Kernal Thread에 할당된다.
+- Virtual Thread를 사용한다면
+  ```java
+  @Bean
+  public TomcatProtocolHandlerCustomizer<T> protocolHandlerVirtualThreadExecutor() {
+      return protocolHandler -> {
+          protocolHandler.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
+      };
+  }
+  ```
+  - Protocol Handler에 VirtualThread를 생성하도록 하여 bean으로 등록해야 한다.
+  - 요청 별로 Tomcat에 Virtual Thread가 생성되어 할당된다.
+
+#### 주의사항
+- Carrier Thread를 block 하면 Virtual Thread 활용 불가
+  - synchronized block
+  - parallelStream 
+- VM Option에 의해 감지 가능하다
+  - -Djdk.tracePinnedThreads=short, full
+
+#### 출처
+우아한 형제들 - 우아한 테크 세미나[https://www.youtube.com/watch?v=BZMZIM-n4C0]
+
