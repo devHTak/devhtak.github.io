@@ -1,0 +1,74 @@
+---
+layout: post
+title: Kotlin. 
+summary: Kotlin Study
+author: devhtak
+date: '2024-05-16 21:41:00 +0900'
+category: Kotlin Study
+---
+
+#### 코틀린 시작하기
+- 소개
+  - 코틀린(Kotlin)은 젯브레인즈(JetBrains)에서 개발한 언어로 JVM 기반의 언어이며 Java 언어와 완벽하게 호환된다. 
+  - JVM 뿐만 아니라 JS, Native상에서 실행 가능한 멀티플랫폼 언어이다. 구글의 안드로이드에서는 코틀린을 공식 언어로 채택하고 있다.
+- 장점
+  - 자료형 오류를 미리 잡을 수 있는 정적 언어: 프로그램이 컴파일될 때 자료형을 검사하기 때문에 오류를 초기에 발견하여 안정성이 뛰어남
+  - 널 포인트 예외(NPE: NullPointerException)로 인한 프로그램의 중단을 예방
+    - Non-null과 Nullable 타입의 구분, Safe calls, Safe casts, Elvis 연산자 등을 지원하여 NPE의 위험을 낮춘다.
+  - 함수형 프로그래밍과 객체 지향 프로그래밍이 모두 가능한 다중 패러다임 언어
+  
+#### 변수와 자료형, 연산자
+
+- 코틀린 패키지
+  - 코틀린 프로젝트는 모듈, 패키지, 파일로 구성된다.
+    - Project > Module > Package > File
+  - 코틀린 기본 패키지: import 하지 않아도 바로 사용 가능
+    - kotlin.* : Any, Int, Double 등 핵심 함수와 자료형
+    - kotlin.text.* : 문자와 관련된 API
+    - kotlin.sequences.* : 컬렉션 자료형의 하나로 반복이 허용되는 개체를 열거
+    - kotlin.ranges.* : if문이나 for문에서 사용할 범위 관련 요소
+    - kotlin.io.* : 입출력 관련 API
+    - kotlin.collections.* : List, Set, Map 등의 컬랙션
+    - kotlin.annotation.* : 애노테이션 관련 API
+
+- 변수
+  ```kotlin
+  val username:String = "Kim"
+  val age = 25
+  var address // 오류 발생 - 타입을 추론할 수 없다
+  ```
+  - var(variable): 값을 변경할 수 있다.
+  - val(value): 초기값을 지정하면 더 이상 값을 변경할 수 없다
+
+- 자료형
+  - Null을 허용한 변수 검사
+    - null(값이 없는 상태)을 허용하기 위해 물음표 기호를 사용해 선언
+    - null을 허용할 경우 null을 검사하고 처리하는 방법까지 고려해야 한다.
+      - Safe calls: null이 할당되어 있을 가능성이 있는 변수를 검사하여 안전하게 호출
+      - not-null 연산자: 변수에 할당된 값이 null이 아님을 단정하여 컴파일러가 null 검사를 생략, NPE가 발생 가능
+      - Elvis 연산자: 변수가 null인지 아닌지 검사하여 null이면 왼쪽 식을 실행하고 null이면 오른쪽 식을 실행
+    ```kotlin
+    var str:String = "Hello Kotlin"
+    str = null
+
+    println("General Call: ${str.length}") // compile 오류
+    println("Safe Call: ${str?.length}") // safe call null
+    println("Not Null: ${str!.length}") // NPE 발생
+    println("Elvis: ${str?.length ?: -1") // elvis -1 출력
+    ```
+  - 자료형 변환
+    - 코틀린에서는 자료형이 다르면 변환 함수를 사용한다.
+      - toLong(), toFloat(), toInt(), toDouble(), toShort(), toChar(), toByte(), toString
+  - 자료형 검사
+    ```kotlin
+    when(e) {
+        is Int -> println("Integer Type")
+        is String -> println("String Type")
+        else -> println("Other Type")
+    }
+    ```
+    - is: 키워드를 통해 자료형을 검사한다.
+    - as: 형변환이 가능하지 않으면 예외가 발생하기 때문에 Safe Call을 통해 안전하게 캐스팅할 수 있다.
+
+#### 함수와 함수형 프로그래밍
+- 
