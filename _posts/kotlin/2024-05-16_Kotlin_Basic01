@@ -71,4 +71,202 @@ category: Kotlin Study
     - as: 형변환이 가능하지 않으면 예외가 발생하기 때문에 Safe Call을 통해 안전하게 캐스팅할 수 있다.
 
 #### 함수와 함수형 프로그래밍
-- 
+- 함수 선언
+  ```kotlin
+  fun 함수이름([매개변수_이름: 자료형...]): [반환값의 자료형] {
+      // ... 
+      [return 반환값]
+  }
+  ```
+  - 반환값이 없는 경우 생략 가능하며 Unit 자료형으로 추론
+  - 매개변수
+    ```kotlin
+    // 기본값 설정
+    fun add(a: Int, b: Int = 0) = a + b 
+    // 매개변수 이름과 함께 함수 호출
+    fun multiple(a: Int=2, b: Int) = a * b
+    println(multiple(b=13)) // 26
+    // 가변인자 사용
+    fun add(vararg numbers: Int): Int {
+        var sum = 0;
+        for(number in numbers) {
+            sum += number
+        }
+        return sum
+    }
+    ```
+- 함수형 프로그래밍
+  - 정의와 특징
+    - 순수 함수를 사용: 동일한 인자에 대하여 항상 같은 결과를 반환
+      - 같은 인자에 대하여 항상 같은 값을 반환하며, 함수 외부의 어떤 상태도 바꾸지 않는다.
+    - 람다식을 사용할 수 있다.
+      - 이름이 없는 함수 형태
+    - 고차함수를 사용할 수 있다.
+      - 다른 함수를 인자로 사용하거나 함수를 결과값으로 반환하는 함수를 말한다.
+      ```kotlin
+      fun highFunction(sum: (Int, Int) -> Int, a: Int, b: Int): Int = sum(a, b)
+
+      println(highFunction({x,y} -> x+y, 10, 20)) // 30
+      ```
+  - 일급 객체: 함수형 프로그래밍에서는 함수를 일급 객체로 생각한다.
+    - 일급 객체는 함수의 인자로 전달할 수 있으며 함수의 반환값으로도 사용할 수 있다.
+    - 일급 객체는 변수에 담을 수 있다.
+- 고차함수와 람다식
+  - 일반 함수를 인자나 반환값으로 사용 가능하며 람다식을 인자나 반환값으로 사용할 수 있다.
+    ```kotlin
+    // 일반 함수 사용
+    fun sum(a: Int, b: Int) = a + b
+    fun multiple(a: Int, b: Int) = a * b
+
+    val result1 = sum(3, 2) // 5
+    val result2 = mul(sum(2,2), 2) // 8 인자에 함수 사용
+
+    // 람다식 사용
+    fun hignFunction(a: Int, b: Int, sum: (Int, Int) -> Int) = sum(a, b)
+    val multi = {x:Int, y:Int -> x * y} // 일반 변수에 람다 할당
+
+    val result1 = hignFunction(10, 20, {x, y ->  x + y})    
+    ```
+  - 람다식과 고차함수 호출
+    ```kotlin
+    // call by value
+    fun callByValue(b: Boolean): Boolean {
+        return b
+    }
+    val lambda: () -> Boolean = {
+        true
+    }
+    callByBalue(lambda())
+
+    // call by name
+    fun callByName(b: () -> Boolean) {
+        return b()
+    }
+    val otherLambda: () -> Boolean = {
+        return true
+    }
+    callByName(otherLambda)
+    ```
+  - 함수를 인자 또는 변수에 할당
+    ```kotlin
+    fun sum(x:Int, b:Int) = x + y
+    fun sumParamFunction(a: Int, b: Int, sum: (Int, Int) -> Int) = sum(a, b)
+
+    sumParamFunction(10, 20, ::sum) // 30
+    val sumLikeLambda = ::sum
+    sumLikeLambda(10, 20) // 30
+    ```
+  - 매개변수
+    ```
+    // 없는 경우
+    fun noParam(out: () -> String) = println(out())
+    noParam({ "Hello Kotlin" })
+    noParam { "Hello Kotlin" } // 위와 동일 결과, 소괄호 생략 가능
+    
+    // 1개 있는 경우
+    fun oneParam(out: (String) -> String) = println(out("OneParam"))   
+    oneParam({ a -> "Hello Kotlin $a" })
+    oneParam { "Hello Kotlin $it" } // 위와 동일 결과, 매개변수가 1개인 경우 it으로 대체 가능
+    
+    // 2개 이상인 경우
+    fun moreParam(out: (String, String) -> String) = println(out("OneParam", "TwoParam"))    
+    moreParam { a, b -> "Hello Kotlin $a $b" } // 매개변수 이름 생략 불가
+    moreParam { _, b -> "Hello Kotlin $b" } // 첫 번째 문자열은 사용하지 않고 생략
+    
+    /* 일반 매개변수와 람다식 매개변수를 같이 사용하는 경우 */
+    fun withArgs(a: String, b: String, out: (String, String) -> String) = println(out(a, b))
+    withArgs("Arg1", "Arg2", { a, b -> "Hello Kotlin $a $b" })
+    withArgs("Arg1", "Arg2") { a, b -> "Hello Kotlin $a $b" } // 함수의 마지막 인자가 람다식인 경우 소괄호 바깥으로 분리 가능
+
+- 인라인 함수
+- 확장 함수
+  ```kotlin
+  fun String.getLongString(target: String): String -> if(this.length > target.length) this else target
+  "Kotlin".getLongString("Hello")
+  ```
+  - 코틀린은 기존의 클래스에 원하는 함수를 포함시켜 확장하는 개념을 제공
+
+#### 프로그램의 흐름 제어
+- 조건문
+  - if / else / else if
+    ```kotlin
+    val a = 10
+    val b = 20
+    if(a > b) {
+        println(a)
+    } else if(a < b) {
+        println(b)
+    } else {
+      println("same")
+    }
+    // kotlin의 if 문 Expression이다
+    var max = if(a > b) a else b
+    ```
+    - Expression: 하나의 값으로 도출되는 문장
+    - Statement: 프로그램의 문장, 하나의 값으로 도출되지 않는다.
+  - when 
+    - 자바의 switch 처럼 case 별로 사용할 수 있다
+    ```kotlin
+    fun typeCheck(obj: Any) {
+        when (obj) {
+            is Int -> println("Int: $obj")
+            is String -> println("String: $obj")
+            !is String -> println("Not a String")
+            else -> println("Unknown")
+        }
+    }
+    ```
+- 반복문
+  - for 문
+    ```kotlin
+    /* 상향식 */
+    var sum = 0
+    for (num in 1..10) sum += num
+    println("Sum: $sum") // 55
+    
+    /* 하향식 */
+    var sum = 0
+    for (num in 10 downTo 1) sum += num
+    println("Sum: $sum") // 55
+    
+    /* step 키워드 사용으로 홀수 덧셈 */
+    var sum = 0
+    for (num in 1..10 step 2) sum += num
+    println("Sum: $sum") // 25
+    ```
+  - while 문
+    ```kotlin
+    /* while문으로 팩토리얼 계산 */
+    var number = readLine()?.toInt() ?: 0
+    var factorial: Long = 1
+    
+    while (number > 0) {
+        factorial *= number
+        number -= 1
+    }
+    println("Factorial: $factorial")
+    ```
+  - do while 문
+    ```kotlin
+    /* 1부터 N까지 덧셈 */
+    do {
+        println("Enter an integer: ")
+        val n = readLine()?.toInt ?: 0
+        var sum = 0
+    
+        for (num in 1..n) {
+            sum += num
+        }
+        if (sum != 0) println("Sum: $sum")
+    } while (n != 0)
+    ```
+- 예외처리문
+  ```kotlin
+  try {
+      // 예외 발생 가능성 있는 문장
+  } catch (e: 예외 처리 클래스 이름) {
+      // 예외를 처리하기 위한 문장
+  } finally {
+      // 반드시 실행되어야 하는 문장
+  }
+  ```
