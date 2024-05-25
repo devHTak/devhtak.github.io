@@ -90,3 +90,178 @@ category: Kotlin Study
   - 구성: 집합관계와 거의 동일하지만 특정 클래스가 어느 한 클래스의 부분이 되어 생명주기가 소유자 클래스에 의존되는 관계
   
 #### 프로퍼티와 초기화
+
+- Getter, Setter를 지정하지 않아도 자동으로 처리한다
+  ```kotlin
+  class User(val id:Int, var name: String, var age:Int)
+  ```
+- 지연 초기화와 위임
+  - 코틀린에서는 프로퍼티를 선언하는 동시에 초기화를 해야 한다
+  - lateinit을 통해 지연 초기화를 할 수 있다
+    - var 로 선언된(가변) 프로퍼티만 사용 가능
+    - 프로퍼티에 대한 getter, setter 사용 불가
+  ```kotlin
+  class Person {
+      lateinit var name: String // 지연 초기화
+      fun nameTest() {
+          if(::name.isInitialized) {
+              println("Initialized")
+          } else {
+              println("Not Initialized")
+          } 
+      }
+  }
+  fun main() {
+      val kim = Person()
+      kit.test(); // Not Initialized
+      kim.name = "Kim"
+      kim.test(); // Initialized
+  }
+  ```
+  - 지연 초기화를 사용한 프로퍼티에 대해 초기화하지 않은 상태에서 접근하게 되면 예외가 발생한다.
+    - UninitializedPropertyAccessException
+  - by lay 정의를 통해 val(불변) 변수에 대한 블록 부분의 초기화를 진행할 수 있다.
+    ```kotlin
+    class Person {
+        val name by lazy {
+            println("Name initializing")
+            "Kim"
+        }
+
+        fun callName() {
+            println("Name: $name")
+        }
+    }
+    fun main() {
+      val kim = Kim()
+      kim.callName() // by lazy 블록 실행 후 callName 내부 실행
+    }
+    ```
+    - lazy는 세가지 모드를 제공
+      - LazyThreadSafetyMode.SYNCHRONIZED: lock을 사용해 단일 스레드만이 사용되도록 보장(기본값)
+      - LazyThreadSafetyMode.PUBLICATION: 여러 군데 호출 될 수 있으나 처음 초기화된 후 반환값을 사용
+      - LazyThreadSafetyMode.NONE: lock을 사용하지 않기 떄문에 빠르지만 다중 스레드가 접근 가능
+
+- 정적 변수와 컴패니언 객체
+  - companion object를 사용하여 static 변수를 생성할 수 있다.
+    ```kotlin
+    class Person {
+        var id: Int = 0
+        var name: String = "Kotlin"
+        companion object {
+            var langauage: String = "Korean"
+            fun work() = println("working")
+        }
+    }
+
+    fun main() {
+        println(Person.language) // Korean
+        Person.work()
+    }
+    ```
+  - Java에서 Companion키워드를 생략하기 위해서 @JvmStatic Annotation 사용 가능하며 프로퍼티 접근을 위해서는 @JvmField를 사용
+    ```kotlin
+    class Customer {
+        companion object {
+            const val LEVEL = "Intermediate"
+            @JvmField
+            val name: String = "Kim"
+            @JvmStatic
+            val login() = println("Login")
+        }
+    }
+
+    // Java
+    public static void main(String[] args) {
+        Customer.LEVEL;
+        Customer.Companion.login();
+        Customer.login(); // @JvmStatic 으로 가능
+        Customer.name;
+    }
+    ```
+- object 와 싱글톤
+  - 익명 내부 클래스를 만들 때 object 표현식이나 object 선언으로 조금 더 쉽게 처리 가능
+  - object 선언: 접근 시점에 객체가 생성되기 떄문에 주, 부생성자를 사용 불가능하나 초기화 블록은 사용 가능하다. object 선언에서도 클래스나 인터페이스 상속이 가능하다
+  ```kotlin
+  object ObjectCustomer {
+      var name = "Kim"
+      var greeting() = println("Hello object")
+  }
+
+  class ClassCustomer {
+      companion object {
+          var name = "Lee"
+          var greeting() = println("Hello companion object")
+      }
+  }
+
+  fun main() {
+      ObjectCustomer.name
+      ObjectCustomer.greeting()
+
+      ClassCustomer.name
+      ClassCustomer.greeting()
+  }
+  ```
+  - object 표현식: object 선언과 달리 이름이 없으며 싱글톤이 아니다. 따라서 사용할 때마다 새로운 인스턴스가 생성되며 결과적으로 익명 내부 클래스의 형태를 object vygustlrdmfh rngusgkf tn dlTek.
+  ```kotlin
+  open class Customer() {
+      open fun work() = println("Working")
+  }
+
+  fun main() {
+      var customer = object: Customer() {
+          override fun work() = println("Working Customer")
+      }
+      customer.work() // Working Customer
+  }
+  ```
+
+#### 다양한 클래스와 인터페이스
+- 추상 클래스
+  - 선언 등의 대략적인 설계 명세와 공통의 기능을 구현한 클래스다.
+  - 추상 클래스를 상속하는 하위 클래스는 내용을 더 구체화해야 한다.
+  - 코틀린에서 추상 클래스의 정의는 abstract 키워드를 사용한다.
+  - 기본적으로 상속과 오버라이딩을 허용하기 때문에 open 키워드를 사용할 필요가 없다.
+  ```kotlin
+  abstract class Vehicle(val name: String) {
+      abstract var maxSpeed: Double
+      abstract fun start()
+      fun displaySpecs() = println("$name, $maxSpeed")
+  }
+  class Car(name: String, override var maxSpeed: Double): Vehicle(name) {
+      override fun start() = println("Start Car")
+  }
+  ```
+- 인터페이스
+  - 추상 메서드나 일반 메서드가 포함된다.
+  - 코틀린의 인터페이스는 메서드에 구현 내용을 포함할 수 있다.
+  - 프로퍼티는 상태를 저장할 수 없는 추상 프로퍼티로만 선언해야 한다.
+  - 다수의 인터페이스를 상속할 수 있어 확장에 용이하다.
+  - 인터페이스 변경시 구현 클래스에 영향이 적다.
+  ```kotlin
+  interface Pet {
+      var category: String // 추상프로퍼티
+      var messageTags: String
+          get() = "My Lovely Pet"
+      fun feeding()
+  } 
+  class Cat(override var category: String): Pet {
+      override fun feeding() = println("Cat feeding")
+  }
+  ```
+- 데이터 클래스
+  - 코틀린은 데이터 전달을 위한 객체(DTO: DataTransfer Object)를 간략하게 표현할 수 있는 데이터 클레스를 제공한다.
+    - 자바에 record
+  - 데이터 클래스 조건
+    - 주 생성자는 최소한 하나의 매개변수를 가져야 한다.
+    - 주 생성자의 모든 매개변수는 val, var로 지정된 프로퍼티여야 한다.
+    - 데이터 클래스는 abstract, open, sealed, inner 키워드를 사용할 수 없다.
+  - 자동 생성 메서드
+    - equals()
+    - hashCode()
+    - copy()
+    - toString()
+    - componentN(): 객체의 선언부 구조를 분해하기 위해 프로퍼티에 상응하는 메서드
+  
+- 기타 클래스
