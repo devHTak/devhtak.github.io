@@ -264,4 +264,63 @@ category: Kotlin Study
     - toString()
     - componentN(): 객체의 선언부 구조를 분해하기 위해 프로퍼티에 상응하는 메서드
   
-- 기타 클래스
+- 내부 클래스
+  - 중첩 클래스
+    ```kotlin
+    class Outer {
+        class Nested {
+            val value = 10
+            fun greeting() = "Nested $val"
+        }
+    }
+    fun main {
+        println(Outer.Nested().greeting())
+    }
+    ```
+    - 코틀린에서 중첩 클래스는 static class 처럼 다뤄져 객체 생성없이 접근할 수 있다.
+  - 내부 클래스
+    ```kotlin
+    interface Swicher {
+        fun on(): String
+    }
+    class Smartphone(val model: String) {
+        private val cpu = "Exynos"
+        //내부 클래스
+        inner class ExternalStorage(val size: Int) {
+            fun getInfo() = "$model: Installed on $cpu with $size GB"
+        }
+        fun powerOn(): String {
+            // 지역 클래스
+            class Led(val color: String) {
+                fun blink():String = "Blinking $color on $model"
+            }
+            // 익명 객체
+            val powerSwitch = object: Switcher {
+                override fun on(): String = powerStatus.blink()
+            }
+            return powerSwitch.on()
+        }
+    }
+    ```
+    - 클래스의 내부에 클래스를 정의하는 것으로 내부 클래스는 외부 클래스의 멤버에 접근할 수 있다.
+  - 지역 클래스
+    - 특정 메서드의 블록이나 init 블록과 같이 블록 범위에서만 유효하다. 블록을 벗어나면 더이상 사용되지 않는다.
+  - 익명 객체
+    - 일회성으로 객체를 생성하여 사용할 수 있다. 익명 객체는 다중 인터페이스를 구현할 수 있다.
+- 열거형 클래스(Enum Class)
+  ```kotlin
+  interface Score {
+      fun getScore(): Int
+  }
+  enum class MemberType(var prio: String): Score {
+      NORMAL("Secord") {
+          override fun getScore(): Int = 100
+      },
+      SILVER("First") {
+          override fun getScore: Int = 500
+      }
+  }
+  ```
+  - 여러개의 상수를 선언하고 열거된 값을 조건에 따라 선택할 수 있는 특수한 클래스
+- 실드 클래스(Sealed Class)
+  - 열거형 클래스의 확장으로 볼 수 있다. 같은 파일 안에서는 상속을 허용하지만 다른 파일에서는 상속이 불가능하게 제한할 수 있다.
