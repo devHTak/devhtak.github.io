@@ -89,6 +89,64 @@ category: Kotlin Study
           }
       }
       ```
-      - inline 함수에서 형식 매개변수를 실행 시간에 직접 접근하기 위해 사용
-      
-  - 배열
+      - inline 함수에서 형식 매개변수를 실행 시간에 직접 접근하기 위해 사용      
+- 배열
+  - kotlin은 배열을 여러 가지 자료형을 혼합하여 구성할 수 있으며 다차원 배열 선언도 가능하다 
+    ```kotlin
+    val numbers = arrayOf(6, 8, "Kim", "Lee")
+    var arr2D = arrayOf(arrayOf(1, 2, 3), arrayOf(4, 5, 6), arrayOf(7, 8, 9))
+
+    val evenArray = Array<Int>(5) {it * 2} // [0, 2, 4, 6, 8] 
+    val array1 = arrayOfNulls<Int>(100) // 100개의 null로 채워진 정수 배열
+    val array2 = Array<Int>(1000) {0} // 1000개의 0으로 채워진 정수 배열
+    ```
+  - 배열 접근은 get, set 또는 \[index] 로 가능하다
+    ```kotlin
+    public class Array<T> {
+        public inline constructor(size: Int, init: (Int) -> T)
+        public operator fun get(index: Int): T
+        public operator fun set(index: Int, value: T): Unit
+        public operator fun size(): Int
+        public operator fun iterator(): Iterator<T>
+    }
+    array.get(index)
+    array.set(index, value)
+    value = array[index]
+    array[index] = value
+    ```
+  - 다양한 방법의 배열 다루기
+    - 배열에 요초 추가 및 잘라내기
+      ```kotlin
+      var arr1 = arrayOf<Int>(1, 2, 3)
+      var arr2 = arr1.plus(4) // 1, 2, 3, 4
+      var arr3 = arr1.sliceArray(1..2) // 2, 3
+      ```
+    - 배열 순환
+      ```kotlin
+      var arr1 = arrayOf<Int>(1, 2, 3)
+      arr1.forEach {e -> println("$e"}
+      arr1.forEachIndexed {i, e -> println("array[$i]: $e")}
+      var iter: Iterator<Int> = array.iterator()
+      while(iter.hasNext()) {
+          val e = iter.next()
+          println("$e")
+      }
+      ```
+    - 오름차순 정렬
+      - 일반 배열로 반환: sortedArray(), 원본배열정렬: sort()
+    - 내림차순 정렬
+      - 일반 배열로 반환: sortedArrayDescending(), 원본 배열 정렬: sortDescending()
+    - sortBy를 이용한 특정 표현식 사용
+      items.sortBy { item -> item.length }
+    - 배열 필터링
+      - filter {it > 0}
+    - 배열 평탄화
+      - flatten() // 1차원 배열
+- 문자열 다루기
+  - 문자열은 불변(immutable) 값으로 생성되기 때문에 참조되고 있는 메모리가 변경될 수 없다. 더 이상 참조되지 않는 문자열은 GC(Garbage Collector)에 의해 제거된다.
+  - 문자열 추출
+    - String.substring(index_범위): String
+    - CharSequence.subSequence(index_범위): CharSequence
+  - 문자열 비교
+    - stringA.compareTo(stringB) // A==B: 0, A<B: 음수, A<B양수
+    
