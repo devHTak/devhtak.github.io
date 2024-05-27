@@ -150,3 +150,63 @@ category: Kotlin Study
   - 문자열 비교
     - stringA.compareTo(stringB) // A==B: 0, A<B: 음수, A<B양수
     
+#### Collection
+- 컬렉션 종류
+  - List: listOf(불변), mutableListOf/arrayListOf(가변)
+  - Set: setOf(불변), mutableSetOf/hashSetOf/linkedSetOf/sortedSetOf(가변형)
+  - Map: mapOf(불변), mutableMapOf/hashMapOf/linkedMapOf/sortedMapOf(가변형
+- Collection 인스턴스 멤버
+  - isEmpty()
+  - contains(element:E)
+  - containsAll(element:Collection<E>)
+- MutableCollection 인스턴스 메서드
+  - add(element:E)
+  - remove(element:E)
+  - addAll(elements:Collection<E>)
+  - removeAll(elements:Collection<E>)
+  - retainAll(elements:Collection<E>)
+  - clear()
+- List 활용하기
+  - 불변형 List
+    - 불변형 List 생성 핼퍼 함수
+      - listOf(): 가변 인자를 받아 원하는 만큼 요소를 지정할 수 있다. List<T>를 반환하며 형식 매개변수를 지정하지 않으면 기본값인 <Any>를 사용한다.
+      - emptyList(): 비어있는 List를 생성하기 위해 사용한다. 이때 반드시 형식 매개변수를 지정한다.
+      - listOfNotNull(): null을 제외한 요소만 List로 구성한다.
+    - List의 주요 멤버 메서드
+      - get(index: Int)
+      - indexOf(element: E)
+      - lastIndexOf(element: E)
+      - listIterator()
+      - subList(fromIndex: Int, toIndex: Int)
+  - 가변형 List
+    - 가변형 List 생성 핼퍼 함수
+      - arrayListOf(): 가변형 List를 생성하지만 반환 자료형은 자바의 ArrayList다
+      - mutableListOf(): 코틀린의 MutableList 인터페이스를 사용하는 헬퍼 함수다.
+- Set 활용하기
+  - 불변형 Set
+    - setOf(): 불변형 Set인 Set<T> 자료형을 반환한다.
+  - 가변형 Set
+    - mutableSetOf(): 가변형 Set인 MutableSet<T> 자료형을 반환하지만, 내부적으로자바의 LinkedHashSet을 생성한다.
+    - hashSetOf(): 해시 테이블에 요소를 자장할 수 있는 자바의 HashSet 컬렉션을 생성한다. 요소의 추가와 삭제가 가능하며 O(1) 시간복잡도의 검색 속도를 갖는다.
+    - sortedSetOf(): 자바의 TreeSet 컬렉션을 정렬된 상태로 반환한다. HashSet보다 성능이 조금 떨어지지만 검색과 정렬이 뛰아나다는 장점이 있다.
+    - linkedSetOf(): 자바의 LinkedHashSet 자료형을 반환한다. 링크드 리스트(Linked List) 자료구조를 사용해 구현된 해시 테이블에 요소를 저장한다.
+- Map 활용하기
+  - 생성 헬퍼 함수
+    - mapOf():	불변형 Map 컬렉션을 만들 수 있다.
+    - mutableMapOf(): 추가, 삭제가 가능한 가변형 Map을 정의한다.
+    - hashMapOf(): 해시 테이블에 요소를 자장할 수 있는 자바의 HashMap 컬렉션을 생성한다.
+    - sortedMapOf(): 자바의 TreeMap 컬렉션을 정렬된 상태로 반환한다.
+    - linkedMapOf(): 자바의 LinkedHashMap 자료형을 반환한다.
+  - 불변형 Map 프로퍼티와 메소드
+    - size: Map 컬렉션의 크기를 반환한다.
+    - keys: Map의 모든 키를 반환한다.
+    - values: Map의 모든 값을 반환한다.
+    - isEmpty(): Map이 비어 있는지 확인한다. 비어있으면 true, 아니면 false를 반환한다.
+    - containsKey(key: K): 인자에 해당하는 키가 있으면 true, 아니면 false를 반환한다.
+    - containsValue(value: V): 인자에 해당하는 값가 있으면 true, 아니면 false를 반환한다.
+    - get(key: K): 키에 해당하는 값을 반환한다. 존재하지 않으면 null을 반환한다.
+  - 가변형 Map 멤버 메소드
+    - put(key: K, value: V): 키와 값의 쌍을 Map에 추가한다.
+    - remove(key: K): 키에 해당하는 요소를 Map에서 제거한다.
+    - putAll(from: Map<out K, V>): 인자로 주어진 Map 데이터를 갱신하거나 추가한다.
+    - clear(): 모든 요소를 지운다.
