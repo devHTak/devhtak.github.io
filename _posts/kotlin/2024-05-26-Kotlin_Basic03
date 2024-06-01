@@ -210,3 +210,159 @@ category: Kotlin Study
     - remove(key: K): 키에 해당하는 요소를 Map에서 제거한다.
     - putAll(from: Map<out K, V>): 인자로 주어진 Map 데이터를 갱신하거나 추가한다.
     - clear(): 모든 요소를 지운다.
+- 컬렉션의 확장 함수
+  - 확장 함수 범주
+    - 연산자 기능, 집계 기능, 검사 기능, 필터링 기능, 변환 기능의 메서드가 존재한다.
+    ```kotlin
+    // 연산자 기능
+    val numbers = mutableListOf("one", "two", "three")
+    numbers += "four"
+    numbers -= "two"
+
+    // 순환
+    numbers.forEach { println(it) } // one three four
+    numbers.forEachIndexed { index, value -> println("$index value") } // 0 one ...
+    val lambdaNumbers = numbers.onEach { println(it) } // 각 요소를 람다로 처리 후 컬렉션 반환
+
+    //집계
+    val intNumbers = listOf(1, 2, 3)
+    val map = mapOf(0 to "zero", 1 to "one", 2 to "two")
+    intNumbers.sumBy { it } // 6
+    intNumbers.count {it % 2 == 0 } // 1
+    intNumbers.maxOrNull() // 3
+    intNumbers.minOrNull() // 1
+
+    // 정해진 식 적용하기 (fold와 reduce에 차이는 초기값 지정 여부)
+    intNumbers.fold(4) {total, next -> total + next } // 4 + 1 + 2 + 3 = 10
+    intNumbers.foldRight(4) {total, next -> total * next } 4 * 3 * 2 * 1 = 24
+    intNumbers.reduce { total, next -> total + next } // 1 + 2 + 3 = 6
+
+    // 요소 검사
+    intNumbers.all { it < 10 } // true
+    intNumbers.any { it % 2 == 0 } // true
+    intNumbers.contains(2) // true
+    intNumbers.containsAll(listOf(1, 2)) // true
+    intNumbers.none() // false
+    intNumbers.non { it > 5 } // true
+
+    // 필터
+    list.filter { it % 2 == 0 } // [2]
+    list.filterNot { it % 2 == 0 } // [1, 3]
+    list.filterNotNull() [ 1, 2, 3]
+    list.filterIndexed { index, value -> index != 1 && value != 3 } // [1]
+    map.filterKeys { it % 2 == 0 } // {1=one}
+    map.filterValues { it % 2 == 0} // {1=one}
+
+    // 특정 범위를 잘라내거나 반환
+    // slice: 특정 인덱스의 요소들을 잘라서 반환하기
+    println("slice: " + intNumbers.slice(listOf(0, 2))) // [1]
+    // take: n개의 요소를 반환
+    println(list.take(2)) // [1, 2] - 앞의 2개 요소
+    println(list.takeLast(2)) // [2, 3] - 뒤의 2개 요소
+    println(list.takeWhile { it < 2 }) // [1] - 조건의 요소
+    // drop: 처음부터 n개의 요소를 제외한 List 반환
+    println(list.drop(2)) // [3] - 앞의 4개 제외한 요소
+    println(list.dropWhile { it < 2 }) // [3] - 앞의 조건의 요소 제외
+    println(list.dropLastWhile { it > 1 }) // [1] - 뒤의 조건의 요소 제외
+    list.component2() // 2
+    listOf(2, 3, 3, 4, 5, 5).distinct() // 2, 3, 4, 5
+    intNumbers.intersect(listOf(2, 3, 4, 5)) // 2, 3
+    // 매핑
+    // map: 컬렉션에 주어진 식을 적용해 새로운 컬렉션을 반환
+    intNumbers.map { it * 2 }) // [2, 4, 6]
+    // mapIndexed: 컬렉션에 인덱스를 포함해 주어진 식을 적용해 새로운 컬렉션 반환
+    intNumbers.mapIndexed { index, element -> index * element } // [0, 2, 6]
+    // mapNotNull: null을 제외하고 식을 적용해 새로운 컬렉션 반환
+    intNumbers.mapNotNull { it?.times(2) }) // [2, 4, 6]
+    // flatMap: 각 요소에 식을 적용 후 다시 합쳐 새로운 컬렉션을 반환
+    intNumbers.flatMap { listOf(it, 'A') }) // [1, A, 2, A, 3, A]
+    listOf("abc", "12").flatMap { it.toList() } // [a, b, c, 1, 2]
+    // groupBy: 주어진 함수의 결과에 따라 그룹화하여 map으로 반환
+    val groupMap = intNumbers.groupBy { if (it % 2 == 0) "even" else "odd" }
+    println(groupMap) // {odd=[1, 3], even=[2]}
+
+    요소 처리와 검색
+    // elementAt: 인덱스에 해당하는 요소 반환
+    intNumber.elementAt(1)) // 2
+    // elementAtOrElse: 인덱스를 벗어나는 경우 식의 결과를 반환에 따라 결과 반환
+    intNumbers.elementAtOrElse(10) { 2 * it }) // 20
+    // elementAtOrNull: 인덱스를 벗어나는 경우 null 반환
+    intNumbers.elementAtOrNull(10)) // null
+    // first: 식에 일치하는 첫 요소 반환
+    val listPair = listOf(Pair("A", 300), Pair("B", 200), Pair("C", 100), Pair("D", 200))
+    listPair.first { it.second == 200 } // (B, 200)
+    // last: 식에 일치하는 마지막 요소 반환
+    listPair.last { it.second == 200 } // (D, 200)
+    // firstOrNull: 식에 일치하지 않는 경우 null 반환
+    listPair.firstOrNull() { it.first == "E" } // null
+    // lastOrNull: 식에 일치하지 않는 경우 null 반환
+    listPair.lastOrNull() { it.first == "E" } // null
+    // indexOf: 주어진 요소에 일치하는 첫 인덱스 반환
+    intNumbers.indexOf(2) // 3
+    // indexOfFirst: 람다식에 일치하는 첫 요소의 인덱스 반환, 없으면 -1
+    intNumbers.indexOfFirst { it % 2 == 0 } // 1
+    // lastIndexOf: 주어진 요소에 일치하는 가장 마지막 인덱스 반환
+    intNumbers.lastIndexOf(2) // 1
+    // indexOfLast: 람다식에 일치하는 마지막 요소의 인덱스 반환, 없으면 -1
+    intNUmbers.indexOfLast { it % 2 == 0 }) // 1
+    // single: 람다식에 일치하는 요소 하나 반환
+    listPair.single { it.second == 100 } // (C, 100)
+    listPair.singleOrNull { it.second == 500 } // null
+    // binarySearch: 요소에 대해 이진 탐색 후 인덱스 반환
+    intNumbers.binarySearch(2) // 1
+    // find: 조건식을 만족하는 첫 번째 검색된 요소 반환, 없으면 null
+    intNumbers.find { it >= 2 } // 1
+
+    // 컬렉션의 분리와 병합
+    val list1 = listOf(1, 2, 3, 4)
+    val list2 = listOf(2, 2, 3, 4, 5, 5)
+    // union: 두 List를 병합(중복 요소는 하나만)
+    list1.union(list2) // [1, 2, 3, 4, 5]
+    // plus: 두 List를 병합(중복 요소 포함), + 연산자와 동일 연산
+    list1.plus(list2) // [1, 2, 3, 4, 2, 2, 3, 4, 5, 5]
+    // partition: 주어진 식에 따라 2개의 컬렉션으로 분리해 Pair로 반환
+    list1.partition { it % 2 == 0 } // [2,4], [1,3]
+    // zip: 동일 인덱스끼리 Pair를 만들어 반환
+    list1.zip(list2) // [(1, 2), (2, 2), (3, 3), (4, 4)]
+
+    // 순서와 정렬
+    // reversed: 뒤집힌 순서로 컬렉션 반환
+    intNumbers.reversed() // [3, 2, 1]
+    // sorted: 요소를 정렬한 후 정렬된 컬렉션 반환
+    intNumbers.sorted()) // [1, 2, 3]
+    // sortedDescending: 내림차순 정렬
+    intNumbers.sortedDescending() // [3, 2, 1]
+    // sortedBy: 특정 비교식에 의해 정렬된 컬렉션 반환환
+    intNumbers.sortedBy { it % 3 } // [3, 1, 2]
+    intNumbers.sortedByDescending { it % 3 }) // [2, 1, 3]
+    ```
+- 시퀀스
+  - 시퀀스(Sequence) 란 순차적인 컬렉션으로 요소의 크기를 특정하지 않고, 나중에 결정할 수 있는 특수한 컬렉션이다. 
+  - 처리 중에는 계산하지 않다가 toList()나 count() 같은 최종 연산에 의해 결정된다.
+
+#### 코틀린 표준 함수
+
+#### 파일 입출력
+- 코틀린 입출력 API
+  - 코틀린의 표준 라이브러리는 kotlin.io 패키지로 자바 라이브러리를 확장한 것
+    - java.io.File -> 파일 처리
+    - java.io.InputStream -> 바이트 단위의 입력 처리
+    - java.io.OutputStream -> 바이트 단위의 출력 처리
+    - java.io.Reader -> 문자 기반 읽기 처리
+    - java.io.Writer -> 문자 기반 쓰기 처리
+    - java.io.BufferedReader -> 버퍼를 가진 읽기 처리
+- IO/NIO 개념
+  - 자바에서 입출력을 위한 기본적인 패키지 java.io와 기능이 대폭 확장된 java.nio 패키지가 있다. 
+  - nio(New Input Output)는 자바 7부터 강화된 라이브러리
+    - io: 스트림 방식으로 Non-buffer, 비동기를 지원하지 않는다(Blocking)
+    - nio: 채널 방식으로 Buffer 사용, 비동기를 지원한다(NonBlocking)
+  - 스트림과 채널
+    - Stream 방식은 데이터가 흘러가는 방향성에 따라 입력 스트림(InputStream)과 출력 스트림(OutputStream)으로 구분되기 때문에 양방향성을 가지는 작업을 할 때 별로도 지정해야한다.
+    - Channel 방식은 양방향으로 입력과 출력이 모두 가능하기 때문에 입출력을 별도로 지정하지 않아도 된다. 채널을 위한 nio 패키지는 다음과 같다.  
+  - NonBuffer vs Buffer
+    - 스트림 방식(넌버퍼)에서 1바이트(Byte)를 쓰면 입력 스트림이 1바이트를 읽기 때문에 버퍼를 사용해 데이터를 읽는 것보다 상당히 느리게 동작한다.
+    - java.nio 방식은 기본적으로 버퍼를 사용하는 입출력을 하기 때문에 더 나은 성능을 보여준다.
+    - java.io 방식에서는 버퍼와 병합해 사용하는 BufferedInputStream과 BufferedOutputStream을 제공해 사용하기도 한다.
+  - 블로킹과 넌블로킹
+    - Blocking 이란 공간에 쓰기나(write) 읽기(read)가 불가능하여 호출한 코드에서 계속 멈춰있는 것을 말한다.
+    - Non-blocking 이란 메인 코드의 흐름을 방해하지 않도록 입출력 작업 시 스레드나 비동기 루틴에 맡겨 별개의 흐름으로 작헙하는 것을 말한다.
