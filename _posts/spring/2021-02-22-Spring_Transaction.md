@@ -248,12 +248,28 @@ category: Spring
     - read operation(select) 마다 snapshot을 다시 뜬다.
     - consisten read를 수행하여 새로 뜬 snapshot을 보기 때문에 dirty read가 발생하지 않는다.
     - record lock을 지원하며 gap lock은 사용하지 않는다.
-  - Repeatable Commit
+    - MySQL(InnoDB) 에서의 Read commited 격리 수준 보장 방법
+      - MVCC(Multi Version Concurrency Control)에 의해 Undo로그에 있는 변경(커밋)되기 이전에 데이터를 읽는다.
+  - Repeatable Read
     - 처음 실행하는 read operation 수행시간을 기록한다. 그리고 그 이후 모든 read operation마다 해당 시점을 기준으로 consistent read를 수행한다.
     - record lock과 gap lock을 사용한다.
+    - MySQL(InnoDB) 에서의 Repeatable Read 격리 수준 보장 방법
+      - Read Commited와 동일하게 MVCC를 활용한다.
+      - 트랜잭션 ID를 기준으로 Undo 로그에 현재 트랜잭션ID보다 이전의 데이터를 읽기 때문에 Non Repeatable Read 수준을 보장한다
   - Serializable
     - 모든 select 문을 select ... for share로 변경하여 shared lock을 건다.
     - select문에 lock을 걸기 때문에 deadlock이 걸릴 가능성이 높아 사용할 때 조심해야 한다.
+    - MySQL(InnoDB) 에서의 Serializable 격리 수준 보장 방법
+      - 읽기 작업에 대해 읽기 잠금이 실행되어 한 트랜잭션이 읽는 작업에 대해 다른 트랜잭션의 CUD 작업이 될 수 없다.
+  - InnoDB 스토리지 엔진에서는 Repeatable Read 수준에서도 Phantom read 가 발생하지 않는다.
+    - Gap Lock과 Next Key Lock 덕분에 발생하지 않는다.(해당 Lock을 사용하기 위해서는 for update 쿼리 사용 필요)
+      - Gap Lock: 인덱스 레코드 사이의 간격에 설정되는 잠금입니다. 이는 다른 트랜잭션이 해당 간격에 새로운 레코드를 삽입하는 것을 막는다
+      - Next Key Lock: Record Lock과 Gap Lock을 결합한 형태로 이는 특정 인덱스 레코드에 대한 잠금과 그 이전의 간격에 대한 잠금을 동시에 설정
+    - 예시
+      - 테이블 상태: id 인덱스가 있는 테이블에 id가 90과 102인 레코드가 있습니다.
+      - 쿼리 실행: SELECT * FROM my_table WHERE id > 100 FOR UPDATE;
+      - Next-Key Lock 설정: InnoDB는 id가 102인 레코드에 Record Lock을 설정하고, 90과 102 사이의 간격에 Gap Lock을 설정합니다.
+      - Phantom Read 방지: 다른 트랜잭션이 id가 101인 새로운 레코드를 삽입하는 것을 방지합니다.
     
 - 출처: https://bamdule.tistory.com/51
 - 출처: https://www.hanumoka.net/2018/09/11/spring-20180911-spring-Transactional/
