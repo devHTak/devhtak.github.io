@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Spring Batch
-summary: Spring Cache
+summary: Spring Batch
 author: devhtak
 date: '2021-11-06 21:41:00 +0900'
 category: Spring
