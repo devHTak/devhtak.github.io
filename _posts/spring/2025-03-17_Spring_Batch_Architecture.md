@@ -1,3 +1,11 @@
+---
+layout: post
+title: Spring Batch Architecture
+summary: Spring Batch
+author: devhtak
+date: '2025-03-17 21:41:00 +0900'
+category: Spring
+---
 ### Spring Batch 
 
 #### 스프링 배치 시작하기
@@ -240,3 +248,7 @@ public class BasicTaskJobConfiguration {
     - targetObject 속성에 대상 클래스의 빈을 지정하고, targetMethod속성에 실행할 메소드 이름을 지정한다.
     - POJO 클래스는 일괄 처리 종료 상태를 메소드의 반환 값으로 반환이 가능하지만, 이경우 사실은 ExitStatus를 반환값으로 설정해야한다.
     - 다른 타입의 값이 반환될 경우 반환값과 상관없이 "정상 종료(ExitStatus:COMPLETED)" 상태로 간주된다.
+
+#### 출처
+- https://devocean.sk.com/experts/techBoardDetail.do?page=&boardType=experts&query=&ID=166164&searchData=&subIndex=&searchText=&techType=&searchDataSub=&searchDataMain=&comment=
+- https://devocean.sk.com/experts/techBoardDetail.do?page=&boardType=experts&query=&ID=166690&searchData=&subIndex=&searchText=&techType=&searchDataSub=&searchDataMain=&comment=
