@@ -178,7 +178,12 @@ paradigm concerned with data streams and the propagation of change.
         () -> System.out.println("Done")
     );
     ```
-    
+- Observer패턴과 @EventListener를 통한 pub-sub 패턴 비교
+  - Observer 패턴과 달리 pub-sub 패턴 차이
+    - Observer 패턴과 달리 pub-sub 패턴은 게시자와 구독자가 서로를 알 필요가 없다.
+  - Observer 패턴은 관찰자(Observer)가 주체(Subject)에 대해 구독을 하고, 주체에서 이벤트가 발생(서로 의존성을 맺고 있다)
+  - pub-sub 패턴은 구독자와 게시자 사이의 간접적인 계층(이벤트 채널)을 두어 직접적인 의존성을 맺지 않는다.
+ 
 #### Reactive Stream
 
 - non-blocking backPressure(배압) 을 이용하여 비동기 서비스를 할 때 기본이 되는 스펙
