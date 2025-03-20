@@ -17,7 +17,8 @@
   interface WebFilter { Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain); }
   ```
 - Reactive Web 스택
-  - 요청 -> 서버 엔진(Netty, Undertow...) -(ServerHttpRequest)-> HttpHandler -(ServerWebExchange)-> WebFilterChain -(ServerWebExchange)-> DispatcherHandler -> RouterFunctionMapping -> HandleFunctionAdapter or RequestMappingHandlerMapping
+  - 요청 -> 서버 엔진(Netty, Undertow...) --> HttpHandler(ServerHttpRequest) --> WebFilterChain(ServerWebExchange)
+    --> DispatcherHandler(ServerWebExchange) --> RouterFunctionMapping --> HandleFunctionAdapter or RequestMappingHandlerMapping
     - 기본 서버 엔진에서 처리하는 요청 입력
     - HttpHandler 계층을 통해 , request, response, 세션 및 관련 정보를 exchange로 결합
     - WebFilterChain 계층을 통해 정의된 WebFilter를 체인으로 구성
