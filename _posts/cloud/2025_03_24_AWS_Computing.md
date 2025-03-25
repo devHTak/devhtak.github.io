@@ -65,3 +65,7 @@
     - 지표에 대한 임계값을 정하고 초과 시 알람을 내리는 형태의 동적인 모니터링 방법
     - EC2를 자동 모니터링 도구는 다양하나 Amazon CloudWatch 알람 시스템을 이용하여 동적으로 단일 지표를 관찰하고 임계값을 기준으로 알람 작업을 수행할 수 있다.
       - Amazon SNS(Simple Notification Service)를 통해 관리자 이메일 등을 호출할 수 있다.
+
+#### 출처
+<img width="571" alt="image" src="https://github.com/user-attachments/assets/48df31c1-aa7e-4a51-82c5-e933d41323d1" />
+- AWS 교과서(길벗)
