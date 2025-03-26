@@ -82,8 +82,8 @@
   - IAM(Identity and Access Management)와 및접하게 연관되어 접속 사용자나 데이터 접근을 관리한다.
 
 ### AWS 데이터베이스 서비스
-|---|---|---|
 |유형|서비스|주요 특징|
+|---|---|---|
 |관계형|Amazon RDS, Amazon Aurora|참조 무결성, 안전한 트랜잭션 수행|
 |키-값|Amazon DynamoDB|빠른 응답 시간, 처리량|
 |문서형|Amazon DocumentDB|각종 문서 인덱싱|
