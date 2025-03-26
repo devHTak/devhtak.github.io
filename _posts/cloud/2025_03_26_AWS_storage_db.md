@@ -81,4 +81,50 @@
 - S3 보안
   - IAM(Identity and Access Management)와 및접하게 연관되어 접속 사용자나 데이터 접근을 관리한다.
 
-### 데이터베이스 서비스
+### AWS 데이터베이스 서비스
+|---|---|---|
+|유형|서비스|주요 특징|
+|관계형|Amazon RDS, Amazon Aurora|참조 무결성, 안전한 트랜잭션 수행|
+|키-값|Amazon DynamoDB|빠른 응답 시간, 처리량|
+|문서형|Amazon DocumentDB|각종 문서 인덱싱|
+|인-메모리|Amazon ElastiCache|메모리 저장, 1ms 응답 시간|
+|그래프형|Amazon Neptune|쉽고 빠른 데이터 관계 생성 및 탐색|
+|시계형|Amazon Timestream|순차적 데이터 수집, 저장, 처리|
+|원장|Amazon QLDB|모든 변경에 대한 불변 검증 기록 유지|
+
+- 관계형 DB, key-value, in-memory 등 다양한 데이터베이스 서비스를 제공
+
+#### Amazon RDS
+- RDS란
+  - 클라우드 환경에서 관계형 데이터베이스를 간편하게 설정하고 운영할 수 있는 서비스로 다양한 데이터베이스 인스턴스 유형을 선택할 수 있다.
+    - Aurora, PostgreSQL, MariaDB, Oracle, SQLServer 등
+  - 사용 편의성이 높고 모니터링 및 지표와 이벤트 알람을 이용해 높은 관리 효율성을 보장하며 비용도 상대적으로 저렴
+  - 간편한 복제 기능을 이용해 가용성과 확장성을 보장
+- 복제
+  - Multi-AZ
+    - 기본적으로 Active(Primary DB)-Standby(Standby Replica) 형태로 동작하며 Primary DB에 문제 발생 시 Standby가 Primary로 승격하여 동적으로 유지
+    - Multi-AZ 방식은 데이터 정합성 유지가 중요하기 때문에 동기식 복제로 데이터를 동기화 한다
+  - Read Replica
+    - 원본 데이터를 Primary DB에 두고 읽기 전용의 복제 데이터를 Read Replica 데이터베이스에 생성하여 유지하며 비동기식 복제가 이뤄진다.
+    - 읽기 전용 복제 데이터가 있는 Read Replica는 확장이 가능하며 데이터 일기 처리 속도를 높일 수 있다. 다른 리전까지 최대 다섯개의 Read Replica를 복제할 수 있다
+#### Amazon Aurora
+- Amazon Aurora
+  - AWS 자체의 클라우드 데이터베이스 엔진으로 안정적이고 고성능의 데이터베이스 처리 가능
+  - Aurora 엔진은 Amazon RDS에서 관리하며 프로비저닝, 패치, 백업, 복원, 장애복구 등 작업 수행 가능
+- 복제 방식
+  - 내결함성이 우수하다.
+  - 예를들면 MySQL은 인스턴스에 EBS 스토리지가 연결되어 서로 다른 가용 영역으로 동기식 복제가 된다.
+  - 반면 Aurora는 공유 스토리지를 통해 최소 3개의 가용 영역에서 두개씩 총 여섯개의 복제 데이터를 가지고 있어 안정적으로 서비스할 수 있다.
+#### Amaazon DynamoDB
+- 키-값 데이터베이스로 키를 데이터의 고유한 식별자로 사용하고, 값은 유형의 제한 없이 단순한 개체(entity)뿐 아니라 복잡한 집합체까지 무엇이든 가능한 비정형 데이터를 입력할 수 있다.
+- 별도 서버를 구축하지 않아도 운영되는 서버리스로 동작하기 때문에 서버에 대한 프로비저닝, 패치, 소프트웨어 설치 없이 용량에 따라 테이블을 자동으로 확장 및 축소해 관리 편의성이 높다.
+  
+#### Amazon ElastiCache
+- In-Memory DB로 데이터를 메모리에 저장하는 형태로 동작
+- Memcache 방식과 Redis 방식으로 구분된다.
+  
+
+#### 출처
+<img width="571" alt="image" src="https://github.com/user-attachments/assets/48df31c1-aa7e-4a51-82c5-e933d41323d1" />
+
+- AWS 교과서(길벗) 중 5장, 6장을 정리한 내용입니다.
