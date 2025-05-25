@@ -52,6 +52,69 @@
   - 구독이 발생한 시점 이전에 emit된 데이터는 Subscriber가 전달받지 못하고 구독이 발생한 이후 emit된 데이터만 전달 받는다.
   - 구독이 여러번 발생해도 타임라인은 하나밖에 생성되지 않는다.
 - HTTP 요청/응답에서 Cold, Hot Sequence 동작 흐름
+  ```java
+  public static main(String[] args) throws InterruptedException {
+      // Cold Sequence
+      Mono<String> coldMono = getWordTime(uri);
+      coldMono.subscribe(dateTime -> log.info("# dateTime1: {}". dateTime);
+      Thread.sleep(2000);
+      coldMono.subscribe(dateTime -> log.info("# dateTime2: {}". dateTime);
+      Thread.sleep(2000);
 
+      // Hot Sequence
+      Mono<String> hotMono = getWordTime(uri).cache();
+      hotMono.subscribe(dateTime -> log.info("# dateTime1: {}". dateTime);
+      Thread.sleep(2000);
+      hotMono.subscribe(dateTime -> log.info("# dateTime2: {}". dateTime);
+      Thread.sleep(2000);
+  }
+  private static Mono<String> getWordTime(URI wordTimeUri) {
+      return webClient.create()
+                .get().uri(worldTimeUri).retrieve()
+                .bodyToMono(String.class)
+                .ma(response -> {
+                    DocumentContext jsonContext = JsonPath.parse(response);
+                    return jsonContext.read("$.datetime");
+                })
+  }
+  ```
+  - Cold Sequence 동작 방식
+    - 구독이 발생할 때마다 데이터의 emit 과정이 처음부터 새로 시작되는 Cold Sequence 특징으로 인해 두번의 구독이 발생했기 때문에 두번의 HTTP 요청이 이뤄지고 2초 정도 차이나는 응답을 확인할 수 있다.
+  - Hot Sequence 동작 방식
+    - cache operator
+      - hot source(sequence)로 병환하며 마지막 emit된 데이터에 대해 캐시한뒤, 구독이 발생할 때마다 캐시된 데이터를 전달
+    - Subscriber의 최초 구독이 발생해야 Publisher가 데이터를 emit 하는 warm-up 과 subscriber의 구독 여부와 상관없이 데이터를 emit 하는 Hot으로 구분할 수 있다.
+   
 #### Backpressure
-
+- Backpressure란
+  - 배압이란 뜻으로 Publisher가 끊임없이 emit 하는 무수한 데이터를 적절하게 제어하여 데이터 처리에 과부하가 발생하지 않도록 제어 하는 것
+- Reactor에서 Backpressure 처리 방식
+  - 데이터 개수 제어: subscriber가 처리할 수 있는 수준의 적절한 데이터 개수 요청
+    ```java
+    Flux.range(1, 5)
+        .doOnRequest(data -> log.info("# doOnRequest: {}", data))
+        .subscribe(new BaseSubscriver<Integer>() {
+            @Override
+            protected void hookOnSubscribe(Subscription subscription) {
+                request(1);
+            }
+            @SneakyThrows
+            @Override
+            protected void hookOnNext(Integer value) {
+                Thread.sleep(2000L);
+                log.info("# hookOnNext: {}", value);
+                request(1);
+            }
+        });
+    ```
+    - hookOnSubscribe: onSubscribe() 대신하여 구독 시점에 request() 호출하여 최초 데이터 요청 개수 제어
+    - hookOnNext: onNext 메서드를 대신하여 emit 한 데이터를 처리한 후 Publisher에게 다시 데이터를 요청하는 역할로 request() 로 데이터 요청 개수 제어
+  - Backpressure 전략 사용
+    - IGNORE 전략: Backpressure 적용하지 않는다. (IllegalStateException 발생)
+    - ERROR 전략: Downstream으로 전달할 데이터가 버퍼에 가득 찰 경우 예외 발생 (IllegalStateException 발생)
+    - DROP 전략: Downstream으로 전달할 데이터가 버퍼에 가득 찰 경우 버퍼 밖에서 대기하는 먼저 emit된 데이터부터 drop
+    - LATEST 전략: Downstream으로 전달할 데이터가 버퍼에 가득 찰 경우 버퍼 밖에서 대기하는 가장 최근에 emit된 데이터부터 버퍼에 채우는 전략
+    - BUFFER 전략: Downstream으로 전달할 데이터가 버퍼에 가득찰 경우 버퍼 안에 있는 데이터부터 drop 시키는 전략
+      - onBackpressureBuffer(int buffer_size, Consume<T> con, BufferOverflowStrategy strategy)
+      - DROP_LATEST: 가장 최근에 버퍼안에 채워진 데이터를 drop하여 확보된 공간에 emit된 데이터를 채우는 전략
+      - DROP_OLDEST: 버퍼 안에 채워진 데이터 중 가장 오래된 데이터를 drop 한 후, 확보된 공간에 emit된 데이터를 새우는 정략
