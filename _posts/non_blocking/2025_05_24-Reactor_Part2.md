@@ -118,3 +118,62 @@
       - onBackpressureBuffer(int buffer_size, Consume<T> con, BufferOverflowStrategy strategy)
       - DROP_LATEST: 가장 최근에 버퍼안에 채워진 데이터를 drop하여 확보된 공간에 emit된 데이터를 채우는 전략
       - DROP_OLDEST: 버퍼 안에 채워진 데이터 중 가장 오래된 데이터를 drop 한 후, 확보된 공간에 emit된 데이터를 새우는 정략
+     
+#### Sinks
+- Sinks 란?
+  - Reactor에선 Processor 인터페이스를 구현한 구현 클래스인 FluxProcessor, MonoProcessor, EmitterProcessor 등을 지원
+  - Sinks가 Reactor 3.4.0에 등장하였으며 Processor는 Reactor 3.5.0부터 완전히 제거될 예정
+  - Sinks는 리액티브 스트림즈의 Signal을 프로그래밍 방식으로 푸쉬할 수 있는 구조이며 Flux, Mono의 의미 체계를 갖는다.
+    - Flux, Mono는 onNext같은 Signal을 내부적으로 전송해주는 방식이었는데, Sinks를 사용하면 프로그래밍 코드를 통해 명시적으로 Signal을 전송할 수 있다.
+    - generate, create operator는 싱글스레드 기반에서 Signal을 전송하는 반면 Sinks는 멀티 스레드 방식으로 Signal을 전송해도 스레드 안정성을 보장하기 때문에 예기치 않은 동작으로 이어지는 것을 방지
+  ```java
+  Sinks.Many<String> unicastSink = Sinks.many().unicast().onBacpressureBuffer();
+  Flux<String> flux = unicastSink.asFlux();
+  IntStream.range(1, 10)
+  .forEach(n -> {
+      try {
+          new Thread(() -> {
+              unicastSink.emitNext(doTask(n), Sinks.EmitFailureHandler.FAIL_FAST);
+              log.info("# emitted: {}", n);
+          }).start();
+      } catch(InterruptedException e) {
+          log.error(e.getMessage();
+      }
+  });
+  flux.publishOn(Schedulers.parallel())
+      .map(result -> result + " success")
+      .doOnNext(n -> log.info("# map: {}", n)
+      .publishOn(Schedulers.parallel())
+      .subscribe(data -> log.info("# onNext: {}", data);
+
+  Thread.sleep(200L);
+  ```
+  - doTask() 메서드가 루프를 돌때마다 새로운 스레드에서 실행
+- Sink 종류 및 특징
+  - Sinks.One, Sinks.Many를 사용하여 전송할 수 있다.
+  - Sinks.One은 한건의 데이터를 프로그래밍 방식으로 emit하는 역할을 하기도 하고, Mono 방식으로 Subscriber가 데이터를 소비할 수 있도록 해주는 Sinks 클래스 내부에서 인터페이스로 정의된 Sinks의 스펙 또는 사양으로 볼 수 있다.
+    - EmitFailureHandler객체를 통해서 emit 도중 발생한 에러를 실패 처리하며 에러가 발생했을 때 재시도를 하지 않고 즉시 실패 처리 한다.
+    ```java
+    public interface EmitFailuerHandler {
+        EmitFailureHandler FAIL_FAST = (signalType, emission) -> false;
+        boolean onEmitFailure(SignalType signalType, EmitResult emitResult);
+    }
+    ```
+  - Sinks.Many
+    - Sinks.Many는 ManySpec을 리턴하며 UnicatSpec, MulticastSpec, MulticastRelpaySpec 를 리턴하는 형태의 추상메소드를 갖는 인터페이스이다.
+    - UnicastSpec
+      - onBackpressureBuffer 메서드를 호출하여 사용할 수 있다.
+      - unicast는 하나의 특정 시스템만 정보를 전달받는 방식으로 단 하나의 Subscriber에게만 데이터를 emit
+      - 두번째 subscribe를 호출하면 IllegalStateException 발생
+    - MulticastSpec
+      - onBackpressureBuffer 메서드를 호출하여 사용할 수 있다.
+      - 하나 이상의 Subscriber에게 데이터를 emit
+    - MulticaspReplaySpec
+      - emit된 데이터 중에서 특정 시점으로 되돌린 데이터부터 emit
+
+#### Scheduler
+- 스레드의 개념 이해
+- Scheduler란?
+- Scheduler를 위한 전용 Operator
+- publishOn, subscribeOn의 동작 이해
+- Scheduler 종류
