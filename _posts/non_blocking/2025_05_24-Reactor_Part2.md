@@ -173,7 +173,126 @@
 
 #### Scheduler
 - 스레드의 개념 이해
+  - Scheduler 는 Reactor Sequence에서 사용되는 스레드 관리자 역할
+  - 물리적인 스레드는 병렬성과 관련이 있으며 논리적인 스레드는 동시성과 관련이 있다.
 - Scheduler란?
+  - 운영체제 레벨에서 Scheduler는 실행되는 프로세스를 선택하고 실행하는 등 프로세스의 라이프사이클을 관리
+  - Reactor에서도 Scheduler는 비동기 프로그래밍을 위해 사용되는 스레드를 관리해주는 역할
+    - Ract Condition 등 생길 수 있는 문제를 최소화하여 간결한 코드, 스레드 제어에 대한 부담을 적게 해준다.
 - Scheduler를 위한 전용 Operator
+  - subscribeOn
+    ```java
+    Flux.fromArray(new Integer[] {1, 3, 5, 7})
+        .subscribeOn(Schedulers.boundedElastic())
+        .doOnNext(data -> log.info("# doOnNext: {}", data)
+        .doOnSubscribe(subscription -> log.info("# doOnSubscription"))
+        .subscribe(data -> log.info("#next: {}", data);
+    ```
+    - 구독이 발생한 직후에 원본 Publisher의 동작을 처리하기 위해 스레드 할당
+    - doOnNext, doOnSubscribe는 데이터 emit, 구독 발생 시점에 처리 동작이며 스레드 확인 가능
+    - doOnSubscribe는 main 스레드 동작, 그 외에는 Scheduler에 의해 새로운 스레드로 동작한다.
+  - publishOn
+    ```java
+    Flux.fromArray(new Integer[] {1, 3, 5, 7})
+        .doOnNext(data -> log.info("# doOnNext: {}", data)
+        .doOnSubscribe(subscription -> log.info("# doOnSubscription"))
+        .publishOn(Schedulers.parallel())
+        .subscribe(data -> log.info("#next: {}", data);
+    ```
+    - Signal을 전송할 때 실행되는 스레드를 제어하는 역할로 Downstream의 실행 스레드 변경
+    - doOnSubscribe, doOnNext는 메인 스레드에서 동작하며 onNext는 새로운 스레드에서 실행된다.
+  - parallel()
+    ```java
+    Flux.fromArray(new Integer[] {1, 3, 5, 7})
+        .parallel(4)
+        .runOn(Schedulers.parallel())
+        .subscribe(data -> log.info("#next: {}", data);
+    ```
+    - subscribeOn, publishOn은 동시성을 가지는 논리적인 스레드이지만 parallel 은 병렬성을 가지는 물리적인 스레드
+      - parallel 의 인자로 실행될 스레드의 개수를 지정할 수 있다. (CPU 코어 개수만큼 병렬 처리)
+    - 실제로 병렬 작업을 수행할 스레드 할당은 runOn() 에서 담당
 - publishOn, subscribeOn의 동작 이해
+  ```java
+   Flux.fromArray(new Integer[] {1, 3, 5, 7})
+        .publishOn(Schedulers.parallel()) // 하위에 새로운 스레드 생성
+        .doOnNext(data -> log.info("# doOnNext: {}", data) 
+        .filter(data -> data > 3) // A thread
+        .doOnNext(data -> log.info("# doOnNext: {}", data)
+        .publishOn(Schedulers.parallel()) // 하위에 새로운 스레드 생성
+        .map(data -> data * 10);  // B thread
+        .subscribe(data -> log.info("#next: {}", data); // B thread
+  ```
+  - 여러 operator 가 있을 때 publishOn을 호출하면 하위 downstream에 대해 새로운 스레드로 처리되며 Operator 체인상에 한개 이상 사용 가능하며 실행 목적에 맞게 적절하게 분리할 수 있다.
+  - subscribe와 publishOn을 함께 사용하여 원본 Publisher에서 데이터를 emit하는 스레드와 emit된 데이터를 가공 처리하는 스레드를 적절하게 분리할 수 있다.
+  - subscribeOn 체이상에 위치와 상관없이 구독 시점 직후, 즉 Publisher가 데이터를 emit하기 전에 실행 스레드를 변경
 - Scheduler 종류
+  - Schedulers.immediate()
+    - 별도 스레드 생성없이 현재 스레드에서 작업을 처리하고자 할 때 사용
+  - Scedulers.single()
+    - 스레드 하나만 생성하여 Scheduler가 제거되기 전까지 재사용
+    - 여러번 호출해도 하나만 생성된다(single-1)
+  - Schedulers.newSingle()
+    - 호출할 때마다 매번 새로운 스레드 하나 생성
+    - 파라미터로는 스레드 명과 데몬 스레드 동작 여부 설정
+    - 데몬 스레드는 보조 스레드라고도 불리며 주 스레드가 종료되면 자동으로 종료된다.
+  - Schedulers.boundedElastic()
+    - ExecutorService 기반의 스레드 풀을 생성한 후, 그 안에서 정해진 수만큼의 스레드를 사용하여 작업을 처리하고 작업이 종료된 스레드는 바납하여 재사용하는 방식으로 Blocking-IO에 최적화 되어 있다.
+  - Schedulers.parallel()
+    - Non-Blocking IO 에 최적화되어 있는 Scheduler로서 CPU 코어 수만큼 스레드 생성
+  - Schedulers.fromExcutorService()
+    - 기존에 사용하고 있는 ExecutorService가 있다면 그로부터 Scheduler를 생성하는 방식, Reactor에서는 이 방식이 권장되지 않는다.
+  - Schedulers.newXXX()
+    - single(), boundedElastic(), parallel()은 Reactor에서 제공하는 Scheduler 인스턴스를 사용하지만 newXXX를 사용하면 새로운 Scheduler 인스턴스를 생성할 수 있다.
+    - 스레드 이름, 디폴트 스레드 개수, 유휴시간, 데몬스레드 여부등을 직접 지정하여 커스텀 스레드 풀로 새로 생성할 수 있다.
+
+#### Context
+- Context란
+  ```
+  the situation, events or information that are related to something and that help you to understand it
+  ```
+  - Context는 어떤 상황에서 그 상황을 처리하기 위해 필요한 정보
+  ```
+  Reactor에서 Context 정의는 아래와 같다.
+  A key/value stroe that is propagated between components such as operators via the context protocol
+  ```
+  - propagate: downstream, upstream으로 Context가 전파되어 Operator 체인상의 각 Operator가 해당 Context 정보를 동일하게 이용할 수 있다.
+  - ThreadLocal과 다소 유사한 면이 있지만 실행 스레드와 매핑하는 것이 아닌 Scheduler와 매핑한다.
+    - 구독이 발생할 때마다 해당 구독과 연결된 하나의 Context가 생기는 것
+  ```java
+  Mono.deferContextual(ctx -> Mono.just("Hello " + ctx.get("firstName"))
+      .subscribeOn(Schedulers.boundedElastic())
+      .publishOn(Schedulers.parallel())
+      .transformDefferedContextual((mono, ctx) -> mono.map(data -> data + " " + ctx.get("lastName:)))
+      .contextWrite(context -> context.put("lastName", "Jobs"))
+      .contextWrite(context -> context.put("firstName", "Steve"))
+      .subscribe(data -> log.info("# onNext: {}", data));
+  ```
+  - Context에 데이터 쓰기
+    - contextWrite을 통해 Context에 데이터를 쓰고 있다.
+    - contextWrite 내부 구현을 보면 Function 으로 람다 타입의 Context 파라미터, 리턴으로 사용되고 있다.
+  - Context에 쓰인 데이터 읽기
+    - Context에서 데이터를 읽는 방식
+      - 원본 데이터 소스 레벨에서 읽는 방식
+      - Operator 체인의 중간에서 읽는 방식
+      - contextWriter 로 쓰기 작업 가능
+    - deferContextual operator 원본 데이터 소스 레벨에서 Context 데이터를 읽을 수 있다.
+    - transformDeferredContextual 을 사용하면 체인 중간에서 데이터를 읽을 수 있다.
+    - 저장된 데이터를 읽을 때는 ContextView를 사용하며 Reactor에서 Operator 체인상의 서로 다른 스레드들이 Context의 저장된 데이터에 손쉽게 접근할 수 있으며 context.put 은 매번 불변객체로 스레드 안정성을 보장
+- 자주 사용되는 Context API
+  - 쓰기
+    - put(key,value)
+      - key/value 형태로 context 값을 쓴다.
+    - of(key1, value1, key2, value2 ...)
+      - key/value 형태로 여러개의 값을 쓴다.
+    - putAll(ContextView)
+      - 현재 Context와 입력받은 ContextVlue merge
+    - delete(key)
+      - Context에서 key에 해당하는 value를 지운다.
+  - 읽기
+    - get(key)
+    - getOrEmpty(key)
+    - getOrDefault(key, default value)
+    - hasKey(key)
+    - isEmpty()
+    - size()
+- Context의 특징
