@@ -295,4 +295,79 @@
     - hasKey(key)
     - isEmpty()
     - size()
-- Context의 특징
+- Context 특징
+  - Context는 구독이 발생할 때마다 하나의 Context가 해당 구독에 연결
+  - Context는 Operator chain의 아래에서 위로 전파
+  - 동일한 키에 대한 값을 중복해 저장하면 Operator 체인에서 가장 위쪽에 위치한 contextWrite()로 저장한 값으로 덮어쓴다.
+  - Inner Sequence 내부에서는 외부 Context에 저장한 데이터를 읽을 수 있지만 Inner Sequence 외부에서는 Inner Sequence 내부 Context에 저장된 데이터를 읽을 수 없다.
+
+#### Debugging
+- Dubug Mode를 사용한 디버깅
+  ```java
+	Hooks.onOperationDebug();
+	```
+  - 실행 결과에 출력된 에러 메세지 이외에 stacktrace 내부에는 의미있는 내용을 확인하기 어렵기 때문에 디버그모드를 실행하면 Operator 체인상에 에러가 발생한 지점을 정확히 가리키고 있다.
+  - 디버그 모드를 활성화하는 경우 애플리케이션 내부에 비용이 많이 드는 동작 과정을 거친다.
+  - 애플리케이션 내에 있는 모든 Operator의 Stacktrace를 캡처한다.
+  - 에러가 발생하면 캡처한 정보를 기반으로 에러가 발생한 Assembly의 Stacktrace를 원본 Stacktrace 중간에 끼어 넣는다.
+    - Assembly란 Operator 연산으로 반환되는 Flux/Mono를 말한다.
+    - 에러가 발생한 operator의 stacktrace를 캡처한 assembly 정보를 traceback 이라 한다.
+- checkpoint() operator를 사용한 디버깅
+  - checkpoint operator를 사용하면 operator 채인 내의 스택트레이스만 캡처
+  - Traceback 출력
+    ```java
+    Flux.just(2, 4, 6, 8)
+        .zipWith(Flux.just(1, 2, 3, 0), (x, y) -> x/y)
+        .map(num -> num + 2)
+        .checkpoint()
+        .subscribe(
+            data -> log.info("# onNext: {}", data),
+            error -> log.error("# onError: ", error);
+        );
+    ```
+    - map 다음에 추가한 checkpoint 지점까지 에러 전파 예상 가능
+  - traceback 출력 없이 식별자를 포함한 Description 을 출력하여 에러 발생 지점 예상하는 방법
+    ```java
+    Flux.just(2, 4, 6, 8)
+        .zipWith(Flux.just(1, 2, 3, 0), (x, y) -> x/y)
+        .checkpoint("zipwith checkpoint")
+        .map(num -> num + 2)
+        .checkpoint("map checkpoint")
+        .subscribe(
+            data -> log.info("# onNext: {}", data),
+            error -> log.error("# onError: ", error);
+        );
+    ```
+    - 파라미터로 입력한 description 출력되는 것 확인 가능
+  - Traceback과 Description 모두 출력하는 방법
+    ```java
+    Flux.just(2, 4, 6, 8)
+        .zipWith(Flux.just(1, 2, 3, 0), (x, y) -> x/y)
+        .checkpoint("zipwith checkpoint", true)
+        .map(num -> num + 2)
+        .checkpoint("map checkpoint", true)
+        .subscribe(
+            data -> log.info("# onNext: {}", data),
+            error -> log.error("# onError: ", error);
+        );
+    ```
+    - checkpoint와 description ahen cnffur
+  - operator 체인이 조금 복잡해지면 에러 발생 지점을 찾는 것이 쉽지 않다.
+- log() operator를 사용한 디버깅
+  ```java
+  Flux.fromArray(new String[]{ "BANANAS", "APPLES", "PEARS", "MELONS"))
+      .map(String::toLowCase)
+      .map(fruit -> fruit.substring(0, fruit.length() - 1))
+      .log()
+      .map(fruitMap::get)
+      .subscribe(
+          data -> log.info("# onNext: {}", data),
+          error -> log.error("# onError: ", error);
+      );
+  ```
+  - log는 reactor sequence의 동작을 출력하는 데, 이 로그를 통해 디버깅 가능
+  - log operator를 추가하면 onSubscribe, request, onNext 같은 singal 출력
+  - log operator에 파라미터 추가 가능
+    - log("Fruit.Substring", Level.FINE)
+    - Fruit.Substring -> 카테고리 표시, Level.FINE -> 로그 레벨 지정
+  - 
