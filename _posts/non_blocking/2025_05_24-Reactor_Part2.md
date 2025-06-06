@@ -370,4 +370,296 @@
   - log operator에 파라미터 추가 가능
     - log("Fruit.Substring", Level.FINE)
     - Fruit.Substring -> 카테고리 표시, Level.FINE -> 로그 레벨 지정
-  - 
+
+#### Testing
+- StepVerifier를 사용한 테스팅
+  ```java
+  StepVerifier.create(Mono.just("Hello Reactor")) // 테스트할 대상 sequence 생성
+              .expectNext("Hello Reactor") // expectXX를 통해 기댓값 평가
+              .as("# expect next") // 이전 기댓값 평가 단계에 대한 설명 추가 가능
+              .expectComplete()
+              .verify(); // 전체 operator chain의 테스트를 트리거
+  ```
+  - 가장 일반적인 테스트 방식은 Flux, Mono를 Reactor sequence로 정의한 후, 구독 시점에 해당 operator chain이 시나리오 대로 동작하는 지 테스트
+  - 다음에 발생할 signal에 대해 데이터 emit, 특정 시간동안 emit된 데이터가 있는 지 등을 단계적으로 테스트할 수 있다.
+  |메소드|설명|
+  |---|---|
+  |expectSubscription|구독이 이뤄짐을 기대|
+  |expectNext|onNext 시그널을 통해 전달된 값이 파라미터로 전달된 값과 같음을 기대|
+  |expectCopmlete|onComplete 시그널 전송되기를 기대|
+  |expectError|onError 시그널 기대|
+  |expectNextCount|구독 시점 또는 이전 expectNext 를 통해 기댓값이 평가된 데이터 이후부터 emit된 수를 기대|
+  |expectNoEvent|주어진 시간동안 signal 이벤트가 발생하지 않았음을 기대|
+  |expectAccessibleContext|구독 시점 이후 context가 전파되었음을 기대|
+  |expectNextSequence|emit된 데이터들이 파라미터로 전달되 iterable 요소와 매치됨을 기대|
+
+  |메소드|설명|
+  |---|---|
+  |verify| 검증을 트리거|
+  |verifyComplete| 검증 트리거 및 onComplete signal 기대|
+  |verifyError| 검증 트리거 및 onError signal 기대|
+  |verifyTimeout|검증 트리거 및 주어진 시간이 초과되어도 publisher 가 종료되지 않음을 기대|
+
+  - withVirtualTime(() -> method()).then(() -> VirtualTimeScheduler.get().advanceTimeBy(Duration.ofHours(1)))
+    - VirtualTimeScheduler 라는 가상 스케줄러의 제어를 받아 특정 시간에 대한 테스트가 가능하다.
+  - Backpressure 테스트
+    - verifyThenAssertThat().hasDroppedElements()
+    - 검증을 트리거한 후, 추가적인 Assertion이 가능한데, hasDroppedElements()를 사용하면 drop된 데이터가 있음을 판단
+  - Context 테스트
+    - expectAccessibleContext.hasKey(key1).hasKey(key2).then()
+    - expectAccessibleContext 를 통해 Context 전파를 확인하고 hasKey를 통해 key가 있는 지 확인할 수 있다.
+    - then 메소드를 통해 다음 signal의 기대값 평가를 할 수 있다.
+  - record 기반 테스트
+    - recordWith를 사용하여 단순 기댓값 평가를 넘어 좀 더 구체적인 조건으로 테스트 가능
+- TestPublisher를 사용한 테스팅
+  - 정상 동작(Well-behaved)하는 TestPublisher
+    ```java
+    TestPublisher<Integer> source = TestPublisher.create();
+    StepVerifier.create(method(source.flux())) // 테스트 대상 클래스에 파라미터로 전달하기 위해 변환
+                .expectSubscription()
+                .then(() -> source.emit(2, 4, 6, 8, 10)) // 필요한 데이터를 emit
+                .expectNext(1, 2, 3, 4)
+                .expectError()
+                .verify();
+    ```
+    - TestPublisher를 사용하여 복잡한 로직이 포함된 대상 메서드를 테스트하거나 조건에 따라 signal을 변경해야 되는 등의 특정 상황을 테스트하기 용이하게 한다.
+    - 오동작(Misbehaving)하는 TestPublisher
+      ```java
+      // 데이터가 null이어도 동작하는 TestPublisher 생성
+      TestPublisher<Integer> source = TestPublisher.createNoncompliant(TestPublisher.Violation.ALLOW_NULL);
+      StepVerifier.create(method(source.flux())) // 테스트 대상 클래스에 파라미터로 전달하기 위해 변환
+                  .expectSubscription()
+                  .then(() -> {
+                                getDataSource().stream().forEach(data -> source.next(data)));
+                                source.complete();
+                  }).expectNext(1, 2, 3, 4)
+                .expectError()
+                .verify();
+    ```
+- PublisherProbe를 사용한 테스팅
+  ```java
+  PublisherProbe<String> probe = PublisherProbe.of(method());
+  StepVerifier.create(method(probe.mono))
+              .expectNextCount(1)
+              .verifyComplete();
+  probe.assertWasSubscribed(); // 해당 파라미터가 구독이 되었고, 요청을 했는지, 중간에 취소되지 않았는 지 확인할 수 있다.
+  probe.assertWasRequested();
+  probe.assertWasNotCanceled();
+  ```
+  - PublisherProbe를 통해 Sequence의 실행 경로를 테스트할 수 있다.
+
+#### Operators
+- Sequence를 생성하기 위한 operator
+  - justOrEmpty
+    - just의 확장 operator로 emit할 데이터가 null일 경우 NullPointerException이 발생하지 않고 onComplete signal 전송
+  - fromIterable
+    - iterable에 포함된 데이터를 emit하는 Flux 생성
+  - fromStream
+    - stream에 포함된 데이터를 emit하는 flux를 생성
+    - java stream 특성 상 Stream 은 재사용할 수 없으며 cancel, error, complete 시 자동으로 닫히게 된다.
+  - range
+    - n부터 1씩 증가한 연속된 수를 m개 emit 하는 flux를 생성
+    - for문처럼 특정 횟수만큼 어떤 작업을 처리하고자 할 경우에 주로 사용
+  - defer
+    ```java
+    System.out.println(LocalDateTime.now()); // 2025.06.01 20:54:00
+    Mono<LocalDateTime> justMono = Muno.just(LocalDateTime.now());
+    Mono<LocalDateTime> deferMono = Muno.defer(() -> Mono.just(LocalDateTime.now()));
+
+    Thread.sleep(2000L);
+
+    justMono.subscribe(System.out::println); // 2025.06.01 20:54:00
+    deferMono.subscribe(System.out::println); // 2025.06.01 20:56:00
+
+    Thread.sleep(2000L);
+
+    justMono.subscribe(System.out::println); // 2025.06.01 20:54:00
+    deferMono.subscribe(System.out::println); // 2025.06.01 20:58:00
+    ```
+    - 구독하는 시점에 데이터를 emit 하는 flux, mono 생성
+    - emit을 지연시키기 때문에 꼭 필요한 시점에 데이터를 emit하여 불필요한 프로세스를 줄일 수 있다.
+    - just는 hot publisher 이고, defer는 cold publisher 이다.
+  - using
+    ```java
+    Path path = Paths.get("./example.txt");
+    Flux.using(() -> Files.lines(path), Flux::fromStream, Stream::close)
+        .subscribe(log::info)
+    ```
+    - 파라미터로 전달받은 resource를 emit하는 flux 생성
+    - 첫번째 파라미터는 읽어 올 resource이고, 두번째 파라미터는 읽어 온 resource를 emit하는 flux, 세번째는 종료 signal이 발생할 경우 resources를 해제하는 등의 후처리를 할 수 있게 한다.
+  - generate
+    ```java
+    Flux.generate(() -> 0, (state, sink) -> {
+        sink.next(state);
+        if(state == 10) sink.complete();
+        return ++state;
+    }).subscribe(log::info)
+    ```
+    - 프로그래밍 방식으로 signal 이벤트를 발생시키며 특히 동기적으로 데이터를 하나씩 순차적으로 emit할 때 사용
+    - 첫번째 파라미터는 emit할 숫자의 초깃값 지정, 두번째는 상태를 지정한다.
+  - create
+    - generate와 동일하게 프로그래밍 방식으로 signal 이벤트를 발생시키지만 차이가 있다.
+    - generate는 동기적으로 한번에 한건씩 발생하지만 create는 한번에 여러건을 비동기적으로 emit할 수 있다.
+- Sequence 필터링 Operator
+  - filter
+    ```java
+    Flux.range(1, 30)
+        .filter(num -> num % 2 != 0)
+        .subscribe(log::info)
+    ```
+    - Upstream에서 emit된 데이터 중에서 조건에 일치하는 데이터만 Downstream으로 emit
+  - filterWhen
+    ```java
+    Flux.fromIterable(method())
+        .filterWhen(vaccine -> Mono.just(vaccineMap.get(vacchine).getT2() >= 23_000_000)
+                                .publishOn(Scheduelrs.parallel()))
+        // filterWhen operator 의 inner sequence를 통해 백신명에 해당하는 수량이 3_000_000개 이상이라면 해당 백신명을 Subscriber에게 emit
+        .subscribe(log::info)
+    ```
+    - 비동기적으로 필터링을 수행한다.
+    - filterWhen() operator는 내부에서 Inner Sequence를 통해 조건에 맞는 데이터인지를 비동기적으로 테스트한 후, 테스트 결과가 true 라면 downstream으로 emit
+  - skip
+    ```java
+    Flux.interval(Duration.ofSeconds(1)) // 5500ms 동안 0 ~ 5 까지 emit
+        .skip(2) // 0, 1 skip
+        .subscribe(log::info); // 2, 3, 4 출력
+    Threa.sleep(5500L);
+    ```
+    ```java
+    Flux.interval(Duration.ofMIllis(300)) // 2000ms 동안 0 ~ 5 까지 emit
+        .skip(Duration.ofSeconds(1)) // 1000ms 동안(0, 1, 2) emit skip
+        .subscribe(log::info); // 3, 4, 5 출력
+    Threa.sleep(2000L);
+    ```
+    - skip operator는 upstream에서 emit된 데이터 중 파라미터로 입력받은 숫자만큼 건너뛴 후 나머지를 emit
+  - take
+    ```java
+    Flux.interval(Duration.ofSeconds(1)) // 4000ms 동안 0 ~ 3 까지 emit
+        .take(3) // 0 ~ 2 까지 take
+        // take(Duration.ofMillis(2500) - 2500ms 동안 emit된 데이터 take
+        .subscibe(log::info); // 0, 1, 2 출력
+    Threa.sleep(4000L);
+    ```
+    - upstream에서 emit되는 데이터 중 파라미터로 입력받은 숫자만큼 downstream으로 emit
+  - takeXXX
+    ```java
+    Flux.fromIterable(method())
+        .takeLast(2)
+        // .takeUntil(tuple -> tuple.getT2() > 20_000_000)
+        // .takeWhile(tuple -> tuple.gett2() < 20_000_000)
+        .subscribe(log::info);
+    ```
+    - takeLast: upstream에서 emit된 데이터 중 가장 마지막에 emit된 데이터를 downstream으로 emit
+    - takeUntil: 파라미터로 입력한 람다표현식을 true가 될때까지 upstream에서 emit된 데이터를 downstream으로 emit
+    - takeWhile: takeUntil과 반대로 표현식이 true일 때까지 upstream에서 emit된 데이터를 downstream으로 emit
+  - next
+    ```java
+    Flux.fromIterable(method())
+        .next()
+        .subscribe(log::info);
+    ```
+    - upstream에서 emit된 데이터 중 첫번째 데이터만 downstream으로 emit
+- Sequence 변환 Operator
+  - map
+    - upstream에서 emit된 데이터를 mapper function 을 사용하여 변환한 후 downstream으로 emit
+  - flatMap
+    ```java
+    Flux.just("Good", "Bad")
+        .flatMap(feel -> Flux.just("Morning", "Afternoon", "Evening")
+                        .map(time -> feeling + " " + time))
+        .subscribe(log::info); //Good Morning, Good Afternoon, Good Evening, Bad ~ 출력
+    ```
+    - upstream에서 emit 한 데이터는 flatMap 내부 inner sequence를 생성하여 1개 이상의 변환된 데이터를 emit
+    - flatMap 내부 sequence에서 Scheduler를 설정하여 비동기적으로 데이터를 emit할 수 있다.
+  - concat
+    ```java
+    Flux.concat(Flux.just(1, 2, 3), Flux.just(4, 5, 6))
+        .subscribe(log::info); // 1, 2, 3, 4, 5, 6 출력
+    ```
+    - 파라미터로 입력되는 publisher sequence를 연결하여 데이터를 순차적으로 emit
+    - 먼저 입력되는 publisher가 종료될 때까지 나머지 publisher가 대기하는 특성을 갖는다.
+  - merge
+    ```java
+    Flux.merge(
+      Flux.just(1, 2, 3, 4).delayElements(Duration.ofMillis(300L))
+      Flux.just(5, 6, 7).delayElements(Duration.ofMillis(500L))
+    ).subscribe(log::info); // 1(300ms), 5(500ms), 2(600ms), 3(900ms), 6(1000ms), 4(1200ms), 7(1500ms) 출력
+    Thread.sleep(2000L);
+    ```
+    - merge operator의 동작을 이해하기 위해선 emit되는 시간 주기를 다르게 설정하는 것이 좋다.
+    - publisher가 emit하는 시간이 빠른 데이터부터 차례대로 emit한다.
+  - zip
+    ```java
+    Flux.zip(
+      Flux.just(1, 2, 3).delayElements(Duration.ofMillis(300L))
+      Flux.just(4, 5, 6).delayElements(Duration.ofMillis(500L))
+      // (n1, n2) -> n1 * n2
+    ).subscribe(log::info); // [1,4], [2,5], [3,6] // 4, 10, 18 출력
+    Thread.sleep(2000L);
+    ```
+    - emit된 데이터를 결합하는 데, 하나씩 emit을 기다렸다가 결합, Tuple로 묶어서 전달
+    - 세번째 파라미터로 tuple이 아닌 최종 변환된 데이터를 전달할 수 있도록 한다.
+  - and
+    ```java
+    Mono.just("Task 1")
+    .delayElements(Duration.ofSeconds(1))
+    .doOnNext(data -> log.info("mono: {}", data))
+    .and(Flux.just("Task 2", "Task 3")
+            .delayElements(Duration.ofMillis(600))
+            .doOnNext(data -> log.info("flux: {}", data))
+    .subscribe(log::info); // flux: Task 2, Mono: Task 1, Flux: Task 3 출력
+    Thread.sleep(5000);
+    ```
+    - Mono의 complete signal과 파라미터로 입력된 publisher 의 complete signal을 결합하여 새로운 Mono<Void> 반환
+  - collectList
+    - Flux에서 데이터를 모아 List로 변환하여 Mono<List<T>> 로 반환
+  - collectMap
+    ```java
+    Flux.range(0, 26)
+        .collectMap(key -> methodKey(key), value -> methodValue(value))
+        .subscribe(log::info);
+    ```
+    - Flux에서 emit된 데이터를 기반으로 key, value를 생성하여 Mono<Map<T, V>>로 반환
+- Sequence 내부 동작 확인하기 위한 Operator
+  |operator|description|
+  |---|---|
+  |doOnSubscribe()|Publisher가 구독중일 때 트리거되는 동작을 추가할 수 있다.|
+  |doOnRequest()|Publisher가 요청을 수신할 때 트리거되는 동작을 추가할 수 있다.|
+  |doOnNext()|Publisher가 데이터를 emit할 때 트리거되는 동작을 추가할 수 있다.|
+  |doOnComplete()|Publisher가 성공적으로 완료되었을 때 트리거되는 동작을 추가할 수 있다.|
+  |doOnError()|Publisher가 에러가 발생한 상태로 종료되었을 때 트리거되는 동작을 추가할 수 있다.|
+  |doOnCancel()|Publisher가 취소되었을 때 트리거되는 동작을 추가할 수 있다.|
+  |doOnTerminate()|Publisher가 성공적으로 완료되었을 떄 또는 에러가 발생한 상태로 종료되었을 때 트리거되는 동작을 추가할 수 있다.|
+  |doOnEach()|Publisher가 데이털르 emit할 때, 성공적으로 완료되었을 때, 에러가 발생한 상태로 종료되었을 때 트리거되는 동작을 추가할 수 있다.|
+  |doOnDiscard()|upstream에 있는 전체 operator 체인의 동작 중 operator에 의해 폐기되는 요소를 조건부로 정리할 수 있다.|
+  |doAfterTerminate()|downstream을 성공적으로 완료한 직후 또는 에러가 발생하여 publisher가 종료된 직후에 트리거되는 동작을 추가할 수 있다.|
+  |doFirst()|publisher가 구독되기 전에 트리거되는 동작을 추가할 수 있다.|
+  |doFinally()|에러를 포함해 어떤 이유든 publisher가 종료된 후 트리거되는 동작을 추가할 수 있다.|
+
+- 예외처리를 위한 Operator
+  - error
+    ```java
+    Flux.range(1, 5)
+        .flatMap(num -> {
+          if(num % 2 == 0)
+            return Flux.error(IllegalArgumentException::new);
+          return Mono.just(num * 2);
+        }).subscribe(data -> log.info("next: {}", data)); // next: 1, onError 발생
+    ```
+    - error operator는 파라미터로 지정된 에러로 종료하는 flux 생성
+    - throw 키워드로 예외를 의도적으로 던지는 것과 같은 역할을 한다.
+  - onErrorReturn
+  - onErrorContinue
+  - retry
+- Sequence의 동작 시간 측정을 위한 Operator
+  - elasped
+- Flux Sequence 분할을 위한 Operator
+  - window
+  - buffer
+  - bufferTimeout
+  - groupBy
+- 다수의 Subscriber에게 Flux를 멀티캐스팅(Multicasting)
+  - publish
+  - autoConnect
+  - refCount
+  -
