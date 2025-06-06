@@ -649,15 +649,96 @@
     - error operator는 파라미터로 지정된 에러로 종료하는 flux 생성
     - throw 키워드로 예외를 의도적으로 던지는 것과 같은 역할을 한다.
   - onErrorReturn
+    ```java
+    getBooks()
+    	.map(book -> book.getName().toUpperCase())
+    	.onErrorReturn(NullPointerException.class, "No pen name") // onErrorReturn("No pen name") 가능
+    	.onErrorReturn(IllegalFormatException.class, "Illegal pen name")
+    	.subscribe(log::info);
+    	// NPE가 발생하면 No pen name 출력, IllegalFormatException 발생 시 Illegal pen name 출력
+    ```
+    - 에러 이벤트가 발생했을 때 Downstream으로 전파하지 않고 대체값을 emit
+  - onErrorResume
+    ```java
+    getBooksFromCache()
+    	.onErrorResume(error -> getBooksFromDb())
+    	.subscribe(log::info, log::error);
+    ```
+    - 에러 이벤트가 발생했을 때 Downstream으로 전파하지 않고 대체 publisher emit
+    - try catch문의 catch 블록에서 예외가 발새앟여 또 다른 메서드를 호출하는 형태
   - onErrorContinue
+    ```java
+    Flux.just(1, 2, 4, 0, 12)
+    	.map(num -> 12 / num)
+    	.onErrorContinue((error, num) -> log.error("e: {}, num: {}", e.getMessage(), num))
+    	.subscribe(log::info); // 12, 6, 3, 1 출력
+    ```
+    - 에러가 발생했을 때, 에러 영역 내에 있는 데이터는 제거하고, upstream에서 후속 데이터를 emit하는 방식으로 에러 복구 
   - retry
+    - 에러가 발생하면 파라미터로 입력한 횟수만큼 원본 Flux의 Sequence를 다시 구독, 만약 Long.MAX_VALUE를 입력하면 무한 반복된다.
 - Sequence의 동작 시간 측정을 위한 Operator
   - elasped
+    ```java
+    Flux.range(1, 3)
+    	.delayElements(Duration.ofSeconds(1))
+    	.elasped()
+    	.subscribe(data -> log.info("onNext: {}, time: {}", data.getT2(), data.getT1());
+    // onNext: 1, time: 1029, // onNext: 2, time: 1005, // onNext: 3, time: 1001
+    ```
+    - emit된 데이터 사이의 경과 시간을 측정하여 Tuple<Long, T> 형태로 Downstream에 emit
 - Flux Sequence 분할을 위한 Operator
   - window
+    ```java
+    Flux.range(1, 7)
+    	.window(3)
+        .flatMap(flux -> {
+	    log.info("=============");
+    	    return flux;
+        }).subscribe(new BaseSubscriber<>()) {
+    	    @Override
+    	    protected void hookOnSubscirbe(Subscription subscription) {
+	        subscription.request(2);
+            }
+    	    @Override
+            protected void hookOnNext(Integer value) {
+                log.info("# onNext: {}", value);
+	        request(2);
+            }
+        });
+	// ======= 1, 2, 3 ======= 4, 5, 6 ======= 7
+    ```
+    - Upstream에서 emit되는 첫번째 데이터부터 maxSize 숫자만큼의 데이터를 포함한 새로운 Flux로 분할
   - buffer
+    ```java
+    Flux.range(1, 7)
+    	.buffer(3)
+    	.subscribe(buffer -> log.info("onNext: {}", buffer);
+    	// onNext 1, 2, 3 // onNext: 4, 5, 6 // onNext: 7
+    ```
+    - upstream에서 emit되는 첫번째 데이터부터 maxSize 숫자만큼 데이터를 list 버퍼로 한번에 emit
   - bufferTimeout
+    ```java
+    Flux.range(1, 7)
+    	.map(num -> {
+	    try {
+                if(num < 5) Thread.sleep(100L);
+                else Thread.sleep(300L);
+    	    } catch(InterruptedException e) {}
+    	    return num;
+    	})
+    	.bufferTimeout(3, Duration.ofMillis(450L))
+    	.subscribe(buffer -> log.info("onNext: {}", buffer);
+    	// onNext: 1, 2, 3 // onNext: 4, 5 // onNext: 6 // onNext: 7
+    ```
+    - upstream에서 emit되는 첫번째 데이터부터 maxSize 숫자만큼 데이터 또는 maxTime 내에 emit되는 데이터를 list 버퍼로 한번에 emit 
   - groupBy
+    ```java
+    Flux.fromIterable(SampleData.books)
+    	.groupBy(book -> book.getAuthorName())
+    	.flatMap(groupedFlux -> groupedFlux.map(book -> book.getName() + " " + book.getAuthorName()).collectList())
+    	.subscribe(log::info);
+    ```
+    - emit되는 keyMapper로 생성한 key를 기준으로 그룹화한 GroupedFlux를 리턴하며 이 GroupedFlux를 통해서 그룹별로 작업ㅇ르 수행할 수 있다.
 - 다수의 Subscriber에게 Flux를 멀티캐스팅(Multicasting)
   - publish
   - autoConnect
