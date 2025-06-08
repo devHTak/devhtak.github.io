@@ -167,7 +167,96 @@
   - Webflux는 핸들러 메서드의 아규먼트를 리액티브 타입을 지원하기 때문에 method argument로 전달 받은 후 서비스 레이어에 전달할 수 있다.
 
 #### 함수형 엔드포인트
-
+- Webflux는 기존의 애노테이션 기반 프로그래밍 모델과 함께 함수형 엔드포인트 기반 새로운 프로그래밍 모델 지원
+  - 들어오는 요청을 라우팅하고, 라우팅된 요청을 처리하며 결과 값을 응답으로 리턴하는등의 모든 작업을 하나의 함수 체인에서 처리
+- HandlerFunction을 사용한 request 처리
+  ```java
+  @FunctionalInterface
+  public interface HandlerFunction<T extends ServerResponse> {
+      Mono<T> handle(ServerRequest request);
+  }
+  ```
+  - 함수형 엔드포인트는 들어오는 요청을 처리하기 위해 HandlerFunction이라는 함수형 기반의 핻를러 사용
+  - HandlerFunction 은 요청처리를 위한 ServerRequest하나만 handle() 아규먼트로 전달받으며, 응답은 Mono<ServerResponse> 형태로 리턴된다.
+  - ServerRequest
+    - Http Headers, method, URI, query parameters에 접근할 수 있는 메서드를 제공하며, Http Body 정보에 접근하기 위한 별도의 메서드 제공
+  - ServerResponse
+    - HandlerFunction or HandlerFilterFunction에서 리턴되는 Http Response를 표현
+    - Response는 BodyBuilder와 HeadersBuilder를 통해 HTTP response body, header 정보 추가 가능
+- Request 라우팅을 위한 RouterFunction
+  ```java
+  @FunctionalInterface
+  public interface RouterFunction<T extends ServerResponse> {
+      Optional<HandlerFunction<T>> route(ServerRequest request);
+      // ...
+  }
+  @Configuration("bookRouterV1")
+  public class BookRouter {
+      @Bean
+      public RouterFunction<?> routeBook(BookHandler handler) {
+          return route()
+              .POST("/v1/books", handerl::createBook(handler::createBook)
+              .PATHCH("/v1/books/{bookId}", handler::updateBook)
+              .GET("/v1/books", hnadler::getBooks)
+              .GET("/v1/books/{bookId}", handler::getBook)
+              .build();
+      }
+  }
+  @Component("bookHandlerV1")
+  @RequiredArgsConstructor
+  public class BookHandler {
+      private final BookMapper mapper;
+      public Mono<ServerResponse> createBook(ServerRequest request) {
+          return request.bodyToMono(BookDto.Post.class)
+                  .map(post -> bookService.createBook(post))
+                  .flatMap(book -> ServerResponse
+                      .created(URI.create("/v1/books" + book.getId())).build());
+      }
+      // ...
+  }
+  ```
+  - RouterFunction은 요청을 해당 HandlerFunction으로 라우팅해주는 역할을 한다.
+  - route() 메서드에서 파라미터로 전달받은 request에 매치되는 HandlerFunction을 리턴
+- 함수형 엔드포인트에서의 request body 유효성 검증
+  ```java
+  @Component("bookValidatorV2")
+  public class BookValidator implements Validator {
+      @Override
+      public boolean supports(Class<?> clazz) {
+          return BookDto.Post.class.isAssignableFrom(clazz);
+      }
+      @Override
+      public void validate(Object target, Errors errors) {
+          BookDto.Post post = (BookDto.Post)target;
+          ValidationUtils.rejectIfEmptyOrWhitespace(errors, "titleKorean", "field,required");
+          // ...
+      }
+  }
+  @Component("bookHandlerV1")
+  @RequiredArgsConstructor
+  public class BookHandler {
+      private final BookMapper mapper;
+      private final BookValidator validator
+      public Mono<ServerResponse> createBook(ServerRequest request) {
+          return request.bodyToMono(BookDto.Post.class)
+                  .doOnNext(post -> this.validate(post))
+                  .map(post -> bookService.createBook(post))
+                  .flatMap(book -> ServerResponse
+                      .created(URI.create("/v1/books" + book.getId())).build());
+      }
+      // ...
+      private void validate(BookDto.Post post) {
+          Error error = new BeanPropertyBindingResult(post, BookDto.class.getName());
+          validator.validate(post, errors);
+          if(errors.hasErrors()) {
+              log.error(errors.getAllErrors().toString());
+              throw new ServerWebInputException(errors.toString());
+          }
+      }
+  }
+  ```
+  - 함수형 엔드포인트는 spring validator 인터페이스 구현한 Custom Validator를 이용해 request body 유효성 검증을 적용할 수 있다.
+  - 이 외에도 Spring Validator 인터페이스 사용, javax 표준 Validator 인터페이스 사용 가능하다
 #### R2DBC
 
 #### 예외처리
