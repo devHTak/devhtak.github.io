@@ -738,9 +738,67 @@
     	.flatMap(groupedFlux -> groupedFlux.map(book -> book.getName() + " " + book.getAuthorName()).collectList())
     	.subscribe(log::info);
     ```
-    - emit되는 keyMapper로 생성한 key를 기준으로 그룹화한 GroupedFlux를 리턴하며 이 GroupedFlux를 통해서 그룹별로 작업ㅇ르 수행할 수 있다.
+    - emit되는 keyMapper로 생성한 key를 기준으로 그룹화한 GroupedFlux를 리턴하며 이 GroupedFlux를 통해서 그룹별로 작업을 수행할 수 있다.
 - 다수의 Subscriber에게 Flux를 멀티캐스팅(Multicasting)
+  - Subscriber가 구독하면 Upstream에서 emit된 데이터가 구독중인 모든 Subscriber에게 멀티캐스팅된다.
+  - 해당 Operator는 Cold Publisher는 Hot Publisher로 동작하게 하는 특징이 있다.
   - publish
+    ```java
+    ConnectableFlux<Integer> flux = Flux.range(1, 5)
+				    .delayElements(Duration.ofMillis(300L)
+				    .publish();
+    Thread.sleep(500L);
+    flux.subscribe(log::info); // 0.5초 뒤 첫번째 구독 발생
+
+    Thread.sleep(200L);
+    flux.subscribe(log::info); // 0.2초 뒤 두번째 구독 발생
+
+    flux.connect(); // 해당 시점부터 0.3초에 한번씩 emit
+    
+    Thread.sleep(1000L); 
+    flux.subscribe(log::info); // 0.2초 뒤 3번째 구독 발생, (1, 2) emit은 이미 시간이 지난 뒤 subscibe 했기 때문에 받지 못한다. (hot publisher)
+
+    Thread.sleep(20000L);
+    ```
+    - publish operator 는 구독을 하더라도 구독 시점에 즉시 데이터를 emit하지 않고 connect 호출하는 시점에 데이터를 emit    
   - autoConnect
+    ```java
+    ConnectableFlux<Integer> flux = Flux.range(1, 5)
+				    .delayElements(Duration.ofMillis(300L)
+				    .publish()
+    			 	    .autoConnect(2);
+    Thread.sleep(500L);
+    flux.subscribe(log::info); // 0.5초 뒤 첫번째 구독 발생
+
+    Thread.sleep(200L);
+    flux.subscribe(log::info); // 0.2초 뒤 두번째 구독 발생, 2번째 구독이 실행되어 upstream에서 데이터 emit
+
+    Thread.sleep(1000L); 
+    flux.subscribe(log::info); // 0.2초 뒤 3번째 구독 발생, (1, 2) emit은 이미 시간이 지난 뒤 subscibe 했기 때문에 받지 못한다. (hot publisher)
+
+    Thread.sleep(20000L);
+    ```
+    - autoConnect는 지정된 숫자만큼 구독이 발생하는 시점에 자동으로 연결되기 때문에 별도의 connect 호출이 필요 없다.
   - refCount
-  -
+    ```java
+    Flux<Long> publisher = Flux.interval(Duration.ofMillis(500))
+    			.publish()
+    			// .autoConnect(1);
+    			.refConnect(1); // refConnect 를 이용해 1개의 구독이 발생하는 시점에 Upstream 소스 연결
+
+    Disposable disposable = publisher.subscibe(log::info); // 연결 0, 1, 2, 3 구독
+
+    Thread.sleep(2100L);
+    disposable.dispose(); // 2.1초 후 구독 해제
+
+    publisher.subscribe(log::info); // 두번째 구독에 대해 첫번째 구독이 취소되었기 때문에 Upstream에 다시 연결
+    // refCount 는 0, 1, 2, 3 구독, autoConnect 는 4, 5, 6, 7, 8 구독
+    // autoConnect에 경우 첫번째 구독이 취소되지만 upstream 소스로의 연결이 해제된 것이 아니기 때문에 4부터 전달받는다.
+
+    Thread.sleep(2500L);
+    ```
+    - 파라미터로 입력된 숫자만큼의 구독이 발생하는 시점에 Upstream 소스에 연결되며 모든 구독이 취소되거나 Upstream의 데이터 emit이 종료되면 연결이 해제
+    - 주로 무한 스트림 상황에서 모든 구독이 취소될 경우 연결을 해제하는 데 사용할 수 있다.
+
+#### 출처
+- 황적식 저자의 스프링으로 시작하는 리액티브 프로그래밍. 
