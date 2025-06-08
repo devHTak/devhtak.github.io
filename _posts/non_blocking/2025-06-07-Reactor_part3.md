@@ -129,3 +129,47 @@
     - Scheduler 를 통해 서버 엔진에서 제공하는 스레드 풀이 아닌 다른 스레드 풀을 사용한다.
 
 #### Annotation 기반의 Controller
+- Spring Webflux 는 두가지 프로그래밍 모델 지원. 하나는 애노테이션 기반 프로그래밍, 다른 하나는 함수형 기반 프로그래밍 모델
+- Annotation 기반 Controller
+  ```java
+  @RestController
+  @RequiredArgsConstructor
+  @RequestMapping("/v1/books")
+  public class BookController {
+      private final BookService bookService;
+
+      @PostMapping
+      @ResponseStatu(HttpStatus.CREATED)
+      public Mono createBook(@RequestBody Mono<BookDto.Post> requestBody) {
+          Mono<Book> book = bookService.createBook(requestBody.toDto());
+          Mono<BookDto.Response> response = book.toResponse();
+          return this.toResponse(book);
+      }
+
+      @PatchMapping("/{bookId}")
+      public Mono updateBook(@PathVariable long bookId, @RequestBody Mono<BookDto.Post> requestBody) {
+          requestBody.setBookId(bookId)
+          Mono<Book> book = bookService.updateBook(requestBody.toDto());
+          return this.toResponse(book);
+      }
+      @GetMapping("/{bookId}")
+      public Mono getBook(@PathVariable long bookId) {
+          Mono<Book> book = bookService.getBook(bookId);
+          return this.toResponse(book);
+      }
+
+      private Mono<BookDto.Response> toResponse(Mono<Book> book) {
+          return mono.flatMap(book -> Mono.just(book.toResponse()));
+      }
+  }
+  ```
+  - MVC 기반과 차이점은 리턴타입과 아규먼트가 Mono<Book>이라는 것을 제외하고 거의 없다.
+  - Webflux는 핸들러 메서드의 아규먼트를 리액티브 타입을 지원하기 때문에 method argument로 전달 받은 후 서비스 레이어에 전달할 수 있다.
+
+#### 함수형 엔드포인트
+
+#### R2DBC
+
+#### 예외처리
+
+#### WebClient
