@@ -94,7 +94,119 @@
   - 결과가 0이 되면 해당 래치는 재사용할 수 없다는 점을 주의하자
 
 #### 실행기와 작업 추상화
+- java.util.concurrent 패키지의 기능을 사용하여 적절한 수준의 추상화를 통해 동시성 프로그램을 수행해야 한다.
+  - 스레드를 효율적으로 유지하면 더 나은 스레드 핫 성능을 얻을 수 있다.
+  - 스레드가 차단되거나 대기상태에 머무르지 않고 지속적으로 실행될 수 있도록 하는 것이 중요
+- 비동기 실행 소개
+  - Callble<V>.call()
+    - 자바에서 작업 추상화 충족하는 방법 중 하나
+    - V타입의 값을 반환하고 결과를 계산할 수 없는 경우 예외를 던진다.
+  - ExecutorService는 submit 메서드와 그 오버로드를 통해 Runnable, Callable을 실행할 수 있다.
+    - submit 메서드는 Future<V>를 리턴
+  - Excutors 도우미 클래스는 팩토리 메서드를 제공하며 일반적인 방법이 있다.
+    - newFixedThreadPool(int nTrheads)
+      - 고정 크기의 스레드 풀을 갖는 ExecutorService 생성
+    - newCachedTreadPool()
+      - 필요에 따라 새로운 스레드를 생성하고 가능한 경우 기존 스레드를 재사용하는 ExecutorService 생성 (생성한 스레드는 60초 동안 유지)
+    - newSingleThreadExecutor()
+      - 단일 스레드로 실행되는 ExecutorService 생성
+    - newScheduledThreadPool(int corePoolSize)
+      - 미래의 특정 시점에 작업을 실행할 수 있도록 추가적인 메서드 제공
+- executorService 선택
+  - 적절한 ExeuctorService를 선택하면 비동기 처리를 효과적으로 제어할 수 있으며, 스레드 풀 내에 수를 올바르게 선택하면 성능 향상을 얻을 수 있다.
+  - ThreadFactory를 제공하여 스레드 속성을 설정할 수 있도록 한다.
+    - 이름, 데몬 상태, 스레드 우선순위 등의 속성
+- 포크/조인
+  ```java
+  public class ForkJoinExample {
+      public static void main(String[] args) {
+          ForkJoinPool pool = new ForkJoinPool();
+          FactorialTask task = new FactorialTask(10);
+          Integer result = pool.invoke(task);
+          System.out.println("Factorial of 10 is: " + result);
+      }
+  
+      static class FactorialTask extends RecursiveTask<Integer> {
+          private final int n;
+          FactorialTask(int n) { this.n = n; }
+  
+          @Override
+          protected Integer compute() {
+              if (n == 1) return 1;
+              FactorialTask subTask = new FactorialTask(n - 1);
+              subTask.fork();
+              return n * subTask.join();
+          }
+      }
+  }
+  ```
+  - 자바는 개발자가 직접 스레드를 제어하고 관리할 필요 없이 사용할 수 있는 동시성 처리 방식 제공
+  - 그 중 하나가 Fork/Join 프레임워크로 해당 프레임워크는 ExecutorService의 새로운 구현체인 ForkJoinPool 기반
+    - 세분화된 작업을 효율적으로 처리할 수 있다.
+    - 작업 훔치기 알고리즘 구현
+  - 큰 작업을 작은 단위로 분할(Fork)해서 여러 스레드가 동시에 처리하고, 결과를 합쳐서(Join) 최종 결과를 만드는 방식으로 동작
+  - 주요 개념과 특징
+    - Fork: 하나의 큰 작업을 재귀적으로 더 작은 하위 작업들로 나눕니다. 이 하위 작업들은 병렬로 실행될 수 있습니다.
+    - Join: 분할된 하위 작업들이 모두 완료되면, 각각의 결과를 합쳐서 하나의 최종 결과로 만듭니다.
+    - Work Stealing: 각 스레드는 자신의 작업 큐를 가지고 있다가, 일이 끝나면 다른 바쁜 스레드의 큐에서 작업을 훔쳐와서 처리
+      - 이를 통해 작업 부하가 자동으로 균등하게 분배되어 리소스를 최대한 활용할 수 있습니다.
+    - 동적 스레드 관리: ForkJoinPool은 CPU 코어 수에 맞춰 동적으로 풀을 관리하고, 작업 처리량에 따라 스레드를 유연하게 할당
+      - 사용자가 병렬성 수준(몇 개의 스레드를 쓸 것인지)도 직접 지정할 수 있습니다
+  - 일반 ThreadPool 과 비교
+    - 작업 분배
+      - ThreadPool: 중앙 큐에서 순차 분배
+      - ForkJoinPool: 각 스레드가 자신만의 큐 + 워크 스틸링
+    - 병렬 처리
+      - ThreadPool: 스레드 수 고정
+      - ForkJoinPool: CPU 코어 수에 맞춰 동적, 자동 조정
+    - 적합한 작업
+      - ThreadPool: I/O, 네트워크
+      - ForkJoinPool 대규모 데이터, 병렬 계산, 재귀적 분할 작업
+    - 주요 메서드
+      - ThreadPool: execute(), submit()
+      - ForkJoinPool: fork(), join(), invoke()
+- 병렬 스트림
+  - parallelStream은 데이터를 병렬로 처리하고 결과를 다시 결합할 때 사용할 수 있다.
+  - Spliterator를 이용해 작업을 분할하고 공통 포크/조인 풀에서 연산 실행
+    - 병렬 처리가 쉬운 문제를 다룰 때 유용
+
 #### 가상 스레드
+- 자바 21부터 가상스레드 도입
+- 가상 스레드 소개
+  - 하나의 자바 스레드는 정확히 하나의 플랫폼 스레드라는 규칙 적용
+    - Thread.start() 호출하면 운영체제의 스레드 생성 시스템 호출(linux clone())
+    - 스레드 별 stack segment를 갖으며 스레드가 종료될 때까지 반환되지 않는다.
+    - 즉, linux x64 환경에서 사용자 공간 스택 크기가 1mb로 설정되어 있어 스레드가 20,000개 생성되면 20gb 메모리가 필요
+    - 이는 스레드 병목 문제
+  - 이를 해결하기 위한 것이 바로 가상 스레드
+    - 스레드를 운영 체제가 아닌 JVM에서 관리
+    - 전용 플랫폼 스레드가 없으며 캐리어 스레드 풀을 공유
+    - 스레드 세그먼트의 정적 할당을 더 유연한 모델로 대체
+    - (적어도 일부) I/O를 수행하는 작업을 위해 설계
+  - 핵심 특징
+    - 경량성: 가상스레드는 기존 OS 스레드(플랫폼 스레드)와 달리, 매우 작은 메모리(200~300B 수준)만을 필요
+      - 수만~수백만 개의 생성이 가능합니다.
+    - JVM 스케줄링: JVM 내부 스케줄러(주로 ForkJoinPool)에서 관리·스케줄링
+      - 이로 인해 컨텍스트 스위칭 비용이 획기적으로 절감됩니다.
+    - 플랫폼 스레드와의 연결: 여러 가상스레드가 하나의 플랫폼 스레드에 번갈아 매핑되어 실행
+      - 실제 CPU는 플랫폼 스레드(캐리어 스레드)가 사용하고, 가상스레드는 그 위에서 논리적으로 동작합니다.
+    - 블로킹 작업 대응: 가상스레드가 블로킹(예: I/O, sleep)에 도달하면, 해당 플랫폼 스레드는 블로킹된 가상스레드를 힙 영역에 잠시 저장(park)하고, 즉시 다른 가상스레드로 교체해 작업 효율을 극대화
+  - 동작 원리 요약
+    - 가상스레드는 OS·플랫폼 스레드와 1:1 매핑되지 않음.
+    - JVM의 스케줄러(예: ForkJoinPool)는 각 가상스레드의 작업(runContinuation 등)을 플랫폼 스레드의 작업 큐에 넣음.
+    - 플랫폼 스레드는 자신에게 매핑된 여러 가상스레드를 번갈아 실행하며, 필요 시 다른 플랫폼 스레드와 작업을 나누기도 함.
+      - work stealing
+    - I/O나 sleep 같은 블로킹 상황이 생기면, 해당 플랫폼 스레드는 해당 가상스레드를 중단(park)하고, 바로 다음 가상스레드 실행으로 넘어감.
+    - 이를 통해 기존 대비 훨씬 더 많은 동시 실행 쓰레드 수를 지원, 효율적인 리소스 활용 가능
+  - 제한 사항
+    - 가상 스레드는 blocking I/O 호출이 발생할 때만 양보하며 선점은 없다.
+    - 네이티브 인터페이스 호출, synchronized 키워드는 가상 스레드를 캐리어 스레드에 고정 시켜 unmount 방지
+      - 가상 스레드가 스케줄링 될 때, 플랫폼 스레드에 마운트되거나 할당
+      - 보통 언마운트된 가상 스레드갸 I/O를 기다리거나 코드 실행을 완료하기위한 차단될 때 발생하며, 이 과정에서 플랫폼 스레드는 해제되어 다른 작업을 사용할 수 있게 된다.
+      - 하지만 이런 방식으로 가상 스레드를 고정하면, 이러한 언마운팅이 불가능해지고, 결국 자원 문제와 예기치 않은 차단 현상 초래 가능
+    - 가상 스레드는 객체 풀 패턴과 잘 호환되지 않는다.
+    - 가상 스레드는 수명이 짧도록 설계되어 기본적인 캐싱 기술은 재사용할 수 없는 가비지 객체에 대한 약한 참조를 유지하는 결과를 초래할 수 있다.
+
 ### 14장 분산시스템 기법
 #### 기본적인 분산 데이터 구조
 #### 합의 프로토콜
