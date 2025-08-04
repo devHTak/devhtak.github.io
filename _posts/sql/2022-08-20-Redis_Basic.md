@@ -6,10 +6,6 @@
   - 레디스가 동작하는 메모리에는 SSD/HDD에 비해 가격이 높아 용량 확보가 어렵다
   - SQL 처럼 표현력이 뛰어난 수단이 없으며, 일부 트랜잭션 기능을 지원하지 않는다.
 - Redis + RDBMS 같이 구성하여 사용하며 마스터 데이터는 RDBMS에, 처리된 결과 데이터를 캐시 데이터로 레디스에 저장하여 구성
-
-- 레디스 동작 이미지
-<img width="540" height="328" alt="image" src="https://github.com/user-attachments/assets/2481bc2c-3842-4cde-961a-6dda1ce1e597" />
-
 - 속도가 빠르고 기능이 많은 인메모리 데이터 저장소
   - 인메모리 동작 기반으로 처리 속도가 빠르다
   - 자료형과 기능 및 관련 명령어가 다양
@@ -41,7 +37,93 @@
   - DEL: 키 삭제
     - 운영 환경에서는 비동기적(background)인 형태로 삭제하기 위하여 unlink 사용
 #### String
+- String형에는 Bitmap 이라는 비트 단위 조작할 수 있는 보조자료형 존재
+- 주요 특징
+  - 키에 값을 일대일로 대응시키는 가장 간단한 자료형
+  - 이진 안전 문자열
+- 유스케이스
+  - 캐시
+    - 간단한 Key와 Value 쌍으로 대응되는 문자열
+    - 세션 정보
+    - 이미지 데이터 등 이진 데이터
+  - 카운터
+    - 방문자 수 등 접근 수 카운트
+  - 실시간 매트릭스
+    - 각 항목의 수치를 파악할 수 있는 지표
+- 주요 명령어
+  ```
+  $ SET key value // 값 저장
+  $ GET key // 조회
+  
+  $ MSET key1 value1 key2 value2 // bulk 저장
+  $ MGET key1 key2 key3 key4 // bulk 조회
 
+  $ SET key1 100
+  $ TYPE key1
+  string
+  $ INCR key1 # 수 증가, 문자열인 경우 Error 발생
+  $ DECR key1 # 수 감소
+  $ INCRBY key1 increment # 수 increment 만큼 증가
+  $ DECRBY key decrement
+  $ INCRBYFLOAT key increment # 값을 지정한 부동소수점만큼 증가
+
+  $ APPEND key value // 키가 존재하는 경우 키값 끝에 인수내용 추가
+  $ STRLEN key // 키값의 문자열 길이 반환 O(1)
+  $ GETRANGE key start end // 범위를 지정하여 값 가져오기
+  $ SETRANGE key offset vlaue // 범위를 지정하여 값 저장
+
+  $ SETEX key ttl value // ttl 과 함께 저장
+  $ TTL key // key ttl 조회
+  ```
+#### List 형
+- 특징
+  - 문자열 컬렉션으로 삽입 순서를 유지
+- 유스케이스
+  - 스택, 큐, SNS 최신 게시물, 로그 등에 사용
+- 주요 명령어
+  ```
+  $ LPOP key [count] // 왼쪽부타 값을 가져오고 삭제
+  $ LPUSH key elemnet [element...] // 왼쪽부터 값 삽입
+  $ RPOP key [count] // 오른쪽부터 값을 가져오고 삭제
+  $ RPUSH key element [element..] // 오른쪽부터 값 삽입
+  $ LMPOP numkeys key [key...] <left/right> [count] // 왼쪽 혹은 오른쪽부터 여러개의 값을 가져오고 삭제
+  $ BLMPOP timeout numkeys key [key...] <left/right> [count] // 블록 기능을 갖춘 LMPOP
+  $ LINDEX key index // 리스트에서 지정한 인덱스에 값을 조회
+  $ LINSERT key before|after pivot element // 리스트에서 지정한 인덱스에 값을 삽입
+  $ LLEN key // 리스트의 길이 가져오기 O(1)
+  $ LRANGE key start stop // 리스트에 지정한 범위의 인덱스에 있는 값 가져오기
+  $ LREM key count element // 리스트에서 지정한 요소를 지정한 수만큼 삭제
+  $ LSET key index element // 리스트에서 지정한 인덱스에 있는 값을 지정한 값으로 저장
+  $ LTRIM key start stop // 지정한 범위 인덱스에 포함된 요소로 리스트 갱신
+  $ LPOS key eleemnt [rank] [count num-matches] [maxlen] // 리스트 중 지정한 인덱스에 있는 값 가져오기
+  ```
+
+#### Hash 형
+- 특징
+  - 필드와 값의 쌍 집합
+  - 필드와 연결된 값으로 구성된 맵, 필드와 값 모두 문자열
+  - 하나의 Hash에 저장할 수 있는 빌드 수는 2^32 - 1개로 메모리에 여유가 있다면 제한이 없다고 봐도 무방
+  - Hash형 키에 값을 계속 추가하면, 볼륨이 거대해지기 때문에 명령어를 실행할 때 처리 시간에 문제가 생길 수 있다.
+- 유스케이스
+  - 객체 표현(ex. 각 사용자를 객체로 간주하여 사용자별로 이름, 나이 등 정보를 저장하는 경우)
+- 주요 명령어
+  ```
+  $ HDEL key field // 해시에 지정한 필드 삭제
+  $ HEXISTS key field // 패시에 지정한 필드가 존재하는 지 확인
+  $ HGET key field // 해시에 지정한 필드값 가져오기 O(1)
+  $ HGETALL key // 해시에 모든 필드 및 지정된 값 쌍 가져오기 O(N)
+  $ HKEYS key // 해시에 지정한 모든 필드 목록 반환 O(N)
+  $ HLEN key // 키로 지정한 해시에 포함된 필드 수를 반환 O(1)
+  $ HMSET key field value [field vlaue...] // key 해시에 field / value 쌍 bulk 저장
+  $ HSET key field value // key 해시에 field / value 쌍 저장
+  $ HVALS key // 해시의 모든 필드값 가져오기
+  $ HSCAN key cursor [MATCH pattern] [COUNT num] // 반복 처리하여 해시의 필드와 그에 연결된 목록 가져오기
+  
+  $ HINCRBY key field increment // 해시에 지정한 필드 값을 지정한 수만큼 증가
+  $ HINCREBYFLOAT key field increment // 해시에 지정한 필드 값을 지정한 부동소수점 수만큼 증가
+  ```
+- 성능 발휘를 위한 주의사항
+  
 ### 고급 기능
 
 #### 파이프라인
