@@ -382,6 +382,7 @@
   ```
   - 가장 일반적인 테스트 방식은 Flux, Mono를 Reactor sequence로 정의한 후, 구독 시점에 해당 operator chain이 시나리오 대로 동작하는 지 테스트
   - 다음에 발생할 signal에 대해 데이터 emit, 특정 시간동안 emit된 데이터가 있는 지 등을 단계적으로 테스트할 수 있다.
+  
   |메소드|설명|
   |---|---|
   |expectSubscription|구독이 이뤄짐을 기대|
