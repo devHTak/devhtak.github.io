@@ -257,8 +257,134 @@
   ```
   - 함수형 엔드포인트는 spring validator 인터페이스 구현한 Custom Validator를 이용해 request body 유효성 검증을 적용할 수 있다.
   - 이 외에도 Spring Validator 인터페이스 사용, javax 표준 Validator 인터페이스 사용 가능하다
-#### R2DBC
 
 #### 예외처리
+- onErrorResume Operator를 이용한 예외처리
+  ```java
+  @PutMapping("/{bookId}")
+  public Mono<ServerResponse> updateBook(ServerRequest request) {
+      final long bookId = request.getPathVariable("bookId");
+      return request.bodyToMono(BookDto.Post.class)
+                  .doOnNext(post -> validator.validate(post))
+                  .flatMap(post -> bookService.updateBook(bookId, post))
+                  .flatMap(book -> ServerResponse
+                                  .ok()
+                                  .bodyValue(this.bookToResponse(book)))
+                  .onErrorResume(IllegalArgumentException.class, error -> ServerResponse
+                                  .badRequest()
+                                  .bodyValue(new ErrorResponse(HttpStatus.BAD_REQUEST, error.getMessage())))
+                  .onErrorResume(Exception.class, error -> ServerResponse
+                                  .unprocessableEntity()
+                                  .bodyValue(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, error.getMessage())))
+  }
+  ```
+  - 에러 이벤트가 발생했을 때 Downstream으로 전파하지 않고 대체 Publisher를 통해 에러 이벤트에 대한 대체 값을 emit하거나 발생한 에러 이벤트를 래핑한 후 다시 에러 이벤트를 발생시키는 역할을 한다.
+  - onErrorResume의 첫번째 파라미터론 처리할 예외 타입이고 두번째 파라미터는 대체할 Publisher Sequence의 해당한다.
+- ErrorWebExceptionHandler를 이용한 글로벌 예외처리
+  ```java
+  @Configuration
+  @RequiredArgsConstructor
+  public class BookWebExceptionHandler implements ErrorWebExceptionHandler {
+      private final ObjectMapper objectMapper;
+
+      @Override
+      public Mono<Void> handle(ServerWebExchange exchange, Throwable throwable) {
+          return handleException(exchange, throwable);
+      }
+
+      private Mono<Void> handleException(ServerWebExchange exchange, Throwable throwable) {
+          ErrorResponse errorResponse = null;
+          DataBuffer buffer = null;
+          DataBufferFactory factory = exchange.getResponse().bufferFactory();
+          exchange.getResponse().getHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+          if(throwable instanceof CustomizeExcpetion) {
+              CustomizeExcpetion e = (CustomizeExcpetion) throwable;
+              ExceptionCode code = e.getExceptionCode();
+              errorResponse = ErrorResponse.of(code.getStatus(), code.getMessage());
+              exchange.getResponse().setStatusCode(HttpStatus.valueOf(code.getStauts()));
+          } // else if(..) { ... }
+
+          try {
+              dataBuffer = bufferFactory.wrap(objectMapper.writeValueAsBytes(errorResponse));
+          } catch(JsonProcessingException e) {
+              bufferFactory.wrap("".getBytes());
+          }
+          return exchange.getResponse().writeWith(Mono.just(dataBuffer));
+      }
+  }
+  ```
+  - onErrorResume를 사용할 때에 단점은 각 Sequence마다 onErrorResume() operator를 일일이 추가해야 되고 중복 코드가 발생할 수 있다는 단점이 존재한다.
+  - 이런 단점을 보완하기 위해서는 Global Exception Handler를 추가로 작성할 수 있다.
 
 #### WebClient
+- WebClient란?
+  - Spring 5 부터 지원하는 Non-Blocking HTTP request 를 위한 리액티브 윀 클라이언트로 함수형 기반의 향상된 API 제공하며 Blocking IO에서도 사용 가능하다
+  - WebClient 정보 요청
+    ```java
+    private void createPost(BookDto.Post post) {
+        WebClient webClient = WebClient.create();
+        Mono<ResponseEntity<Void>> response = webClient
+              .post()
+              .uri("http://localhost:8080/v1/books")
+              .bodyValue(post)
+              .retrieve()
+              .toEntity(Void.class);
+        response.subscribe(log::info);
+    }
+
+    private void updatePost(BookDto.Post post, long bookId) {
+        WebClient webClient = WebClient.create("http://localhost:8080");
+        Mono<BookDto.Response> response = webClient
+              .post()
+              .uri("/v1/books/{bookId}", bookId)
+              .bodyValue(post)
+              .retrieve()
+              .bodyToMono(BookDto.Response.class);
+        response.subscribe(log::info);
+    }
+
+    private void getPost(long bookId) {
+        WebClient webClient = WebClient.create("http://localhost:8080");
+        Mono<BookDto.Response> response = webClient
+            .get()
+            .uri(uriBuilder -> uriBuilder
+                  .path("/v1/books/{bookId}")
+                  .build(bookId))
+            .retrieve()
+            .bodyToMono(BookDto.Response.class);
+        response.subscribe(log::info);
+    }
+    ```
+- Connection Timeout 설정
+```java
+HttpClient httpClient = HttpClient.create()
+    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 500)
+    .responseTimeout(Duration.ofMillis(500))
+    .doOnConnected(connection -> connection.addHandlerLast(new ReadTimeoutHandler(500, TimeUtil.MILISECONDS))
+              .addHandlerLast(new WriteTimeoutHandler(500, TimeUtil.MILISECONDS)));
+
+WebClient.builder().baseUri("http://localhost:8080")
+    .clientConnector(new ReactorClientHttpClient(httpClient))
+    .build();
+```
+  - 특정 서버 엔진의 Http Client Connector 설정을 통해 Timeout 설정을 할 수 있다.
+- exchangeToMono()를 사용한 응답 디코딩
+```java
+private void createPost(BookDto.Post post) {
+    WebClient webClient = WebClient.create();
+    Mono<ResponseEntity<Void>> response = webClient
+          .post()
+          .uri("http://localhost:8080/v1/books")
+          .bodyValue(post)
+          .exchangeToMono(response -> {
+              if(response.statusCode().equals(HttpStatus.CREATED)) {
+                  return response.toEntity(Void.class);
+              } else {
+                  return response.createException()
+                      .flatMap(throwable -> Mono.error(throwable));
+              }
+          });
+    response.subscribe(log::info);
+}
+```
