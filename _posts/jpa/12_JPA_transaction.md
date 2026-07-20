@@ -87,9 +87,10 @@
 - 프록시 동등성 비교
   - 엔티티의 동등성을 비교할 때에는 Primary Key에 대한 equals 메서드를 오버라이딩하고 비교하면 된다.
   - 근데, equals를 비교할 때 타입을 비교하는 로직에서 ==를 사용하게 되는 경우 프록시는 동등성 실패가 발생할 수 있다.
+  - equals, instaneof 동등성 비교 실패 가능. Hibernate.getClass() 사용
     ```java
     // if(this.getClass() != obj.getClass()) return false;
-    if(!(this.getClass() instanceof Member)) return false;
+    if(Hibernate.getClass(member) != Member.class)) return false;
     ```
 
 ### 트랜잭션과 락
