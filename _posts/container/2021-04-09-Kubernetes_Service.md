@@ -370,6 +370,12 @@ category: Container
   
   ** 이미지 출처: : https://kubernetes.io/docs/concepts/services-networking/service
 
+- NodePort와 LoadBalancer 차이점
+  - NodePort는 모든 워커 노드에 동일한 포트를 개방하여 사용자가 어떤 노드의 요청을 보내면 kube-proxy가 파드로 전달
+  - LoadBalancer는 클라우드가 자동으로 외부 로드밸런서를 프로비저닝하여 공용 단일 IP를 제공한다
+    - 서비스 별로 로드밸런서가 생성되는 구조로 관리 비용이 커지기 때문에 ingress 와 함께사용
+    - ingress 를 사용하면 1개의 외부 로드밸런서를 띄우고 그 뒤에 여러 ClusterIP를 연결햐 트래픽 분배 가능
+
 #### Ingress
 
 - 인그레스의 필요성
