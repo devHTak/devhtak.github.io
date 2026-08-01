@@ -96,13 +96,16 @@ public class BasicTaskJobConfiguration {
 - BATCH_JOB_INSTANCE
   - 스키마 중 가장 기본이 되는 배치 잡 인스턴스 테이블
   - 배치가 수행되면 Job이 생성되고 해당 Job 인스턴스에 대해서 관련된 모든 정보를 가진 최상위 테이블
+  - Job의 이름과 전달된 JobParameter의 조합을 저장 (Job의 식별자)
 - BATCH_JOB_EXCUTION_PARAMS
   - JobParameter 에 대한 정보를 저장하는 테이블
   - Key/Value 형태로 Job에 전달되며 Job이 실행될 때 전달된 파라미터 정보를 저장한다.
   - 각 파라미터는 IDENTIFYING이 true로 설정되며 JobParameter 생성 시 유니크한 값으로 사용된 경우라는 의미
+  - Job 실행 시 넘어온 매개변수(JobParameters) 값들
 - BATCH_JOB_EXECUTION
   - JobExecution과 관련된 모든 정보를 저장
   - Job이 매번 실행될 때, JobExecution이라는 새로운 객체가 있으며, 이 테이블에 새로운 row로 생성
+  - Job이 실행될 때마다 생성되는 실행 기록 (시작시간, 종료시간, 상태 COMPLETED/FAILED 등)
 - BATCH_STEP_EXECUTION
   - StepExecution과 관련된 정보
   - BATCH_JOB_EXECUTION 테이블과 유사하며 생성된 각 JobExecution에 대한 단계당 항목이 하나 이상 저장된다.
