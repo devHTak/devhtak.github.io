@@ -11,9 +11,12 @@ category: JPA
 
 - JPA를 사용하다 보면 흔하게 마주치는 문제가 N+1 문제이다
 - fetch 전략이 Eager인 경우
-  - 조회할 때 연관관계를 갖는 객체에 대한 조회 쿼리에서 N+1 문제 발생 
+  - 조회할 때 연관관계를 갖는 객체에 대한 조회 쿼리에서 N+1 문제 발생
+  - Member, Team이 다대일 관계고 즉시로딩 설정 후 JPQL로 select m from Member m 호출
+    - JPA는 즉시로딩할 Team 조회를 위해 Member 병 팀을 조회
 - fetch 전략이 Lazy인 경우
   - 연관관계를 맺은 객체를 사용할 때 N+1 문제가 발생할 수 있다.
+  - Member, Team이 다대일 관계고 지연로딩 설정 후 member 조회 후 반복문으로 team 을 조회하는 경우 발생
 - 예제
   - Team, Member 다대 일 관계
     ```java
