@@ -171,6 +171,13 @@
     - MulticaspReplaySpec
       - emit된 데이터 중에서 특정 시점으로 되돌린 데이터부터 emit
 
+#### Upstream, Downstream
+- upstream은 현재 연산자 기준 위, downstream은 연산자 기준 아래쪽
+- 두가지 신호는 반대 방향이다.
+  - 데이터 및 이벤트는 up -> down 으로 이동 (데이터, 에러, 완료 신호, onNext, onError, onComplete)
+  - 구독 및 백프레셔는 down -> up 으로 이동(구독 신청 subscribe, 데이터 요청 request, 구독 취소 cancel)
+- publisherOn은 downstream 의 실행스레드 변경, subscribeOn은 upstream 의 실행스레드 변경
+  
 #### Scheduler
 - 스레드의 개념 이해
   - Scheduler 는 Reactor Sequence에서 사용되는 스레드 관리자 역할
